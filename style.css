@@ -1,0 +1,211 @@
+@font-face {
+    font-family: 'MyFont';
+    src: url('fonts/Myfont-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+body {
+    font-family: 'MyFont', sans-serif;
+    margin: 2%;                      
+    background-image: url("img/white-paper-texture.jpg");
+    background-color: #fafafa;
+    color: #333;
+}
+
+
+.main {
+    display: flex;
+    justify-content: space-between;  
+    align-items: flex-start;         
+    gap: 2%;
+}
+
+
+.main-left {
+    display: flex;
+    flex-direction: column;
+    width: 70%;       
+    margin-left: 2%;                
+}
+
+
+h1 {
+    font-size: 80px;                  
+    margin-bottom: 3%;
+    line-height: 1;                   
+}
+
+
+#pf_img {
+    display: block;                   
+    width: 250px;                     
+    max-width: 100%;                 
+    height: auto;
+    border-radius: 15px;
+    margin-bottom: 3%;
+    margin-left: 10%;
+}
+
+#return {
+    width: 70px;
+    height: auto;
+    cursor: pointer;
+    position: fixed;
+    top: 20px;             
+    right: 20px;                  
+}
+
+
+h2 {
+    font-size: 40px;
+    margin: 1% 0 0 0;                
+}
+
+
+.options {
+    width: 30%;                       
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 5%;            
+    margin-right: 2%;                
+}
+
+.options h3 {
+    font-size: 45px;                  
+    margin-bottom: 6%;
+    transition: transform 0.2s ease; 
+    border-bottom: 4px solid transparent;  
+}
+
+.options h3:hover {
+    transform: scale(1.2);    
+    border-bottom: 4px solid #333;   
+}
+
+#upv_logo {
+    float: right;
+    width: 150px;
+    height: auto;
+    margin-top: 20px;
+    margin-right: 3%;
+}
+
+#ntnu_logo {
+    float: right;
+    width: 144px;
+    height: auto;
+    margin-top: 20px;
+    margin-right: 3%;
+}
+
+a{
+    text-decoration: none;            
+    color: inherit;                   
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0 2%;
+    box-sizing: border-box;
+}
+
+.description p{
+    color: #242424;
+    font-size: 22px;
+    margin-bottom: 20px;
+    margin-right: 20%;             
+}
+
+footer p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.contacts {
+    display: flex;
+    gap: 25px; 
+}
+
+.logos {
+    width: 30px;
+    height: auto;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0.8;
+}
+
+.logos:hover {
+    transform: scale(1.2); /* 20% bigger on hover */
+    opacity: 1;
+}
+
+#phone_logo {
+    filter: invert(1); /* make the phone logo white */
+}
+
+#gmail_link {
+    padding-top: 3px; /* make the gmail logo white */
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 8px;
+  position: absolute;
+  bottom: 125%; /* shows above the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  transition: opacity 0.3s;
+  font-size: 20px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.tooltip:hover .tooltip-text,
+.tooltip:active .tooltip-text,
+.tooltip-text.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+#skillsCanvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 50px); /* match footer height */
+  z-index: -1;
+}
+
+#skillPopup {
+    display: none;
+    position: absolute;
+    background: rgba(0,0,0,0.9);
+    color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 300px;
+    z-index: 2;
+}
