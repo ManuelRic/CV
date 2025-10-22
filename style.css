@@ -19,33 +19,52 @@ body {
     display: flex;
     justify-content: space-between;  
     align-items: flex-start;         
-    gap: 2%;
 }
 
 
 .main-left {
+    margin-top: 2%;
     display: flex;
     flex-direction: column;
-    width: 70%;       
-    margin-left: 2%;                
+    width: fit-content;       
+    margin-left: 2%;
+    text-align: center;    
+    align-items: center;
 }
 
+#cv_button{
+    font-family: 'MyFont', sans-serif;
+    width: fit-content;
+    margin: 5% auto; /* top: 0, sides: auto, bottom: 10% */
+    font-size: 20px;
+    white-space: nowrap;     
+    padding: 12px;                         
+    cursor: pointer;                 
+    border: none;                    
+    border-radius: 8px;              
+    background-color: #4CAF50;      
+    color: white;                    
+}
 
 h1 {
-    font-size: 80px;                  
-    margin-bottom: 3%;
+    font-size: 80px;
+    margin-top: 0;                  
+    margin-bottom: 4%;
     line-height: 1;                   
 }
 
+h2 {
+    font-size: 40px;
+    margin-top: 3%;              
+}
 
 #pf_img {
     display: block;                   
-    width: 250px;                     
+    width: 350px;                     
     max-width: 100%;                 
     height: auto;
     border-radius: 15px;
     margin-bottom: 3%;
-    margin-left: 10%;
 }
 
 #return {
@@ -57,25 +76,18 @@ h1 {
     right: 20px;                  
 }
 
-
-h2 {
-    font-size: 40px;
-    margin: 1% 0 0 0;                
-}
-
-
 .options {
-    width: 30%;                       
+    margin: auto;
+    width: auto;                       
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 5%;            
-    margin-right: 2%;                
 }
 
 .options h3 {
+    margin-bottom: 25%;
+    margin-right: auto;
     font-size: 45px;                  
-    margin-bottom: 6%;
     transition: transform 0.2s ease; 
     border-bottom: 4px solid transparent;  
 }
@@ -104,6 +116,16 @@ h2 {
 a{
     text-decoration: none;            
     color: inherit;                   
+}
+
+.f_stars{
+    text-align: right;
+    color: yellow;
+}
+
+.e_stars{
+    text-align: right;
+    color: rgb(161, 129, 13);
 }
 
 footer {

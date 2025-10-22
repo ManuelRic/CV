@@ -35,19 +35,56 @@ const topCutoff = window.innerHeight * 0.09; // top 9% blocked off
 const sideCutoff = window.innerWidth * 0.10; // side 10% blocked off
 
 const skills = [
-  { name: "HTML" },
-  { name: "CSS" },
-  { name: "JavaScript" },
-  { name: "Python" },
-  { name: "C++" },
-  { name: "C#" },
-  { name: "Unity" },
-  { name: "3D Modeling" },
-  { name: "Git" },
-  { name: "MySQL" },
-  { name: "Graphic Design" },
-  { name: "Java" },
+  { 
+    name: "HTML", 
+    stars: "<span class='f_stars'>★ ★ ★ ★ ★</span><span class='e_stars'></span>" 
+  },
+  { 
+    name: "CSS", 
+    stars: "<span class='f_stars'>★ ★ ★ ★ ★</span><span class='e_stars'></span>" 
+  },
+  { 
+    name: "JavaScript", 
+    stars: "<span class='f_stars'>★ ★ ★ ★ ★</span><span class='e_stars'></span>" 
+  },
+  { 
+    name: "Python", 
+    stars: "<span class='f_stars'>★ ★ ★ ★ ★</span><span class='e_stars'></span>" 
+  },
+  { 
+    name: "C++", 
+    stars: "<span class='f_stars'>★ ★ ★</span><span class='e_stars'> ☆ ☆</span>" 
+  },
+  { 
+    name: "C#", 
+    stars: "<span class='f_stars'>★ ★ ★ ★</span><span class='e_stars'> ☆</span>" 
+  },
+  { 
+    name: "Unity", 
+    stars: "<span class='f_stars'>★ ★ ★ ★</span><span class='e_stars'> ☆</span>" 
+  },
+  { 
+    name: "3D Modeling", 
+    stars: "<span class='f_stars'>★ ★ ★</span><span class='e_stars'> ☆ ☆</span>" 
+  },
+  { 
+    name: "Git", 
+    stars: "<span class='f_stars'>★ ★ ★ ★</span><span class='e_stars'> ☆</span>" 
+  },
+  { 
+    name: "MySQL", 
+    stars: "<span class='f_stars'>★ ★ ★</span><span class='e_stars'> ☆ ☆</span>" 
+  },
+  { 
+    name: "Graphic Design", 
+    stars: "<span class='f_stars'>★ ★ ★ ★ ★</span><span class='e_stars'></span>" 
+  },
+  { 
+    name: "Java", 
+    stars: "<span class='f_stars'>★ ★ ★</span><span class='e_stars'> ☆ ☆</span>" 
+  }
 ];
+
 
 // Unique colors for each ball
 const ballColors = [
@@ -132,7 +169,7 @@ const balls = skills.map((skill, i) => {
     }
   );
 
-  ball.customUrl = skill.url;
+  ball.stars = skill.stars; // attach stars to the body
   return ball;
 });
 
@@ -176,7 +213,7 @@ Events.on(engine, "beforeUpdate", () => {
 const skillDescriptions = {
   "HTML": "Built semantic, accessible, and responsive web pages for modern web applications.",
   "CSS": "Designed layouts and styled interfaces using CSS, Flexbox, Grid, and animations.",
-  "JavaScript": "Developed interactive web applications with integrated libraries and custom elements. (Like the font on this page!)",
+  "JavaScript": "Developed interactive web applications with integrated libraries and custom elements.",
   "Python": "Automated tasks and processed data using Python scripts and prototypes.",
   "C++": "Programmed embedded systems (Arduino, ESP32, Raspberry Pi) implemented projects connecting hardware.",
   "C#": "Developed interactive applications and games using C# in Unity.",
@@ -187,7 +224,6 @@ const skillDescriptions = {
   "Graphic Design": "Produced visual designs, branding assets, and UI elements for digital projects.",
   "Java": "Built software applications and Android apps using Java and Android Studio.",
 };
-
 
 let popupTimer;
 let activePopupBall = null;
@@ -211,7 +247,7 @@ canvas.addEventListener("dblclick", (event) => {
       if (distance <= body.circleRadius) {
         activePopupBall = body;
         popup.style.display = "block";
-        popup.innerHTML = `<strong>${body.label}</strong><br>${skillDescriptions[body.label] || "No description available."}`;
+        popup.innerHTML = `<strong>${body.label} ${body.stars || ""}</strong><br>${skillDescriptions[body.label] || "No description available."}`;
 
         if (popupTimer) clearTimeout(popupTimer);
         popupTimer = setTimeout(() => {
@@ -315,7 +351,7 @@ Events.on(engine, "afterUpdate", () => {
         stillTimeMap.set(body, now);
       } else {
         const timeStill = now - stillTimeMap.get(body);
-        if (timeStill > 2000) {
+        if (timeStill > 1000) {
           smoothSetAngle(body, 0, 500);
           stillTimeMap.delete(body);
         }
