@@ -7,14 +7,14 @@ window.addEventListener("DOMContentLoaded", () => {
     returnBtn.addEventListener("mouseover", () => {
       returnBtn.style.width = "120px";
       returnBtn.style.transition = "width 0.3s ease"
-      returnBtn.src = "img/return_arrow_ex.png";
+      returnBtn.src = "img/return_red.png";
     });
 
     // Hover out: revert image
     returnBtn.addEventListener("mouseout", () => {
       returnBtn.style.width = "70px";
       returnBtn.style.transition = "width 0.3s ease";
-      returnBtn.src = "img/return_fill.png";
+      returnBtn.src = "img/arrow_nofill.png";
     });
 
     // Click: go back to home page
