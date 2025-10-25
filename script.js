@@ -24,62 +24,76 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
 function setupCopyTooltips(selector) {
   const elements = document.querySelectorAll(selector);
-  let currentTooltip = null;  // tracks currently visible tooltip
-  let hoverTimeout = null;     // tracks hover timeout globally
+  let currentTooltip = null;
+  let hoverTimeout = null;
 
   elements.forEach(el => {
     const tooltip = el.querySelector(".tooltip-text");
-    const textToCopy = el.dataset.copy;
+    const textToCopy = el.dataset.copy;               // may be undefined
+    const originalText = tooltip ? tooltip.textContent : "";
 
-    // Hover behavior
+    // Hover: show original text and track current tooltip
     el.addEventListener("mouseenter", () => {
-      // Hide previous tooltip immediately
+      if (!tooltip) return;
       if (currentTooltip && currentTooltip !== tooltip) {
         currentTooltip.classList.remove("show");
         clearTimeout(hoverTimeout);
       }
-
+      tooltip.textContent = originalText; // ensure correct text on hover
       tooltip.classList.add("show");
       currentTooltip = tooltip;
       clearTimeout(hoverTimeout);
     });
 
-    // Hover out: hide tooltip after 2 seconds
+    // Hover out: hide after 2s
     el.addEventListener("mouseleave", () => {
+      if (!tooltip) return;
       hoverTimeout = setTimeout(() => {
         tooltip.classList.remove("show");
         if (currentTooltip === tooltip) currentTooltip = null;
       }, 2000);
     });
 
-    // Click behavior: copy to clipboard
-    el.addEventListener("click", async () => {
-      clearTimeout(hoverTimeout); // prevent hover timeout from hiding tooltip
-      try {
-        await navigator.clipboard.writeText(textToCopy);
-        tooltip.textContent = "Copied!";
-        tooltip.classList.add("show");
+    // Click: only attempt copy if data-copy exists.
+    el.addEventListener("click", async (event) => {
+      if (!tooltip) return;
+      clearTimeout(hoverTimeout);
 
+      // If there's no data-copy, do nothing special: allow default link behavior
+      // but show the original tooltip briefly for feedback.
+      if (!textToCopy) {
+        tooltip.textContent = originalText;
+        tooltip.classList.add("show");
         setTimeout(() => {
-          tooltip.textContent = textToCopy;
           tooltip.classList.remove("show");
           if (currentTooltip === tooltip) currentTooltip = null;
-        }, 1500);
+        }, 1200);
+        return; // do NOT preventDefault — link will open as normal
+      }
+
+      // For copyable items, prevent navigation and perform copy
+      event.preventDefault();
+      try {
+        await navigator.clipboard.writeText(String(textToCopy));
+        tooltip.textContent = "Copied!";
+        tooltip.classList.add("show");
       } catch (err) {
         tooltip.textContent = "Error!";
         tooltip.classList.add("show");
-        setTimeout(() => {
-          tooltip.textContent = textToCopy;
-          tooltip.classList.remove("show");
-          if (currentTooltip === tooltip) currentTooltip = null;
-        }, 1500);
       }
+
+      // Restore original text
+      setTimeout(() => {
+        tooltip.textContent = originalText;
+        tooltip.classList.remove("show");
+        if (currentTooltip === tooltip) currentTooltip = null;
+      }, 1500);
     });
   });
 }
+
 
 // Apply to all tooltip elements
 setupCopyTooltips(".tooltip");

@@ -1,7 +1,7 @@
-remove skill rating (stars)
-add location
-add single click to open skill explenation
-remove buzz words (passionate)
+remove skill rating (stars) '
+add location '
+add single click to open skill explenation '
+remove buzz words (passionate) 
 get down to business (remove filler content)
 click off skill ball removes text-box
 add animations (skill ball paint splatter on click?/unique cursor?/hability to paint?(creative aspect)
