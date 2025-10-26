@@ -1,8 +1,5 @@
 const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint, Events, Body } = Matter;
 
-// ----------------------
-// Utility: ensure splatter canvas exists
-// ----------------------
 function ensureSplatterCanvas() {
   let sc = document.getElementById("splatterCanvas");
   if (!sc) {
@@ -24,9 +21,6 @@ const splatterCanvas = ensureSplatterCanvas();
 const canvas = document.getElementById("skillsCanvas");
 let sctx = splatterCanvas.getContext("2d");
 
-// ----------------------
-// Resize canvases with DPR support
-// ----------------------
 function resizeCanvases() {
   const dpr = window.devicePixelRatio || 1;
   const w = Math.max(1, Math.floor(window.innerWidth));
@@ -45,7 +39,6 @@ function resizeCanvases() {
   splatterCanvas.width = Math.floor(w * dpr);
   splatterCanvas.height = Math.floor(h * dpr);
 
-  // Re-fetch context because width/height reset it
   sctx = splatterCanvas.getContext("2d");
   if (sctx) sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
@@ -53,15 +46,10 @@ function resizeCanvases() {
 resizeCanvases();
 window.addEventListener("resize", resizeCanvases);
 
-// ----------------------
-// Matter setup
-// ----------------------
 const engine = Engine.create();
 const world = engine.world;
-
-// Adjust gravity as needed
-engine.world.gravity.y = 0.02; // no vertical gravity
-engine.world.gravity.x = 0; // no horizontal gravity
+engine.world.gravity.y = 0.02;
+engine.world.gravity.x = 0;
 
 const render = Render.create({
   canvas: canvas,
@@ -76,9 +64,6 @@ const render = Render.create({
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-// ======================
-// Constants & data
-// ======================
 const footerHeight = 50;
 const wallThickness = 200;
 const skillRadius = 60;
@@ -96,11 +81,26 @@ const skillDescriptions = {
   "3D Modeling": "Created 3D models using Onshape and OpenSCAD, and developed animations (as well as the assets animated) in Blender.",
   "Git": "Managed version control and collaborative development using Git.",
   "MySQL": "Designed databases and wrote queries for data-driven applications using MySQL.",
-  "Graphic Design": "Produced visual designs, branding assets, and UI elements for digital projects (Like the font and other elements on this page!).",
-  "Java": "Built software applications and Android apps using Java and Android Studio.",
+  "Graphic Design": "Produced unique visual designs (like the font on this page!) using programs like gimp, krita, procreate, aseprite and more.",
+  "Java": "Built software applications and Android apps using Java and Android Studio."
 };
 
 const skills = Object.keys(skillDescriptions);
+
+const skillImageMap = {
+  "HTML": "img/skills/html_d.png",
+  "CSS": "img/skills/css_d.png",
+  "JavaScript": "img/skills/js_d.png",
+  "Python": "img/skills/python_d.png",
+  "C++": "img/skills/cpp_d.png",
+  "C#": "img/skills/csharp_d.png",
+  "Unity": "img/skills/unity_d.png",
+  "3D Modeling": "img/skills/blender_d.png",
+  "Git": "img/skills/git_d.png",
+  "MySQL": "img/skills/mysql_d.png",
+  "Graphic Design": "img/skills/gd_d.png",
+  "Java": "img/skills/java_d.png"
+};
 
 const ballColors = [
   "#F16529", "#2965F1", "#F7DF1E", "#3472A6", "#00599C",
@@ -108,14 +108,10 @@ const ballColors = [
   "#E67E22", "#E74C3C"
 ];
 
-// ----------------------
-// invisible walls
-// ----------------------
 function createWalls() {
   const w = window.innerWidth;
   const h = window.innerHeight - footerHeight;
   const opts = { isStatic: true, render: { visible: false } };
-
   return [
     Bodies.rectangle(w / 2, h + wallThickness / 6, w - 2 * sideCutoff, wallThickness, opts),
     Bodies.rectangle(w / 2, topCutoff, w - 2 * sideCutoff, wallThickness, opts),
@@ -126,9 +122,13 @@ function createWalls() {
 let walls = createWalls();
 Composite.add(world, walls);
 
-// ----------------------
-// create balls with black outline
-// ----------------------
+const loadedImages = {};
+for (const [name, src] of Object.entries(skillImageMap)) {
+  const img = new Image();
+  img.src = src;
+  loadedImages[name] = img;
+}
+
 const balls = skills.map((name, i) => {
   const xMin = sideCutoff + skillRadius;
   const xMax = window.innerWidth - sideCutoff - skillRadius;
@@ -143,21 +143,18 @@ const balls = skills.map((name, i) => {
       restitution: 0.7,
       frictionAir: 0.02,
       mass: 5,
-      render: { 
+      render: {
         fillStyle: ballColors[i % ballColors.length],
-        strokeStyle: "#000", // black outline
-        lineWidth: 4
+        strokeStyle: "#000",
+        lineWidth: 0
       },
       label: name,
-      plugin: { lastMotionTime: Date.now() }
+      plugin: { lastMotionTime: Date.now(), flipAngle: 0 }
     }
   );
 });
 Composite.add(world, balls);
 
-// ----------------------
-// mouse/drag control
-// ----------------------
 const mouse = Mouse.create(render.canvas);
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
@@ -189,9 +186,6 @@ Events.on(mouseConstraint, "mousemove", () => {
   }
 });
 
-// ----------------------
-// Smooth straighten function
-// ----------------------
 function smoothSetAngle(body, targetAngle = 0, duration = 500) {
   const startAngle = body.angle;
   const startTime = performance.now();
@@ -206,18 +200,11 @@ function smoothSetAngle(body, targetAngle = 0, duration = 500) {
     Body.setAngle(body, newAngle);
     if (progress < 1) requestAnimationFrame(animate);
   }
-
   requestAnimationFrame(animate);
 }
 
-// ----------------------
-// Straighten text for stationary balls not splattered
-// ----------------------
 const stillTimeMap = new Map();
 
-// ----------------------
-// Splatter
-// ----------------------
 const splatters = new Map();
 function drawSplatterOnCanvas(body) {
   if (splatters.has(body)) return;
@@ -258,7 +245,7 @@ function drawSplatterOnCanvas(body) {
       const sin = Math.sin(-area.angle);
       const tx = cos * (nx - area.ex) - sin * (ny - area.ey);
       const ty = sin * (nx - area.ex) + cos * (ny - area.ey);
-      if ((tx*tx)/((area.rx + radius)*(area.rx + radius)) + 
+      if ((tx*tx)/((area.rx + radius)*(area.rx + radius)) +
           (ty*ty)/((area.ry + radius)*(area.ry + radius)) <= 1) {
         return true;
       }
@@ -312,9 +299,6 @@ function drawSplatterOnCanvas(body) {
   splatters.set(body, true);
 }
 
-// ----------------------
-// Popup + click logic with outline removal and text straighten
-// ----------------------
 const popup = document.getElementById("skillPopup");
 let activePopupBall = null;
 let mouseDownPos = null;
@@ -348,17 +332,16 @@ canvas.addEventListener("mouseup", e => {
     if (Math.sqrt(dx*dx + dy*dy) <= b.circleRadius) { clickedBall = b; break; }
   }
 
-  if (!clickedBall) { 
-    popup.style.display = "none"; 
-    activePopupBall = null; 
-    mouseDownPos = null; 
-    mouseMoved = false; 
-    return; 
+  if (!clickedBall) {
+    popup.style.display = "none";
+    activePopupBall = null;
+    mouseDownPos = null;
+    mouseMoved = false;
+    return;
   }
 
   activePopupBall = clickedBall;
 
-  // remove outline on click
   clickedBall.render.lineWidth = 0;
 
   if (!splatters.has(clickedBall)) {
@@ -367,10 +350,8 @@ canvas.addEventListener("mouseup", e => {
     if (mouseConstraint.body === clickedBall) mouseConstraint.constraint.bodyB = null;
   }
 
-  // straighten text immediately on click
   smoothSetAngle(clickedBall, 0, 500);
 
-  // show popup
   popup.innerHTML = `<strong>${clickedBall.label}</strong><br>${skillDescriptions[clickedBall.label] || "No description available."}`;
   popup.style.display = "block";
 
@@ -385,19 +366,15 @@ canvas.addEventListener("mouseup", e => {
   mouseMoved = false;
 });
 
-// Update popup position each frame
 (function updatePopupPosition(){
   requestAnimationFrame(updatePopupPosition);
   if (activePopupBall){
-    const rect=render.canvas.getBoundingClientRect();
-    popup.style.left=(activePopupBall.position.x + rect.left + 10) + "px";
-    popup.style.top=(activePopupBall.position.y + rect.top + 10) + "px";
+    const rect = render.canvas.getBoundingClientRect();
+    popup.style.left = (activePopupBall.position.x + rect.left + 10) + "px";
+    popup.style.top = (activePopupBall.position.y + rect.top + 10) + "px";
   }
 })();
 
-// ----------------------
-// Handle resize (walls)
-// ----------------------
 window.addEventListener("resize", ()=> {
   resizeCanvases();
   Composite.remove(world, walls);
@@ -405,12 +382,9 @@ window.addEventListener("resize", ()=> {
   Composite.add(world, walls);
 });
 
-// ----------------------
-// Keep bodies on screen (fallback)
-// ----------------------
 setInterval(()=> {
-  const w=window.innerWidth;
-  const h=window.innerHeight;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
   Composite.allBodies(world).forEach(body=>{
     if(!body.position) return;
     if(body.position.y>h+1000||body.position.x<-1000||body.position.x>w+1000){
@@ -420,25 +394,70 @@ setInterval(()=> {
   });
 },3000);
 
-// ----------------------
-// Draw labels and ball outlines
-// ----------------------
+canvas.addEventListener("mousemove", e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  balls.forEach(b => {
+    const dx = b.position.x - mx;
+    const dy = b.position.y - my;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+  });
+});
+
 (function drawLabels(){
-  const ctx=render.context;
+  const ctx = render.context;
   requestAnimationFrame(drawLabels);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font="bold 18px MyFont, sans-serif";
   ctx.fillStyle="#fff";
   ctx.textAlign="center";
   ctx.textBaseline="middle";
+
   balls.forEach(body=>{
+    const img = loadedImages[body.label];
+    const flip = body.plugin.flipAngle;
+    const flipped = flip > Math.PI / 2;
+    const scaleX = Math.cos(flip);
+
     ctx.save();
     ctx.translate(body.position.x, body.position.y);
     ctx.rotate(body.angle);
-    ctx.fillText(body.label,0,0);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, body.circleRadius, 0, Math.PI * 2);
+    ctx.fillStyle = body.render.fillStyle;
+    ctx.fill();
+
+    ctx.scale(scaleX, 1);
+
+    if (!flipped && img) {
+      const size = body.circleRadius * 1.6;
+      const aspect = (img.naturalWidth || img.width) / (img.naturalHeight || img.height || 1);
+      let drawW, drawH;
+      if (aspect > 1) {
+        drawW = size;
+        drawH = size / aspect;
+      } else {
+        drawH = size;
+        drawW = size * aspect;
+      }
+      ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+    } else if (flipped) {
+      ctx.save();
+      if (scaleX < 0) ctx.scale(-1, 1);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 20px MyFont, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(body.label, 0, 0);
+      ctx.restore();
+    }
+
     ctx.restore();
 
-    // draw outline if lineWidth > 0
-    if(body.render.lineWidth > 0){
+    if (body.render.lineWidth > 0) {
       ctx.beginPath();
       ctx.arc(body.position.x, body.position.y, body.circleRadius, 0, Math.PI*2);
       ctx.strokeStyle = body.render.strokeStyle || "#000";
@@ -448,13 +467,10 @@ setInterval(()=> {
   });
 })();
 
-// ----------------------
-// Straighten stationary balls
-// ----------------------
 Events.on(engine, "afterUpdate", () => {
   const now = performance.now();
   balls.forEach(body => {
-    if (splatters.has(body)) return; // skip splattered
+    if (splatters.has(body)) return;
     const speed = Math.sqrt(body.velocity.x**2 + body.velocity.y**2);
     const angularSpeed = Math.abs(body.angularVelocity);
 
