@@ -98,6 +98,16 @@ function setupCopyTooltips(selector) {
 // Apply to all tooltip elements
 setupCopyTooltips(".tooltip");
 
+// Add a class when the slideInRight animation completes so hover transforms work reliably
+document.querySelectorAll('.options h3').forEach(el => {
+  el.addEventListener('animationend', (e) => {
+    // Ensure we're responding to the expected keyframe animation
+    if (e.animationName && e.animationName !== 'slideInRight') return;
+
+    // Add the class (listener fires once per element by specifying { once: true } below)
+    el.classList.add('animation-finished');
+  }, { once: true });
+});
 
 
 

@@ -160,6 +160,42 @@ const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
   constraint: { stiffness: 0.15, damping: 0.15, render: { visible: false } }
 });
+
+let hoveredBall = null;
+
+function checkMouseHover() {
+  const rect = canvas.getBoundingClientRect();
+  const mx = mouse.position.x - rect.left;
+  const my = mouse.position.y - rect.top;
+
+  let newHover = null;
+  for (let b of balls) {
+    const dx = b.position.x - mx;
+    const dy = b.position.y - my;
+    if (Math.sqrt(dx * dx + dy * dy) <= b.circleRadius) {
+      newHover = b;
+      break;
+    }
+  }
+
+  // Mouse entered a new ball
+  if (newHover && newHover !== hoveredBall) {
+    if (hoveredBall) animateFlip(hoveredBall, 0); // Flip old one back
+    animateFlip(newHover, Math.PI);               // Flip new one forward
+    hoveredBall = newHover;
+  }
+
+  // Mouse left all balls
+  if (!newHover && hoveredBall) {
+    animateFlip(hoveredBall, 0);                  // Flip back
+    hoveredBall = null;
+  }
+
+  requestAnimationFrame(checkMouseHover);
+}
+
+requestAnimationFrame(checkMouseHover);
+
 Composite.add(world, mouseConstraint);
 render.mouse = mouse;
 
@@ -202,6 +238,36 @@ function smoothSetAngle(body, targetAngle = 0, duration = 500) {
   }
   requestAnimationFrame(animate);
 }
+
+function animateFlip(body, targetAngle, duration = 600) {
+  // Cancel previous animation if it exists
+  if (body.plugin.flipAnimationFrame) cancelAnimationFrame(body.plugin.flipAnimationFrame);
+
+  const startAngle = body.plugin.flipAngle || 0;
+  const startTime = performance.now();
+
+  function step(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Smooth cubic ease in/out
+    const easeInOut = t => t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    body.plugin.flipAngle = startAngle + (targetAngle - startAngle) * easeInOut(progress);
+
+    if (progress < 1) {
+      body.plugin.flipAnimationFrame = requestAnimationFrame(step);
+    } else {
+      body.plugin.flipAngle = targetAngle; // Snap exactly to target
+      body.plugin.flipAnimationFrame = null;
+    }
+  }
+
+  body.plugin.flipAnimationFrame = requestAnimationFrame(step);
+}
+
 
 const stillTimeMap = new Map();
 
@@ -309,6 +375,7 @@ canvas.addEventListener("mousedown", e => {
   mouseDownPos = { x: e.clientX, y: e.clientY };
   mouseMoved = false;
 });
+
 
 canvas.addEventListener("mousemove", e => {
   if (!mouseDownPos) return;
