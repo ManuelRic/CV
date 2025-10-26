@@ -141,6 +141,7 @@ h2 {
 }
 
 #lang_p {
+    margin-top: 45px;
     text-align: left;
     font-size: 20px;
 }
@@ -219,15 +220,26 @@ h2 {
     margin-bottom: 0px;
 }
 
-.f_stars {
-    text-align: right;
-    color: yellow;
+#skill_images {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 equal columns */
+    gap: 20px; /* space between images */
+    justify-items: center; /* center images in each column */
+    float: left;
+    margin: 2%;
 }
 
-.e_stars {
-    text-align: right;
-    color: rgb(161, 129, 13);
+.skill_img {
+    width: 50px;  /* adjust as needed */
+    height: auto;
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
+
+.skill_img:hover {
+    transform: scale(1.2);
+}
+
 
 footer {
     position: fixed;
