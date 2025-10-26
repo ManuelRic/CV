@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Click: go back to home page
     returnBtn.addEventListener("click", () => {
-      window.location.href = "home_page.html";
+      window.location.href = "index.html";
     });
   }
 });
