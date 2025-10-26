@@ -1,133 +1,119 @@
 @font-face {
-  font-family: 'MyFont';
-  src: url('fonts/Myfont-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    font-family: 'MyFont';
+    src: url('fonts/Myfont-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
 }
 
 body {
-  font-family: 'MyFont', sans-serif;
-  background-image: url("img/white-paper-texture.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-color: #fafafa;
-  color: #333;
+    font-family: 'MyFont', sans-serif;
+    background-image: url("img/white-paper-texture.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-color: #fafafa;
+    color: #333;
 }
 
-/* Ensure canvases never block pointer events */
-#splatterCanvas,
-#skillsCanvas {
-  pointer-events: none;
+#skills_body {
+    overflow: hidden;
 }
-
-/* Layout */
-#skills_body { overflow: hidden; }
 
 .main {
-  margin: 2%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  overflow: hidden;
+    margin: 2%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    overflow: hidden;
 }
 
 .main-left {
-  width: auto;
-  margin-top: 2%;
-  display: flex;
-  flex-direction: column;
-  margin-left: 5%;
-  text-align: center;
-  align-items: center;
+    width: auto;
+    margin-top: 2%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 5%;
+    text-align: center;
+    align-items: center;
 }
 
-/* Headline and photo animations */
 .main-left h1 {
-  font-size: 80px;
-  margin-top: 2%;
-  margin-bottom: 4%;
-  opacity: 0;
-  transform: translateX(-50px);
-  animation: slideInLeft 1s cubic-bezier(.22,1,.36,1) forwards;
-  animation-delay: 0.2s;
+    font-size: 80px;
+    margin-top: 2%;
+    margin-bottom: 4%;
+    opacity: 0;
+    transform: translateX(-50px);
+    animation: slideInLeft 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 0.2s;
 }
 
 #pf_img {
-  display: block;
-  width: 350px;
-  max-width: 100%;
-  height: auto;
-  border-radius: 15px;
-  margin-bottom: 3%;
-  opacity: 0;
-  transform: translateY(50px);
-  animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
-  animation-delay: 0.4s;
+    display: block;
+    width: 350px;
+    max-width: 100%;
+    height: auto;
+    border-radius: 15px;
+    margin-bottom: 3%;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 0.4s;
 }
 
 .main-left h2 {
-  width: fit-content;
-  font-size: 40px;
-  margin-top: 1%;
-  margin-bottom: 1%;
-  margin-left: 2%;
-  opacity: 0;
-  transform: translateX(50px);
-  animation: slideInRight 1s cubic-bezier(.22,1,.36,1) forwards;
-  animation-delay: 0.6s;
+    width: fit-content;
+    font-size: 40px;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 2%;
+    opacity: 0;
+    transform: translateX(50px);
+    animation: slideInRight 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 0.6s;
 }
 
-/* Location */
 #location {
-  font-size: 28px;
-  margin: 2%;
-  margin-bottom: 5%;
+    font-size: 28px;
+    margin: 2%;
+    margin-bottom: 5%;
 }
 
-/* CV button: slide-in then hover scale works */
-#cv_button {
-  font-family: 'MyFont', sans-serif;
-  width: fit-content;
-  margin-top: 25%;
-  font-size: 20px;
-  white-space: nowrap;
-  padding: 12px;
-  cursor: pointer;
-  border: 2px solid #191919;
-  border-radius: 8px;
-  background-color: #4CAF50;
-  color: white;
-
-  /* animation initial values */
-  opacity: 0;
-  transform: translateY(50px);
-  animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
-  animation-delay: 1.2s;
-
-  /* allow hover transforms after animation finishes */
-  transition: transform 0.18s ease, opacity 0.18s ease;
-  will-change: transform, opacity;
+.notname {
+    margin-left: 2%;
+    margin-bottom: 1%;
 }
 
-/* Hover for CV button — include the translate part so transform property remains consistent */
-#cv_button:hover {
-  transform: translateY(0) scale(1.05);
+h1 {
+    font-size: 80px;
+    margin-top: 2%;
+    margin-bottom: 4%;
 }
 
-/* Other text and options */
-.notname { margin-left: 2%; margin-bottom: 1%; }
+h2 {
+    width: fit-content;
+    font-size: 40px;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 2%;
+}
 
-h1 { font-size: 80px; margin-top: 2%; margin-bottom: 4%; }
-h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; margin-left: 2%; }
+#lang_t {
+    font-size: 28px;
+}
+
+#lang_p {
+    margin-top: 45px;
+    text-align: left;
+    font-size: 20px;
+}
+
+.options { 
+    margin: auto; 
+    width: auto; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; }
 
 .options {
   margin: auto;
@@ -149,9 +135,6 @@ h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; mar
   animation-delay: 0.8s;
 }
 
-#lang_t { font-size: 28px; }
-#lang_p { margin-top: 45px; text-align: left; font-size: 20px; }
-
 /* Consolidated h3 rules */
 .options h3 {
   position: relative;
@@ -171,9 +154,7 @@ h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; mar
   /* allow hover scale once animation finishes */
   transition: transform 0.18s ease, opacity 0.18s ease;
   will-change: transform, opacity;
-
   /* make sure heading can sit above canvases */
-  z-index: 2;
 }
 
 /* Hover - include translateX(0) to ensure we don't remove final translation state */
@@ -184,7 +165,7 @@ h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; mar
 
 /* Class added by JS after animation completes — locks final state */
 .options h3.animation-finished {
-  animation: none !important;        /* stop any animation control */
+  animation: none !important; /* stop any animation control */
   transform: translateX(0) !important;
   opacity: 1 !important;
 }
@@ -209,9 +190,59 @@ h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; mar
   transition: width 0.3s ease;
 }
 
-.options h3 a:hover::after { width: 100%; }
+.options h3 a:hover::after {
+  width: 100%;
+}
 
-.options h3:hover { transform: translateX(0) scale(1.05); }
+.options h3:hover {
+  transform: translateX(0) scale(1.05);
+}
+
+/* CV button: slide-in then hover scale works */
+.cv-wrap {
+  display: inline-block; /* necessary for transform to behave nicely */
+  transform: translateY(50px);
+  animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
+  animation-delay: 1.2s;
+  opacity: 0;
+  /* keep wrapper from stealing pointer events from the button */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* button itself only handles hover scale (no sliding translate here) */
+#cv_button {
+  font-family: 'MyFont', sans-serif;
+  width: fit-content;
+  margin-top: 25%;
+  font-size: 20px;
+  white-space: nowrap;
+  padding: 12px;
+  cursor: pointer;
+  border: 2px solid #191919;
+  border-radius: 8px;
+  background-color: #4CAF50;
+  color: white;
+
+  /* don't set translateY here — wrapper handles that */
+  transform: translateY(0);
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  will-change: transform, opacity;
+}
+
+/* hover scales only the button */
+.cv-wrap:hover #cv_button,
+#cv_button:hover {
+  transform: scale(1.05);
+}
+
+/* Class added by JS after animation completes — locks final state */
+#cv_button.animation-finished {
+  animation: none !important; /* stop any animation control */
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+
+
 #timeline {
     margin-top: 0%;
     background-color: #fffa65;
@@ -247,15 +278,15 @@ h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; mar
 
 #skill_images {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    justify-items: center;
+    grid-template-columns: repeat(2, 1fr); /* 2 equal columns */
+    gap: 20px; /* space between images */
+    justify-items: center; /* center images in each column */
     float: left;
     margin: 2%;
 }
 
 .skill_img {
-    width: 50px;
+    width: 50px;  /* adjust as needed */
     height: auto;
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -264,6 +295,7 @@ h2 { width: fit-content; font-size: 40px; margin-top: 1%; margin-bottom: 1%; mar
 .skill_img:hover {
     transform: scale(1.2);
 }
+
 
 footer {
     position: fixed;
@@ -345,6 +377,21 @@ footer p {
     opacity: 1;
 }
 
+#splatterCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -2;
+    pointer-events: none;
+}
+
+#skillsCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
 #skillPopup {
     display: none;
     position: absolute;
@@ -370,7 +417,14 @@ footer p {
     transform: scale(1.2);
 }
 
-/* Keyframes */
-@keyframes slideInLeft { to { opacity: 1; transform: translateX(0); } }
-@keyframes slideInRight { to { opacity: 1; transform: translateX(0); } }
-@keyframes slideInUp { to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInLeft {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInUp {
+    to { opacity: 1; transform: translateY(0); }
+}
