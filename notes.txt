@@ -1,10 +1,7 @@
 remove buzz words (passionate) 
 get down to business (remove filler content)
-click off skill ball removes text-box '
-add animations (skill ball paint splatter on click'/unique cursor?/hability to paint?(creative aspect)
+hability to paint?(creative aspect)
 doodles around the page?
 check that web addapts to all screen sizes
-think about typography
+think about typography + colors (very important!)
 (maybe add splash sfx)
-add what apps i have knowledge with for graphic design (procreate, gimp...)
-maybe instead of the balls, make them the logos of the services? 

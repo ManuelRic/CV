@@ -67,10 +67,6 @@ body {
     margin-top: 1%;
     margin-bottom: 1%;
     margin-left: 2%;
-    opacity: 0;
-    transform: translateX(50px);
-    animation: slideInRight 1s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: 0.6s;
 }
 
 #location {
@@ -82,6 +78,10 @@ body {
 .notname {
     margin-left: 2%;
     margin-bottom: 1%;
+    transform: translateX(-350px);
+    animation: slideInLeft 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 0.8s;
+    animation-fill-mode: forwards;
 }
 
 h1 {
@@ -96,6 +96,10 @@ h2 {
     margin-top: 1%;
     margin-bottom: 1%;
     margin-left: 2%;
+    opacity: 0;
+    transform: translateX(50px);
+    animation: slideInRight 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 0.6s;
 }
 
 #lang_t {
@@ -220,7 +224,7 @@ h2 {
   cursor: pointer;
   border: 2px solid #191919;
   border-radius: 8px;
-  background-color: #4CAF50;
+  background-color: #d3582b;
   color: white;
 
   /* don't set translateY here — wrapper handles that */
@@ -253,6 +257,10 @@ h2 {
     text-align: center;
     transform: rotate(-2deg);
     margin-right: 6%;
+    transform: translate(0px, 50px);
+    opacity: 0;
+    animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 1.5s;
 }
 
 #timeline p {
@@ -266,6 +274,11 @@ h2 {
 
 .description {
     margin: 2%;
+    opacity: 0;
+    transform: translateX(35px);
+    animation: slideInRight 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 1.3s;
+    animation-fill-mode: forwards;
 }
 
 #whoIam p {
@@ -313,7 +326,7 @@ footer {
     opacity: 0;
     transform: translateY(20px);
     animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: 1.4s;
+    animation-delay: 1.7s;
 }
 
 footer p {
