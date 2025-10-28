@@ -276,15 +276,14 @@ h2 {
   width: 320px;
   flex: 0 0 320px;
   text-align: center;
-  margin: 0;
+  margin-right: 2%;
+
 }
 
 #stickynote {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 8px;
-  z-index: 1;
 }
 
 /* Notes positioned on top of sticky note */
