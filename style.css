@@ -14,6 +14,7 @@ body {
     background-attachment: fixed;
     background-color: #fafafa;
     color: #333;
+    z-index: -3;
 }
 
 #skills_body {
@@ -110,6 +111,15 @@ h2 {
     margin-top: 45px;
     text-align: left;
     font-size: 20px;
+}
+
+#skill_tip {
+    font-size: 22px;
+    margin-top: 0px;
+    margin-left: 2%;
+    opacity: 0;
+    animation: fadeInOut 8s ease-in-out forwards;
+    animation-delay: 1s;
 }
 
 .options { 
@@ -246,48 +256,94 @@ h2 {
   opacity: 1 !important;
 }
 
+.about-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+  margin-left: 5%;
+  flex-wrap: wrap; /* responsive fallback */
+}
+
+.about-row .description {
+  flex: 1 1 55%;
+  min-width: 300px;
+  max-width: 900px;
+}
 
 #timeline {
-    margin-top: 0%;
-    background-color: #fffa65;
-    border-radius: 12px;
-    box-shadow: 4px 4px 15px rgba(0,0,0,0.3);
-    width: fit-content;
-    float: right;
-    text-align: center;
-    transform: rotate(-2deg);
-    margin-right: 6%;
-    transform: translate(0px, 50px);
-    opacity: 0;
-    animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: 1.5s;
+  position: relative;
+  width: 320px;
+  flex: 0 0 320px;
+  text-align: center;
+  margin: 0;
 }
 
-#timeline p {
-    font-size: 25px;
-    margin: 20px 10px 10px 10px;
+#stickynote {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  z-index: 1;
 }
 
-.year {
-    font-size: 15px;
+/* Notes positioned on top of sticky note */
+#timeline .note {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  text-align: center;
+  z-index: 2;
+  color: #222;
+  background: transparent;
+  margin: 0;
+  font-size: 18px;
+  white-space: nowrap;
 }
 
-.description {
-    margin: 2%;
-    opacity: 0;
-    transform: translateX(35px);
-    animation: slideInRight 1s cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: 1.3s;
-    animation-fill-mode: forwards;
+/* Adjust vertical positions — tweak to fit your sticky note image */
+#timeline .note:nth-of-type(1) { top: 25%; }
+#timeline .note:nth-of-type(2) { top: 35%; }
+#timeline .note:nth-of-type(3) { top: 45%; }
+#timeline .note:nth-of-type(4) { top: 55%; }
+#timeline .note:nth-of-type(5) { top: 65%; }
+#timeline .note:nth-of-type(6) { top: 75%; }
+#timeline .note:nth-of-type(7) { top: 85%; }
+
+#timeline .year {
+  font-size: 14px;
+  color: #444;
+  margin-left: 4px;
+}
+
+/* RESPONSIVE: Stack vertically on smaller screens */
+@media (max-width: 1000px) {
+  .about-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .about-row .description {
+    max-width: 100%;
+  }
+
+  #timeline {
+    margin-top: 30px;
+    width: 280px;
+  }
+
+  #timeline .note {
+    white-space: normal;
+  }
 }
 
 #whoIam p {
     width: fit-content;
     color: #242424;
-    font-size: 22px;
-    margin-right: 28%;
-    margin-bottom: 0px;
+    font-size: 26px;
 }
+
 
 #skill_images {
     display: grid;
@@ -441,3 +497,11 @@ footer p {
 @keyframes slideInUp {
     to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    25% { opacity: 1; }   
+    80% { opacity: 1; }   
+    100% { opacity: 0; }    
+}
+

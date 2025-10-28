@@ -5,3 +5,5 @@ doodles around the page?
 check that web addapts to all screen sizes
 think about typography + colors (very important!)
 (maybe add splash sfx)
+add text to indicate balls are interactable (throwable)
+fix about me page (margins and composition + animations)

@@ -1,66 +1,74 @@
 <!DOCTYPE html>
 <html lang="en" translate="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Me</title>
-    <link rel="stylesheet" href="style.css" />
-    <link rel="icon" type="image/png" href="img/favicontest.png">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Me</title>
+  <link rel="icon" type="image/png" href="img/favicontest.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1 class="notname">Hi!</h1>
-    <img id="return" src="img/arrow_nofill.png" alt="Return to home page">
+  <h1 class="notname">Hi!</h1>
+  <img id="return" src="img/arrow_nofill.png" alt="Return to home page">
 
-    <h2>A bit about me:</h2>
-    <div id="timeline">
-            <p>MET <span class="year">(2011 - 2021)</span></p>
-            <p>&#8595</p>
-            <p>SEK Levante <span class="year">(2021 - 2022)</span></p>
-            <p>&#8595</p>
-            <p>UPV <span class="year">(2022 - present)</span></p>
-            <p>&#8595</p>
-            <p>NTNU <span class="year">(2025 - present)</span></p>
-        </div>
+  <h2>A bit about me:</h2>
+
+  <!-- New flex row for description + timeline -->
+  <div class="about-row">
+    <!-- LEFT SIDE: Description -->
     <div class="description">
-        
-        <div id="whoIam">
-            <br>
-            <p>
-                I spent ten years studying in Panama at the Metropolitan School of Panama (MET), where I began the IB program. Later, I moved back to Spain to complete the program at SEK Levante.
-            </p>
-            <p>
-                I’m currently studying Technology and Multimedia at the Polytechnic University of Valencia (UPV) and completing a semester abroad through ERASMUS at the Norwegian University of Science and Technology (NTNU).
-            </p>
-            <p>
-                My interests lie in full-stack and software development, game creation (including VR), and 2D/3D design — areas where I can combine creativity and technology.
-            </p>
-            <p>
-                Outside academics, I enjoy outdoor activities like rock climbing, kayaking, and rugby, where I served as team captain during the club’s early years. I’ve always been drawn to art — starting with hands-on forms and later digital — and that mix of creativity and logic naturally led me to this field.
-            </p>
-        </div>
+      <div id="whoIam">
+        <br>
+        <p>
+          I spent ten years in Panama studying at the Metropolitan School of Panama (MET), where I began the IB program, later completing it at SEK Levante in Spain.
+        </p>
+        <p>
+          I’m currently studying Technology and Multimedia at the Polytechnic University of Valencia (UPV) and completing a semester abroad through ERASMUS at the Norwegian University of Science and Technology (NTNU).
+        </p>
+        <p>
+          My interests lie in full-stack and software development, game creation (including VR), and 2D/3D design — areas where I can combine creativity and technology.
+        </p>
+        <p>
+          Outside academics, I enjoy outdoor activities like rock climbing, kayaking, and rugby, where I served as team captain during the club’s early years. I’ve always been drawn to art — starting with hands-on forms and later digital — and that mix of creativity and logic naturally led me to this field.
+        </p>
+      </div>
     </div>
-    <footer>
-        <p>Manuel Ricart. All rights reserved.</p>
-        <div class="contacts">
-            <a id="gmail_link" class="tooltip" data-copy="manuel.ricart.soler@gmail.com">
-                <img class="logos" src="img/Gmail_icon.png" alt="Gmail">
-                <span class="tooltip-text">manuel.ricart.soler@gmail.com</span>
-            </a>
 
-            <a id="phone_link" class="tooltip" data-copy="+34 644 08 43 11">
-                <img id="phone_logo" class="logos" src="img/phone_logo.png" alt="Telephone">
-                <span class="tooltip-text">+34 644 08 43 11</span>
-            </a>
-            
-            <a class="tooltip" href="www.linkedin.com/in/manuel-ricart-soler-747b86273" target="_blank">
-                <img class="logos" src="img/LinkedIn_logo_initials.png" alt="LinkedIn">
-                <span class="tooltip-text">Open!</span>
+    <!-- RIGHT SIDE: Sticky Note Timeline -->
+    <div id="timeline">
+      <img id="stickynote" src="img/stickynote.png" alt="Sticky note background">
+      
+      <!-- Overlay text -->
+      <p class="note">MET <span class="year">(2011 - 2021)</span></p>
+      <p class="note">&#8595;</p>
+      <p class="note">SEK Levante <span class="year">(2021 - 2022)</span></p>
+      <p class="note">&#8595;</p>
+      <p class="note">UPV <span class="year">(2022 - present)</span></p>
+      <p class="note">&#8595;</p>
+      <p class="note">NTNU <span class="year">(2025 - present)</span></p>
+    </div>
+  </div>
 
-            </a>
+  <footer>
+    <p>Manuel Ricart</p>
+    <div class="contacts">
+      <a id="gmail_link" class="tooltip" data-copy="manuel.ricart.soler@gmail.com">
+        <img class="logos" src="img/Gmail_icon.png" alt="Gmail">
+        <span class="tooltip-text">manuel.ricart.soler@gmail.com</span>
+      </a>
 
-        </div>
-    </footer>
-    <script src="script.js"></script>
+      <a id="phone_link" class="tooltip" data-copy="+34 644 08 43 11">
+        <img id="phone_logo" class="logos" src="img/phone_logo.png" alt="Telephone">
+        <span class="tooltip-text">+34 644 08 43 11</span>
+      </a>
+
+      <a class="tooltip" href="https://www.linkedin.com/in/manuel-ricart-soler-747b86273" target="_blank">
+        <img class="logos" src="img/LinkedIn_logo_initials.png" alt="LinkedIn">
+        <span class="tooltip-text">Open!</span>
+      </a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
