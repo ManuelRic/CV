@@ -21,7 +21,7 @@ body {
     z-index: -3;
     -ms-overflow-style: none;  /* hides scrollbar in IE/Edge */
     scrollbar-width: none;     /* hides scrollbar in Firefox */
-    margin-bottom: 3%;
+    margin-bottom: 5%;
 }
 
 #skills_body {
@@ -29,7 +29,6 @@ body {
 }
 
 .main {
-  margin-top: 0;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
