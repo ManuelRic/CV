@@ -5,6 +5,10 @@
     font-style: normal;
 }
 
+body::-webkit-scrollbar {
+  display: none; /* hides scrollbar */
+}
+
 body {
     font-family: 'MyFont', sans-serif;
     background-image: url("img/white-paper-texture.jpg");
@@ -15,6 +19,8 @@ body {
     background-color: #fafafa;
     color: #333;
     z-index: -3;
+    -ms-overflow-style: none;  /* hides scrollbar in IE/Edge */
+    scrollbar-width: none;     /* hides scrollbar in Firefox */
 }
 
 #skills_body {
@@ -22,7 +28,6 @@ body {
 }
 
 .main {
-    margin: 2%;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -34,7 +39,7 @@ body {
     margin-top: 2%;
     display: flex;
     flex-direction: column;
-    margin-left: 5%;
+    margin-left: 10%;
     text-align: center;
     align-items: center;
 }
@@ -107,7 +112,7 @@ h2 {
 }
 
 #lang_p {
-    margin-top: 45px;
+    margin-top: 60px;
     text-align: left;
     font-size: 20px;
 }
@@ -121,13 +126,6 @@ h2 {
     animation-delay: 1s;
 }
 
-.options { 
-    margin: auto; 
-    width: auto; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; }
-
 .options {
   margin: auto;
   width: auto;
@@ -139,9 +137,10 @@ h2 {
 .options p {
   font-weight: bold;
   text-align: left;
+  margin-top: 27%;
+  margin-bottom: 0;
   width: 400px;
   font-size: 30px;
-  margin-bottom: 0;
   opacity: 0;
   transform: translateX(-50px);
   animation: slideInLeft 1s cubic-bezier(.22,1,.36,1) forwards;
@@ -226,7 +225,7 @@ h2 {
 #cv_button {
   font-family: 'MyFont', sans-serif;
   width: fit-content;
-  margin-top: 25%;
+  margin-top: 20%;
   font-size: 20px;
   white-space: nowrap;
   padding: 12px;
