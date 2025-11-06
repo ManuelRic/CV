@@ -5,6 +5,15 @@
     font-style: normal;
 }
 
+html, body {
+  overflow: auto; /* or scroll if needed */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 body::-webkit-scrollbar {
   display: none; /* hides scrollbar */
 }
