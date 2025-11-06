@@ -51,7 +51,7 @@ body {
 
 #pf_img {
     display: block;
-    width: 350px;
+    width: 250px;
     max-width: 100%;
     height: auto;
     border-radius: 15px;
@@ -234,7 +234,7 @@ h2 {
   cursor: pointer;
   border: 2px solid #191919;
   border-radius: 8px;
-  background-color: #d3582b;
+  background-color: #d32b31;
   color: white;
 
   /* don't set translateY here — wrapper handles that */
@@ -246,7 +246,7 @@ h2 {
 /* hover scales only the button */
 .cv-wrap:hover #cv_button,
 #cv_button:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 /* Class added by JS after animation completes — locks final state */
@@ -255,6 +255,27 @@ h2 {
   transform: translateY(0) !important;
   opacity: 1 !important;
 }
+
+#location_icon {
+    display: inline-block;
+    font-size: 2rem;
+    transition: 
+      transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      filter 0.15s ease,
+      text-shadow 0.15s ease;
+    transform-origin: center bottom; /* makes transform pivot from bottom point */
+  }
+
+  #location_icon:hover {
+    transform: scaleY(0.85) scaleX(1.1) translateY(2px); /* squish down slightly */
+    filter: brightness(0.9); /* make it look pressed */
+    text-shadow: 0 1px 0 #00000033; /* subtle depth shadow */
+  }
+
+  /* Optional: small “bounce back” animation on release */
+  #location_icon:active {
+    transform: scale(0.95) translateY(3px);
+  }
 
 .about-row {
   display: flex;
