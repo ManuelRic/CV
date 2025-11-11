@@ -419,6 +419,7 @@ footer p {
 }
 
 .contacts {
+    margin-right: 2.5%;
     display: flex;
     gap: 25px;
 }
@@ -444,6 +445,7 @@ footer p {
 }
 
 .tooltip {
+  margin-right: 15%;
     position: relative;
     display: inline-block;
     cursor: pointer;
