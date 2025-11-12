@@ -108,6 +108,3 @@ document.querySelectorAll('.options h3').forEach(el => {
     el.classList.add('animation-finished');
   }, { once: true });
 });
-
-
-
