@@ -113,7 +113,7 @@ document.querySelectorAll('.options h3').forEach(el => {
 window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("location_icon").classList.add("animate");
-  }, 4500); // 4.5 second delay
+  }, 5500); // 4.5 second delay
 });
 
 
@@ -135,25 +135,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearAndReflow() {
       dot.style.animation = 'none';
       trunk.style.animation = 'none';
-      // force reflow so next animation starts freshly
-      void dot.offsetWidth;
+      void dot.offsetWidth; // force reflow
     }
 
     function playForward() {
-      // cancel a running reverse
       if (reversePlaying) {
         reversePlaying = false;
         clearAndReflow();
       }
-
       reverseQueued = false;
       forwardPlaying = true;
 
-      // start forward and keep final state with 'forwards'
       dot.style.animation = `moveUp ${DURATION}ms ease-in-out forwards`;
       trunk.style.animation = `moveTrunk ${DURATION}ms ease-in-out forwards`;
 
-      // when forward ends, either trigger queued reverse or remain at 100%
       dot.addEventListener('animationend', function onFwdEnd() {
         forwardPlaying = false;
         dot.removeEventListener('animationend', onFwdEnd);
@@ -161,48 +156,40 @@ document.addEventListener('DOMContentLoaded', () => {
           reverseQueued = false;
           playReverse();
         }
-        // otherwise leave the element at final keyframe (forwards)
       }, { once: true });
     }
 
     function playReverse() {
-      // if forward is still running, just queue reverse
       if (forwardPlaying) {
         reverseQueued = true;
         return;
       }
-      // if already reversing, do nothing
       if (reversePlaying) return;
 
       reversePlaying = true;
       clearAndReflow();
 
-      // play the same keyframes in reverse and keep initial state with 'forwards'
       dot.style.animation = `moveUp ${DURATION}ms ease-in-out reverse forwards`;
       trunk.style.animation = `moveTrunk ${DURATION}ms ease-in-out reverse forwards`;
 
       dot.addEventListener('animationend', function onRevEnd() {
         reversePlaying = false;
         dot.removeEventListener('animationend', onRevEnd);
-        // clear inline animations so next hover starts fresh
         dot.style.animation = '';
         trunk.style.animation = '';
       }, { once: true });
     }
 
-    // event wiring
-    container.addEventListener('mouseenter', () => {
-      // immediately play forward (cancel reverse if happening)
-      playForward();
+    // Hover events
+    container.addEventListener('mouseenter', playForward);
+    container.addEventListener('mouseleave', () => {
+      if (forwardPlaying) reverseQueued = true;
+      else playReverse();
     });
 
-    container.addEventListener('mouseleave', () => {
-      // if forward is running, queue the reverse, otherwise reverse now
-      if (forwardPlaying) {
-        reverseQueued = true;
-      } else {
-        playReverse();
-      }
-    });
+    // Animate on load
+    setTimeout(playForward, 1500);
+    // Optional: reverse after a delay to start floating effect
+    setTimeout(playReverse, 2500); // 500ms pause at the top
   });
 });
