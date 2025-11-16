@@ -12,7 +12,6 @@ function ensureSplatterCanvas() {
     sc.style.left = "0";
     sc.style.top = "0";
     sc.style.pointerEvents = "none";
-    sc.style.zIndex = "0";
   }
   return sc;
 }
@@ -113,10 +112,10 @@ function createWalls() {
   const h = window.innerHeight - footerHeight;
   const opts = { isStatic: true, render: { visible: false } };
   return [
-    Bodies.rectangle(w / 2, h + wallThickness / 6, w - 2 * sideCutoff, wallThickness, opts),
-    Bodies.rectangle(w / 2, topCutoff, w - 2 * sideCutoff, wallThickness, opts),
-    Bodies.rectangle(-wallThickness / 2 + sideCutoff, h / 2, wallThickness, h, opts),
-    Bodies.rectangle(w + wallThickness / 2 - sideCutoff, h / 2, wallThickness, h, opts)
+    Bodies.rectangle(w / 2, h + wallThickness / 6 - 100, w - 2 * sideCutoff, wallThickness, opts), //bottom wall
+    Bodies.rectangle(w / 2, topCutoff, w - 2 * sideCutoff, wallThickness, opts), //top wall
+    Bodies.rectangle(-wallThickness / 2 + sideCutoff, h / 2, wallThickness, h, opts), //left wall
+    Bodies.rectangle(w + wallThickness / 2 - sideCutoff, h / 2, wallThickness, h, opts) //right wall
   ];
 }
 let walls = createWalls();
@@ -285,8 +284,8 @@ function drawSplatterOnCanvas(body) {
   const color = splatterColors[body.label] || "#000";
 
   const droplets = [];
-  const numDroplets = 20 + Math.floor(Math.random() * 20);
-  const maxDist = skillRadius * 1.8;
+  const numDroplets = 15 + Math.floor(Math.random() * 15);
+  const maxDist = skillRadius * 5;
   const stretchedAreas = [];
 
   for (let i = 0; i < numDroplets; i++) {
@@ -355,7 +354,7 @@ function drawSplatterOnCanvas(body) {
 
     sctx.beginPath();
     sctx.fillStyle = color;
-    sctx.arc(x, y, skillRadius * 0.6 * eased, 0, Math.PI * 2);
+    sctx.arc(x, y, body.circleRadius * eased, 0, Math.PI * 2);
     sctx.fill();
 
     if (progress < 1) requestAnimationFrame(animate);
@@ -412,6 +411,9 @@ canvas.addEventListener("mouseup", e => {
   clickedBall.render.lineWidth = 0;
 
   if (!splatters.has(clickedBall)) {
+    Body.scale(clickedBall, 0.9, 0.9);
+    clickedBall.circleRadius *= 0.9;
+
     Body.setStatic(clickedBall, true);
     drawSplatterOnCanvas(clickedBall);
     if (mouseConstraint.body === clickedBall) mouseConstraint.constraint.bodyB = null;

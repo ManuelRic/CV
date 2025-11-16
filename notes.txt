@@ -1,7 +1,8 @@
 hability to paint?(creative aspect)
-doodles around the page?
+doodles around the page? rocket flying around? (maybe w/ sfx?)
 check that web addapts to all screen sizes
 think about typography + colors (very important!)
 (maybe add splash sfx)
-change cv (remove data)
 add more interactables
+make it seem as if it splashes against the wall
+rotating sticky note (need two imgs so the pin stays in place, only note rotates)

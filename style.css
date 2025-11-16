@@ -26,7 +26,7 @@ body {
     background-attachment: fixed;
     background-color: #fff4f4;
     color: #333;
-    z-index: -3;
+    z-index: 0;
     -ms-overflow-style: none;  /* hides scrollbar in IE/Edge */
     scrollbar-width: none;     /* hides scrollbar in Firefox */
     margin-bottom: 5%;
@@ -271,6 +271,7 @@ h2 {
 .red_txt{
   color: #d32b31;
 }
+
 #location_icon {
     display: inline-block;
     font-size: 2rem;
@@ -282,15 +283,31 @@ h2 {
   }
 
   #location_icon:hover {
+    animation: bounce;
     transform: scaleY(0.85) scaleX(1.1) translateY(2px); /* squish down slightly */
     filter: brightness(0.9); /* make it look pressed */
     text-shadow: 0 1px 0 #00000033; /* subtle depth shadow */
   }
 
-  /* Optional: small “bounce back” animation on release */
-  #location_icon:active {
-    transform: scale(0.95) translateY(3px);
+#location_icon.animate {
+  animation: bounce 0.3s ease;
+}
+
+@keyframes bounce {
+  0% {
+    transform: scaleY(1) scaleX(1) translateY(0);
+    filter: brightness(1);
   }
+  50% {
+    transform: scaleY(0.85) scaleX(1.1) translateY(2px);
+    filter: brightness(0.9);
+    text-shadow: 0 1px 0 #00000033;
+  }
+  100% {
+    transform: scaleY(1) scaleX(1) translateY(0);
+    filter: brightness(1);
+  }
+}
 
 .about-row {
   display: flex;
@@ -320,6 +337,7 @@ h2 {
   display: block;
   width: 100%;
   height: auto;
+  filter: drop-shadow(8px 38px 6px rgba(0,0,0,0.5));
 }
 
 /* Notes positioned on top of sticky note */
@@ -350,6 +368,14 @@ h2 {
   font-size: 14px;
   color: #444;
   margin-left: 4px;
+}
+ 
+#timeline {
+  transition: transform 0.5s ease-in-out; /* duration + easing */
+}
+
+#timeline:hover {
+  transform: rotate(1deg);
 }
 
 /* RESPONSIVE: Stack vertically on smaller screens */
@@ -418,6 +444,7 @@ footer {
     transform: translateY(20px);
     animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
     animation-delay: 1.7s;
+    z-index: 0;
 }
 
 footer p {
@@ -436,6 +463,8 @@ footer p {
     height: auto;
     transition: transform 0.2s ease, opacity 0.2s ease;
     opacity: 0.8;
+    filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.5));
+
 }
 
 .logos:hover {
@@ -473,7 +502,7 @@ footer p {
     transition: opacity 0.3s;
     font-size: 20px;
     white-space: nowrap;
-    z-index: 10;
+    z-index: 1;
 }
 
 .tooltip:hover .tooltip-text,
@@ -487,7 +516,7 @@ footer p {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: -2;
+    z-index: -1;
     pointer-events: none;
 }
 
@@ -506,7 +535,7 @@ footer p {
     padding: 15px;
     border-radius: 8px;
     max-width: 300px;
-    z-index: 2;
+    z-index: 1;
 }
 
 #return {
@@ -522,6 +551,73 @@ footer p {
 #return:hover {
     transform: scale(1.2);
 }
+
+
+/*Moving I*/
+.letter-container {
+  position: relative;
+  display: inline-block;
+  font-size: 1.1em; /* relative to h1 */
+}
+
+.dot_trunk,
+.trunk_dot {
+  position: absolute;
+  pointer-events: none; /* so hover works on dot */
+}
+
+/* size & position relative to container */
+.dot_trunk {
+  width: 0.3em;
+  height: 0.43em;
+  transform: translate(-0.07em, -0.87em);
+  z-index: 3;
+  background-color: #fff4f4;
+}
+
+.trunk_dot {
+  width: 0.3em;
+  height: 0.25em;
+  transform: translate(-0.07em, -0.5em);
+  z-index: 1;
+  background-color: #fff4f4;
+}
+
+/* moving dot */
+.dot {
+  position: absolute;
+  transform: translate(-0.07em, -0.9em) rotate(180deg);
+  z-index: 2;
+}
+
+/* optional trunk if you want visual trunk */
+.trunk {
+  position: absolute;
+  transform: translate(-0.07em, -0.8em);
+  z-index: 0;
+}
+
+@keyframes moveUp {
+  0%   { transform: translate(-0.07em, -0.90em) rotate(180deg); }
+  20%  { transform: translate(-0.12em, -0.95em) rotate(180deg); }
+  40%  { transform: translate( -0.02em, -1.00em) rotate(180deg); }
+  60%  { transform: translate(-0.1em, -1.05em) rotate(180deg); }
+  80%  { transform: translate( 0.00em, -1.08em) rotate(180deg); }
+  100% { transform: translate(-0.07em, -1.10em) rotate(180deg); }
+}
+
+@keyframes moveTrunk {
+  0%   { transform: translate(-0.07em, -0.85em); }
+  20%  { transform: translate(-0.12em, -0.91em); }
+  40%  { transform: translate( -0.02em, -0.96em); }
+  60%  { transform: translate(-0.1em, -1.01em); }
+  80%  { transform: translate( 0.0em, -1.04em); }
+  100% { transform: translate(-0.07em, -1.06em); }
+}
+
+
+
+/*Keyframes for animations*/
 
 @keyframes slideInLeft {
     to { opacity: 1; transform: translateX(0); }
