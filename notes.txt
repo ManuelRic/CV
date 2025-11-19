@@ -6,3 +6,4 @@ think about typography + colors (very important!)
 add more interactables
 make it seem as if it splashes against the wall
 rotating sticky note (need two imgs so the pin stays in place, only note rotates)
+fix div for i letter !!!

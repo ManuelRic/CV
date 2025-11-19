@@ -570,7 +570,7 @@ footer p {
 .dot_trunk {
   width: 0.3em;
   height: 0.43em;
-  transform: translate(-0.07em, -0.87em);
+  transform: translate(-0.07em, -0.85em);
   z-index: 3;
   background-color: #fff4f4;
 }
