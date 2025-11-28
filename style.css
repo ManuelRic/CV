@@ -176,18 +176,16 @@ h2 {
   /* allow hover scale once animation finishes */
   transition: transform 0.18s ease, opacity 0.18s ease;
   will-change: transform, opacity;
-  /* make sure heading can sit above canvases */
 }
 
-/* Hover - include translateX(0) to ensure we don't remove final translation state */
-.options h3:hover,
-.options h3 a:hover {
+/* Hover - scale h3 */
+.options h3:hover {
   transform: translateX(0) scale(1.05);
 }
 
 /* Class added by JS after animation completes — locks final state */
 .options h3.animation-finished {
-  animation: none !important; /* stop any animation control */
+  animation: none !important;
   transform: translateX(0) !important;
   opacity: 1 !important;
 }
@@ -198,6 +196,13 @@ h2 {
   text-decoration: none;
   display: inline-block;
   position: relative;
+  transition: color 0.18s ease;
+  padding-bottom: 4px; /* ensures hover includes underline area */
+}
+
+/* Hover effect for text & underline when h3 is hovered */
+.options h3:hover a {
+  color: #d32b31;
 }
 
 /* Underline effect */
@@ -205,24 +210,24 @@ h2 {
   content: '';
   position: absolute;
   left: 0;
-  bottom: -5px;
+  bottom: 0; /* align with bottom of link */
   width: 0%;
   height: 4px;
   background-color: #d32b31;
   transition: width 0.3s ease;
+  pointer-events: none; /* ensures underline is not hoverable */
 }
 
-.options h3 a:hover::after {
+/* Animate underline when h3 is hovered */
+.options h3:hover a::after {
   width: 100%;
 }
 
-.options h3:hover {
-  transform: translateX(0) scale(1.05);
-}
-
+/* Optional inner link hover style (if used elsewhere) */
 .link-inner:hover {
   color: #d32b31;
 }
+
 
 /* CV button: slide-in then hover scale works */
 .cv-wrap {

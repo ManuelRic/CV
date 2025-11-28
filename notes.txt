@@ -4,6 +4,8 @@ check that web addapts to all screen sizes
 think about typography + colors (very important!)
 (maybe add splash sfx)
 add more interactables
-make it seem as if it splashes against the wall
 rotating sticky note (need two imgs so the pin stays in place, only note rotates)
-fix div for i letter !!!
+add previous projects (TTS Website, think about others or create others)
+
+future:
+ -change orbs to 3d slasheble (like fruit ninja)
