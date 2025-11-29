@@ -563,6 +563,7 @@ footer p {
   position: relative;
   display: inline-block;
   font-size: 1.1em; /* relative to h1 */
+  z-index: -1;
 }
 
 .dot_trunk,
