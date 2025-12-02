@@ -644,3 +644,170 @@ footer p {
     100% { opacity: 0; }    
 }
 
+@media (max-width: 992px) {
+
+  .main {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .main-left {
+    margin-left: 0;
+  }
+
+  .main-left h1 {
+    font-size: 60px;
+  }
+
+  .main-left h2 {
+    font-size: 32px;
+  }
+
+  #pf_img {
+    width: 200px;
+  }
+
+  .options p {
+    width: 100%;
+    text-align: center;
+  }
+
+  .options h3 {
+    font-size: 36px;
+  }
+
+  .about-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #timeline {
+    margin-top: 30px;
+    width: 260px;
+  }
+
+  /* Footer stays visible but smaller */
+  footer {
+    height: 45px;
+    font-size: 14px;
+  }
+}
+
+
+/* =======================================
+   RESPONSIVE — MOBILE (max-width: 768px)
+   ======================================= */
+@media (max-width: 768px) {
+
+  body {
+    font-size: 14px;
+  }
+
+  .main {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .main-left h1 {
+    font-size: 48px;
+  }
+
+  .main-left h2 {
+    font-size: 28px;
+  }
+
+  #pf_img {
+    width: 170px;
+  }
+
+  #location {
+    font-size: 22px;
+  }
+
+  /* Stack main-left above options */
+  .options {
+    width: 100%;
+    margin-top: 8%;
+  }
+
+  .options p {
+    font-size: 24px;
+    text-align: center;
+    width: 90%;
+  }
+
+  .options h3 {
+    font-size: 32px;
+  }
+
+  /* Sticky note moves BELOW text */
+  .about-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #timeline {
+    order: 2;       /* forces it BELOW the text */
+    width: 230px;
+    margin-top: 40px;
+  }
+
+  /* One-column skill grid */
+  #skill_images {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .skill_img {
+    width: 40px;
+  }
+
+  /* Footer becomes STATIC (no covering content) */
+  footer {
+    position: static;
+    height: 45px;
+    margin-top: 30px;
+  }
+}
+
+
+/* =======================================
+   SMALL MOBILE (max-width: 480px)
+   ======================================= */
+@media (max-width: 480px) {
+
+  .main-left h1 {
+    font-size: 38px;
+  }
+
+  .main-left h2 {
+    font-size: 24px;
+  }
+
+  #pf_img {
+    width: 140px;
+  }
+
+  #timeline {
+    width: 200px;
+  }
+
+  .options h3 {
+    font-size: 28px;
+  }
+
+  .options p {
+    font-size: 20px;
+  }
+
+  .skill_img {
+    width: 34px;
+  }
+
+  footer {
+    font-size: 12px;
+    height: 40px;
+  }
+}
