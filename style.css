@@ -6,7 +6,6 @@
 }
 
 body {
-    min-height: 100vh;
     font-family: 'MyFont', sans-serif;
     background-color: #fff4f4;
     color: #333;
@@ -26,7 +25,7 @@ body {
 
 .main-left {
     width: auto;
-    margin-top: 2%;
+    margin: auto;
     display: flex;
     flex-direction: column;
     margin-left: 10%;
@@ -128,7 +127,6 @@ h2 {
 .options p {
   font-weight: bold;
   text-align: left;
-  margin-top: 27%;
   margin-bottom: 0;
   width: 400px;
   font-size: 30px;
@@ -226,7 +224,7 @@ h2 {
 #cv_button {
   font-family: 'MyFont', sans-serif;
   width: fit-content;
-  margin-top: 20px;
+  margin-top: 40px;
   font-size: 20px;
   white-space: nowrap;
   padding: 12px;
@@ -235,6 +233,8 @@ h2 {
   border-radius: 8px;
   background-color: #d32b31;
   color: white;
+  transition: transform 0.18s ease;
+  transform-origin: center;
 }
 
 /* hover scales only the button */
@@ -496,6 +496,7 @@ footer p {
     top: 20px;
     right: 20px;
     transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 #return:hover {
