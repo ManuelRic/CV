@@ -5,31 +5,12 @@
     font-style: normal;
 }
 
-html, body {
-  overflow: auto; /* or scroll if needed */
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;
-}
-
-body::-webkit-scrollbar {
-  display: none; /* hides scrollbar */
-}
-
 body {
+    min-height: 100vh;
     font-family: 'MyFont', sans-serif;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
     background-color: #fff4f4;
     color: #333;
     z-index: 0;
-    -ms-overflow-style: none;  /* hides scrollbar in IE/Edge */
-    scrollbar-width: none;     /* hides scrollbar in Firefox */
-    margin-bottom: 5%;
 }
 
 #skills_body {
@@ -37,10 +18,10 @@ body {
 }
 
 .main {
+    min-height: 95vh;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    overflow: hidden;
 }
 
 .main-left {
@@ -213,7 +194,8 @@ h2 {
   bottom: 0; /* align with bottom of link */
   width: 0%;
   height: 4px;
-  background-color: #d32b31;
+  background-color: #e23c41;
+  border-radius: 999px; /* rounded underline ends */
   transition: width 0.3s ease;
   pointer-events: none; /* ensures underline is not hoverable */
 }
@@ -244,7 +226,7 @@ h2 {
 #cv_button {
   font-family: 'MyFont', sans-serif;
   width: fit-content;
-  margin-top: 20%;
+  margin-top: 20px;
   font-size: 20px;
   white-space: nowrap;
   padding: 12px;
@@ -253,24 +235,12 @@ h2 {
   border-radius: 8px;
   background-color: #d32b31;
   color: white;
-
-  /* don't set translateY here — wrapper handles that */
-  transform: translateY(0);
-  transition: transform 0.18s ease, opacity 0.18s ease;
-  will-change: transform, opacity;
 }
 
 /* hover scales only the button */
 .cv-wrap:hover #cv_button,
 #cv_button:hover {
   transform: scale(1.1);
-}
-
-/* Class added by JS after animation completes — locks final state */
-#cv_button.animation-finished {
-  animation: none !important; /* stop any animation control */
-  transform: translateY(0) !important;
-  opacity: 1 !important;
 }
 
 .red_txt{
@@ -330,57 +300,32 @@ h2 {
 }
 
 #timeline {
-  position: relative;
-  width: 320px;
-  flex: 0 0 320px;
-  text-align: center;
-  margin-right: 2%;
+  margin-top: -3.5%;
+  margin-right: 4%;
+  width: 24%;
 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-#stickynote {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(8px 38px 6px rgba(0,0,0,0.5));
-}
-
-/* Notes positioned on top of sticky note */
 #timeline .note {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%;
-  text-align: center;
-  z-index: 2;
-  color: #222;
-  background: transparent;
   margin: 0;
-  font-size: 18px;
-  white-space: nowrap;
+  text-align: center;
+  font-size: 20px;
+  line-height: 1.25;
 }
-
-/* Adjust vertical positions — tweak to fit your sticky note image */
-#timeline .note:nth-of-type(1) { top: 25%; }
-#timeline .note:nth-of-type(2) { top: 35%; }
-#timeline .note:nth-of-type(3) { top: 45%; }
-#timeline .note:nth-of-type(4) { top: 55%; }
-#timeline .note:nth-of-type(5) { top: 65%; }
-#timeline .note:nth-of-type(6) { top: 75%; }
-#timeline .note:nth-of-type(7) { top: 85%; }
 
 #timeline .year {
-  font-size: 14px;
-  color: #444;
-  margin-left: 4px;
-}
- 
-#timeline {
-  transition: transform 0.5s ease-in-out; /* duration + easing */
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
 }
 
-#timeline:hover {
-  transform: rotate(1deg);
+#timeline .arrow {
+  font-size: 33px;
+  line-height: 1;
 }
 
 /* RESPONSIVE: Stack vertically on smaller screens */
@@ -441,9 +386,9 @@ footer {
     background-color: #333;
     color: white;
     display: flex;
+    padding: 0 2%;
     justify-content: space-between;
     align-items: center;
-    padding: 0 2%;
     box-sizing: border-box;
     opacity: 0;
     transform: translateY(20px);
