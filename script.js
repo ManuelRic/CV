@@ -6,6 +6,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Hover: change image
     returnBtn.addEventListener("mouseover", () => {
       returnBtn.style.width = "120px";
+      returnBtn.style.transition = "width 0.3s ease"
       returnBtn.src = "img/return_red.png";
     });
 
