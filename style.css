@@ -586,7 +586,18 @@ footer p {
   display: inline-block;
   font-size: 1.1em; /* relative to h1 */
   vertical-align: 0.14em;
-  z-index: -1;
+  z-index: 0;
+}
+
+.letter-container::before {
+  content: "";
+  position: absolute;
+  left: -0.2em;
+  top: -1.12em;
+  width: 0.7em;
+  height: 1.35em;
+  pointer-events: auto;
+  z-index: 4;
 }
 
 .dot_trunk,
