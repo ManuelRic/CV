@@ -43,6 +43,8 @@ html {
 
 .skills-section .notname,
 .skills-section #skill_tip,
+.projects-section .notname,
+.projects-grid,
 .about-section .notname,
 .about-section h2,
 .about-row {
@@ -51,7 +53,8 @@ html {
 }
 
 .skills-section .notname,
-.skills-section #skill_tip {
+.skills-section #skill_tip,
+.projects-section .notname {
     margin-left: var(--page-x);
     margin-right: var(--page-x);
 }
@@ -228,6 +231,11 @@ h2 {
     animation-delay: 1.2s;
 }
 
+.page-section.is-visible .project-card {
+    animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: 0.45s;
+}
+
 /* links inside the h3 */
 .options h3 a {
   color: inherit;
@@ -302,6 +310,63 @@ h2 {
 
 .red_txt{
   color: var(--accent);
+}
+
+.projects-grid {
+  width: min(100%, var(--content-max));
+  margin: 0 auto;
+}
+
+.project-card {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) minmax(240px, 1fr);
+  align-items: center;
+  gap: 42px;
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+.project-media {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 2107 / 3262;
+  border: 3px solid var(--ink);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.project-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.project-doodle-img {
+  pointer-events: none;
+  opacity: 1;
+  mask-image: radial-gradient(circle 0 at 50% 50%, #000 0, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle 0 at 50% 50%, #000 0, transparent 100%);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.project-info {
+  border-left: 5px solid var(--accent);
+  padding-left: 24px;
+}
+
+.project-info h2 {
+  margin-bottom: 14px;
+}
+
+.project-info p {
+  margin: 0;
+  font-size: 28px;
+  color: #242424;
 }
 
 #location_icon {
@@ -746,6 +811,15 @@ footer p {
     gap: 34px;
   }
 
+  .project-card {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .project-info {
+    padding-left: 18px;
+  }
+
   #timeline {
     margin-top: 0;
     width: min(100%, 320px);
@@ -815,6 +889,15 @@ footer p {
 
   .options h3 {
     font-size: 32px;
+  }
+
+  .project-info p {
+    font-size: 23px;
+  }
+
+  .project-media {
+    max-width: min(100%, 340px);
+    justify-self: center;
   }
 
   /* Sticky note moves BELOW text */

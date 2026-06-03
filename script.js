@@ -122,10 +122,76 @@ function runWhenVisible(elements, callback, options = {}) {
   targets.forEach(target => observer.observe(target));
 }
 
+function setupDoodleReveal() {
+  document.querySelectorAll(".doodle-reveal").forEach(surface => {
+    const overlay = surface.querySelector(".project-doodle-img");
+    if (!overlay) return;
+
+    const trail = [];
+    let rafId = null;
+    let lastPoint = null;
+    const trailLife = 780;
+
+    function setMask(mask) {
+      overlay.style.maskImage = mask;
+      overlay.style.webkitMaskImage = mask;
+    }
+
+    function updateTrail(time) {
+      for (let i = trail.length - 1; i >= 0; i--) {
+        if (time - trail[i].created > trailLife) trail.splice(i, 1);
+      }
+
+      if (!trail.length) {
+        setMask("radial-gradient(circle 0 at 50% 50%, #000 0, transparent 100%)");
+        rafId = null;
+        return;
+      }
+
+      const masks = trail.map(point => {
+        const age = time - point.created;
+        const strength = Math.max(0, 1 - age / trailLife);
+        const radius = point.radius * (0.75 + strength * 0.45);
+        return `radial-gradient(circle ${radius}px at ${point.x}px ${point.y}px, rgba(0,0,0,${strength}) 0%, rgba(0,0,0,${strength * 0.86}) 38%, rgba(0,0,0,0) 72%)`;
+      });
+
+      setMask(masks.join(", "));
+      rafId = requestAnimationFrame(updateTrail);
+    }
+
+    function addTrailPoint(event) {
+      const rect = surface.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+      if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 7) return;
+
+      lastPoint = { x, y };
+      trail.push({
+        x,
+        y,
+        created: performance.now(),
+        radius: Math.max(70, Math.min(rect.width, rect.height) * 0.16)
+      });
+
+      if (trail.length > 18) trail.shift();
+      if (!rafId) rafId = requestAnimationFrame(updateTrail);
+    }
+
+    surface.addEventListener("pointermove", addTrailPoint);
+    surface.addEventListener("pointerleave", () => {
+      lastPoint = null;
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   runWhenVisible(document.querySelectorAll(".page-section"), el => {
     el.classList.add("is-visible");
   });
+
+  setupDoodleReveal();
 
   runWhenVisible([document.getElementById("location_icon")], locationIcon => {
     setTimeout(() => locationIcon.classList.add("animate"), 1200);
