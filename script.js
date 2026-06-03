@@ -130,6 +130,7 @@ function setupDoodleReveal() {
     const trail = [];
     let rafId = null;
     let lastPoint = null;
+    let pointerInside = false;
     const trailLife = 780;
 
     function setMask(mask) {
@@ -138,6 +139,13 @@ function setupDoodleReveal() {
     }
 
     function updateTrail(time) {
+      if (pointerInside && lastPoint && trail.length) {
+        const activePoint = trail[trail.length - 1];
+        activePoint.x = lastPoint.x;
+        activePoint.y = lastPoint.y;
+        activePoint.created = time;
+      }
+
       for (let i = trail.length - 1; i >= 0; i--) {
         if (time - trail[i].created > trailLife) trail.splice(i, 1);
       }
@@ -165,14 +173,20 @@ function setupDoodleReveal() {
       const y = event.clientY - rect.top;
 
       if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
-      if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 7) return;
+      pointerInside = true;
+
+      if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 7) {
+        lastPoint = { x, y };
+        if (!rafId) rafId = requestAnimationFrame(updateTrail);
+        return;
+      }
 
       lastPoint = { x, y };
       trail.push({
         x,
         y,
         created: performance.now(),
-        radius: Math.max(70, Math.min(rect.width, rect.height) * 0.16)
+        radius: Math.max(200, Math.min(rect.width, rect.height) * 0.5)
       });
 
       if (trail.length > 18) trail.shift();
@@ -181,6 +195,7 @@ function setupDoodleReveal() {
 
     surface.addEventListener("pointermove", addTrailPoint);
     surface.addEventListener("pointerleave", () => {
+      pointerInside = false;
       lastPoint = null;
     });
   });
