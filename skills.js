@@ -18,12 +18,52 @@ function ensureSplatterCanvas() {
 
 const splatterCanvas = ensureSplatterCanvas();
 const canvas = document.getElementById("skillsCanvas");
+const skillsSection = document.getElementById("skills") || canvas.parentElement || document.body;
+const boundsOutline = document.getElementById("skillsBoundsOutline");
 let sctx = splatterCanvas.getContext("2d");
+let render = null;
+const footerHeight = 50;
+const wallThickness = 200;
+const skillRadius = 60;
+const bottomPlayInset = 85;
+
+function getSkillsBounds() {
+  const rect = skillsSection.getBoundingClientRect();
+  return {
+    width: Math.max(1, Math.floor(rect.width || window.innerWidth)),
+    height: Math.max(1, Math.floor(rect.height || window.innerHeight))
+  };
+}
+
+function getPageInsetRatio() {
+  const value = getComputedStyle(document.documentElement).getPropertyValue("--page-x").trim();
+  if (value.endsWith("%")) return parseFloat(value) / 100;
+  if (value.endsWith("px")) return parseFloat(value) / getSkillsBounds().width;
+  return 0.1;
+}
+
+function getSideCutoff() {
+  return getSkillsBounds().width * getPageInsetRatio();
+}
+
+function getTopCutoff() {
+  return getSkillsBounds().height * 0.09;
+}
+
+function getPlayableBounds() {
+  const { width, height } = getSkillsBounds();
+
+  return {
+    left: getSideCutoff(),
+    right: width - getSideCutoff(),
+    top: getTopCutoff() + wallThickness / 2,
+    bottom: height - bottomPlayInset
+  };
+}
 
 function resizeCanvases() {
   const dpr = window.devicePixelRatio || 1;
-  const w = Math.max(1, Math.floor(window.innerWidth));
-  const h = Math.max(1, Math.floor(window.innerHeight));
+  const { width: w, height: h } = getSkillsBounds();
 
   canvas.style.width = w + "px";
   canvas.style.height = h + "px";
@@ -40,6 +80,22 @@ function resizeCanvases() {
 
   sctx = splatterCanvas.getContext("2d");
   if (sctx) sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  if (render) {
+    render.options.width = w;
+    render.options.height = h;
+    render.bounds.max.x = w;
+    render.bounds.max.y = h;
+  }
+
+  if (boundsOutline) {
+    const bounds = getPlayableBounds();
+    const outlineOffset = 2;
+    boundsOutline.style.left = (bounds.left - outlineOffset) + "px";
+    boundsOutline.style.top = (bounds.top - outlineOffset) + "px";
+    boundsOutline.style.width = Math.max(1, bounds.right - bounds.left + outlineOffset * 2) + "px";
+    boundsOutline.style.height = Math.max(1, bounds.bottom - bounds.top + outlineOffset * 2) + "px";
+  }
 }
 
 resizeCanvases();
@@ -50,24 +106,18 @@ const world = engine.world;
 engine.world.gravity.y = 0.02;
 engine.world.gravity.x = 0;
 
-const render = Render.create({
+render = Render.create({
   canvas: canvas,
   engine: engine,
   options: {
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: getSkillsBounds().width,
+    height: getSkillsBounds().height,
     wireframes: false,
     background: "transparent"
   }
 });
 Render.run(render);
 Runner.run(Runner.create(), engine);
-
-const footerHeight = 50;
-const wallThickness = 200;
-const skillRadius = 60;
-const topCutoff = window.innerHeight * 0.09;
-const sideCutoff = window.innerWidth * 0.10;
 
 const skillDescriptions = {
   "HTML": "Built semantic, accessible, and responsive web pages for modern web applications.",
@@ -108,14 +158,15 @@ const ballColors = [
 ];
 
 function createWalls() {
-  const w = window.innerWidth;
-  const h = window.innerHeight - footerHeight;
+  const { width: w, height: sectionHeight } = getSkillsBounds();
+  const h = sectionHeight - footerHeight;
+  const bounds = getPlayableBounds();
   const opts = { isStatic: true, render: { visible: false } };
   return [
-    Bodies.rectangle(w / 2, h + wallThickness / 6 - 100, w - 2 * sideCutoff, wallThickness, opts), //bottom wall
-    Bodies.rectangle(w / 2, topCutoff, w - 2 * sideCutoff, wallThickness, opts), //top wall
-    Bodies.rectangle(-wallThickness / 2 + sideCutoff, h / 2, wallThickness, h, opts), //left wall
-    Bodies.rectangle(w + wallThickness / 2 - sideCutoff, h / 2, wallThickness, h, opts) //right wall
+    Bodies.rectangle(w / 2, bounds.bottom + wallThickness / 2, bounds.right - bounds.left, wallThickness, opts), //bottom wall
+    Bodies.rectangle(w / 2, getTopCutoff(), bounds.right - bounds.left, wallThickness, opts), //top wall
+    Bodies.rectangle(bounds.left - wallThickness / 2, h / 2, wallThickness, h, opts), //left wall
+    Bodies.rectangle(bounds.right + wallThickness / 2, h / 2, wallThickness, h, opts) //right wall
   ];
 }
 let walls = createWalls();
@@ -129,10 +180,11 @@ for (const [name, src] of Object.entries(skillImageMap)) {
 }
 
 const balls = skills.map((name, i) => {
-  const xMin = sideCutoff + skillRadius;
-  const xMax = window.innerWidth - sideCutoff - skillRadius;
-  const yMin = topCutoff + skillRadius;
-  const yMax = window.innerHeight - footerHeight - skillRadius;
+  const bounds = getPlayableBounds();
+  const xMin = bounds.left + skillRadius;
+  const xMax = bounds.right - skillRadius;
+  const yMin = bounds.top + skillRadius;
+  const yMax = bounds.bottom - skillRadius;
 
   return Bodies.circle(
     xMin + Math.random() * (xMax - xMin),
@@ -155,6 +207,8 @@ const balls = skills.map((name, i) => {
 Composite.add(world, balls);
 
 const mouse = Mouse.create(render.canvas);
+canvas.removeEventListener("wheel", mouse.mousewheel);
+
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
   constraint: { stiffness: 0.15, damping: 0.15, render: { visible: false } }
@@ -163,9 +217,8 @@ const mouseConstraint = MouseConstraint.create(engine, {
 let hoveredBall = null;
 
 function checkMouseHover() {
-  const rect = canvas.getBoundingClientRect();
-  const mx = mouse.position.x - rect.left;
-  const my = mouse.position.y - rect.top;
+  const mx = mouse.position.x;
+  const my = mouse.position.y;
 
   let newHover = null;
   for (let b of balls) {
@@ -202,11 +255,12 @@ Events.on(mouseConstraint, "mousemove", () => {
   if (mouseConstraint.body) {
     const body = mouseConstraint.body;
     const r = body.circleRadius;
+    const bounds = getPlayableBounds();
 
-    const minX = sideCutoff + r;
-    const maxX = window.innerWidth - sideCutoff - r;
-    const minY = topCutoff + r;
-    const maxY = window.innerHeight - footerHeight - r;
+    const minX = bounds.left + r;
+    const maxX = bounds.right - r;
+    const minY = bounds.top + r;
+    const maxY = bounds.bottom - r;
 
     if (mouse.position.x < minX || mouse.position.x > maxX ||
         mouse.position.y < minY || mouse.position.y > maxY) {
@@ -438,9 +492,8 @@ canvas.addEventListener("mouseup", e => {
 (function updatePopupPosition(){
   requestAnimationFrame(updatePopupPosition);
   if (activePopupBall){
-    const rect = render.canvas.getBoundingClientRect();
-    popup.style.left = (activePopupBall.position.x + rect.left + 10) + "px";
-    popup.style.top = (activePopupBall.position.y + rect.top + 10) + "px";
+    popup.style.left = (activePopupBall.position.x + 10) + "px";
+    popup.style.top = (activePopupBall.position.y + 10) + "px";
   }
 })();
 
@@ -452,8 +505,7 @@ window.addEventListener("resize", ()=> {
 });
 
 setInterval(()=> {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  const { width: w, height: h } = getSkillsBounds();
   Composite.allBodies(world).forEach(body=>{
     if(!body.position) return;
     if(body.position.y>h+1000||body.position.x<-1000||body.position.x>w+1000){

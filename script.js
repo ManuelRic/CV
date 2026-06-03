@@ -98,6 +98,40 @@ function setupCopyTooltips(selector) {
 // Apply to all tooltip elements
 setupCopyTooltips(".tooltip");
 
+function runWhenVisible(elements, callback, options = {}) {
+  const targets = Array.from(elements).filter(Boolean);
+  if (!targets.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    targets.forEach(callback);
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      callback(entry.target);
+      obs.unobserve(entry.target);
+    });
+  }, {
+    threshold: 0.25,
+    rootMargin: "0px 0px -10% 0px",
+    ...options
+  });
+
+  targets.forEach(target => observer.observe(target));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  runWhenVisible(document.querySelectorAll(".page-section, footer"), el => {
+    el.classList.add("is-visible");
+  });
+
+  runWhenVisible([document.getElementById("location_icon")], locationIcon => {
+    setTimeout(() => locationIcon.classList.add("animate"), 1200);
+  }, { threshold: 1 });
+});
+
 // Add a class when the slideInRight animation completes so hover transforms work reliably
 document.querySelectorAll('.options h3').forEach(el => {
   el.addEventListener('animationend', (e) => {
@@ -107,13 +141,6 @@ document.querySelectorAll('.options h3').forEach(el => {
     // Add the class (listener fires once per element by specifying { once: true } below)
     el.classList.add('animation-finished');
   }, { once: true });
-});
-
-
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    document.getElementById("location_icon").classList.add("animate");
-  }, 5500); // 4.5 second delay
 });
 
 
@@ -187,9 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
       else playReverse();
     });
 
-    // Animate on load
-    setTimeout(playForward, 1500);
-    // Optional: reverse after a delay to start floating effect
-    setTimeout(playReverse, 2500); // 500ms pause at the top
+    runWhenVisible([container], () => {
+      setTimeout(playForward, 1500);
+      setTimeout(playReverse, 2500);
+    }, { threshold: 0.8 });
   });
 });

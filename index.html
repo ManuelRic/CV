@@ -8,54 +8,123 @@
   <link rel="icon" type="image/png" href="img/favicontest_120_red2_outlined2.png">
 </head>
 <body>
-  <div class="main">
+  <section id="home" class="main page-section">
     <div class="main-left">
       <h1 id="name">
-      Manuel R
-      <div class="letter-container">
-        <div class="dot_trunk"></div>
-        <div class="trunk_dot"></div>
-        <span class="red_txt">
-        <span class="trunk">i</span>
-        <span class="dot">i</span>
-        </span>
-      </div>
-      cart
-    </h1>
+        Manuel R
+        <div class="letter-container">
+          <div class="dot_trunk"></div>
+          <div class="trunk_dot"></div>
+          <span class="red_txt">
+            <span class="trunk">i</span>
+            <span class="dot">i</span>
+          </span>
+        </div>
+        cart
+      </h1>
 
       <img id="pf_img" src="img/pf1.jpg" alt="Profile image">
       <h2 id="title">Technology and Multimedia</h2>
-      <h2 id="location"><span id="location_icon">📍</span>Valencia, Spain</h2>
+      <h2 id="location"><span id="location_icon">&#128205;</span>Valencia, Spain</h2>
     </div>
+
     <div class="options">
       <p>I enjoy designing and building <span class="red_txt">interactive</span> projects that connect technology, <span class="red_txt">creativity</span>, and <span class="red_txt">design</span>.</p>
-      <h3><a href="about_me.html"><span class="link-inner">About me</span></a></h3>
-      <h3><a href="skills.html"><span class="link-inner">Skills</span></a></h3>
+      <h3><a href="#skills"><span class="link-inner">Skills</span></a></h3>
+      <h3><a href="#about"><span class="link-inner">About me</span></a></h3>
       <p id="lang_p"><span id="lang_t">Languages:</span><br><br> Spanish (<span class="red_txt">Native</span>)&nbsp+&nbspEnglish (<span class="red_txt">C1</span>)</p>
       <a href="pdf/CV_Manuel_Ricart.pdf" download>
         <span class="cv-wrap">
           <button id="cv_button"><span class="btn-inner">Download CV as PDF</span></button>
         </span>
       </a>
-
     </div>
-  </div>
-    <footer>
-        <p id="name">Manuel Ricart</p>
-        <div class="contacts">
-            <a id="gmail_link" class="tooltip" data-copy="manuel.ricart.soler@gmail.com">
-                <img class="logos" src="img/Gmail_icon.png" alt="Gmail">
-                <span class="tooltip-text">manuel.ricart.soler@gmail.com</span>
-            </a>
-            
-            <a class="tooltip" href="https://www.linkedin.com/in/manuel-ricart-soler-747b86273/" target="_blank">
-                <img class="logos" src="img/LinkedIn_logo_initials.png" alt="LinkedIn">
-                <span class="tooltip-text">Open!</span>
+  </section>
 
-            </a>
+  <section id="skills" class="page-section skills-section">
+    <h1 class="notname">My Skills</h1>
+    <p id="skill_tip">Small tip: you can <span class="red_txt">drag</span> and <span class="red_txt">toss</span> the orbs around, or <span class="red_txt">click</span> to learn more</p>
 
+    <canvas id="splatterCanvas"></canvas>
+    <canvas id="skillsCanvas"></canvas>
+    <div id="skillsBoundsOutline" aria-hidden="true"></div>
+
+    <div id="skillPopup"></div>
+  </section>
+
+  <section id="about" class="page-section about-section">
+    <h1 class="notname">Hi!</h1>
+
+    <h2>A <span id="bit_h2">bit</span> about me:</h2>
+
+    <div class="about-row">
+      <div class="description">
+        <div id="whoIam">
+          <br>
+          <p>
+            I'm currently studying Technology and Multimedia at the Polytechnic University of Valencia (UPV).
+          </p>
+          <p>
+            My interests lie in <span class="red_txt">full-stack</span> and <span class="red_txt">software development</span>, <span class="red_txt">game creation</span> (including VR), and <span class="red_txt">2D/3D design</span>, areas where I can combine creativity and technology.
+          </p>
+          <p>
+            I've always been drawn to art, starting with hands-on forms and later digital. That mix of creativity and logic naturally led me to this field.
+          </p>
+          <p>
+            Outside academics, I enjoy any outdoor activity from rock climbing to kayaking.
+          </p>
         </div>
-    </footer>
-    <script src="script.js"></script>
+      </div>
+
+      <div id="timeline">
+        <h2>Education</h2>
+        <br>
+        <p class="note">
+          Metropolitan School of Panama (MET)
+          <span class="year">2011 - 2021</span>
+        </p>
+
+        <p class="note arrow">&#8595;</p>
+
+        <p class="note">
+          SEK International School Levante
+          <span class="year">2021 - 2022</span>
+        </p>
+
+        <p class="note arrow">&#8595;</p>
+
+        <p class="note">
+          Polytechnic University of Valencia (UPV)
+          <span class="year">2022 - Present</span>
+        </p>
+
+        <p class="note arrow">&#8595;</p>
+
+        <p class="note">
+          Norwegian University of Science and Technology (NTNU)
+          <span class="year">ERASMUS 2025</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Manuel Ricart</p>
+    <div class="contacts">
+      <a id="gmail_link" class="tooltip" data-copy="manuel.ricart.soler@gmail.com">
+        <img class="logos" src="img/Gmail_icon.png" alt="Gmail">
+        <span class="tooltip-text">manuel.ricart.soler@gmail.com</span>
+      </a>
+
+      <a class="tooltip" href="https://www.linkedin.com/in/manuel-ricart-soler-747b86273/" target="_blank">
+        <img class="logos" src="img/LinkedIn_logo_initials.png" alt="LinkedIn">
+        <span class="tooltip-text">Open!</span>
+      </a>
+    </div>
+  </footer>
+
+  <script src="matter-js-master/build/matter.min.js"></script>
+  <script src="script.js"></script>
+  <script src="skills.js"></script>
 </body>
 </html>
