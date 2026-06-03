@@ -47,13 +47,13 @@ function setupCopyTooltips(selector) {
       clearTimeout(hoverTimeout);
     });
 
-    // Hover out: hide after 2s
+    // Hover out: hide quickly
     el.addEventListener("mouseleave", () => {
       if (!tooltip) return;
       hoverTimeout = setTimeout(() => {
         tooltip.classList.remove("show");
         if (currentTooltip === tooltip) currentTooltip = null;
-      }, 2000);
+      }, 250);
     });
 
     // Click: only attempt copy if data-copy exists.
@@ -123,13 +123,25 @@ function runWhenVisible(elements, callback, options = {}) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  runWhenVisible(document.querySelectorAll(".page-section, footer"), el => {
+  runWhenVisible(document.querySelectorAll(".page-section"), el => {
     el.classList.add("is-visible");
   });
 
   runWhenVisible([document.getElementById("location_icon")], locationIcon => {
     setTimeout(() => locationIcon.classList.add("animate"), 1200);
   }, { threshold: 1 });
+
+  const footer = document.querySelector("footer");
+  function updateFooterVisibility() {
+    if (!footer) return;
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const pageBottom = document.documentElement.scrollHeight;
+    footer.classList.toggle("footer-visible", scrollBottom >= pageBottom - 8);
+  }
+
+  updateFooterVisibility();
+  window.addEventListener("scroll", updateFooterVisibility, { passive: true });
+  window.addEventListener("resize", updateFooterVisibility);
 });
 
 // Add a class when the slideInRight animation completes so hover transforms work reliably

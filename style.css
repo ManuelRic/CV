@@ -223,14 +223,9 @@ h2 {
     animation-delay: 1s;
 }
 
-.page-section.is-visible .cv-wrap,
-footer.is-visible {
+.page-section.is-visible .cv-wrap {
     animation: slideInUp 1s cubic-bezier(.22,1,.36,1) forwards;
     animation-delay: 1.2s;
-}
-
-footer.is-visible {
-    animation-delay: 0.2s;
 }
 
 /* links inside the h3 */
@@ -459,8 +454,16 @@ footer {
     align-items: center;
     box-sizing: border-box;
     opacity: 0;
-    transform: translateY(20px);
+    pointer-events: none;
+    transform: translateY(100%);
+    transition: opacity 0.25s ease, transform 0.25s ease;
     z-index: 10;
+}
+
+footer.footer-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 footer p {
@@ -472,6 +475,29 @@ footer p {
     margin-right: 2.5%;
     display: flex;
     gap: 25px;
+}
+
+.floating-contacts {
+    position: fixed;
+    top: 18px;
+    right: 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    z-index: 20;
+}
+
+.floating-contacts .tooltip {
+    margin-right: 0;
+}
+
+.floating-contacts .tooltip-text {
+    bottom: auto;
+    top: 125%;
+}
+
+.floating-contacts .logos {
+    filter: none;
 }
 
 .logos {
@@ -745,6 +771,12 @@ footer p {
 
   body {
     font-size: 14px;
+  }
+
+  .floating-contacts {
+    top: 12px;
+    right: 16px;
+    gap: 14px;
   }
 
   .main {
