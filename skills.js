@@ -19,12 +19,12 @@ function ensureSplatterCanvas() {
 const splatterCanvas = ensureSplatterCanvas();
 const canvas = document.getElementById("skillsCanvas");
 const skillsSection = document.getElementById("skills") || canvas.parentElement || document.body;
-const boundsOutline = document.getElementById("skillsBoundsOutline");
 let sctx = splatterCanvas.getContext("2d");
 let render = null;
 const footerHeight = 50;
 const wallThickness = 200;
 const skillRadius = 60;
+const topPlayInset = 170;
 const bottomPlayInset = 85;
 
 function getSkillsBounds() {
@@ -47,7 +47,7 @@ function getSideCutoff() {
 }
 
 function getTopCutoff() {
-  return getSkillsBounds().height * 0.09;
+  return topPlayInset;
 }
 
 function getPlayableBounds() {
@@ -88,14 +88,6 @@ function resizeCanvases() {
     render.bounds.max.y = h;
   }
 
-  if (boundsOutline) {
-    const bounds = getPlayableBounds();
-    const outlineOffset = 2;
-    boundsOutline.style.left = (bounds.left - outlineOffset) + "px";
-    boundsOutline.style.top = (bounds.top - outlineOffset) + "px";
-    boundsOutline.style.width = Math.max(1, bounds.right - bounds.left + outlineOffset * 2) + "px";
-    boundsOutline.style.height = Math.max(1, bounds.bottom - bounds.top + outlineOffset * 2) + "px";
-  }
 }
 
 resizeCanvases();
@@ -325,11 +317,238 @@ function animateFlip(body, targetAngle, duration = 600) {
 const stillTimeMap = new Map();
 
 const splatters = new Map();
+
+function getPaintBounds() {
+  const bounds = getPlayableBounds();
+  const outlineOffset = 2;
+  return {
+    left: bounds.left - outlineOffset,
+    right: bounds.right + outlineOffset,
+    top: bounds.top - outlineOffset,
+    bottom: bounds.bottom + outlineOffset
+  };
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function tracePaintDroplet(x, y, angle, distance, radius, bounds) {
+  const dx = Math.cos(angle) * distance;
+  const dy = Math.sin(angle) * distance;
+  const targetX = x + dx;
+  const targetY = y + dy;
+  const minX = bounds.left + radius;
+  const maxX = bounds.right - radius;
+  const minY = bounds.top + radius;
+  const maxY = bounds.bottom - radius;
+
+  if (targetX >= minX && targetX <= maxX && targetY >= minY && targetY <= maxY) {
+    return { x: targetX, y: targetY, wall: null };
+  }
+
+  let hitT = 1;
+  let wall = null;
+
+  if (dx < 0) {
+    const t = (minX - x) / dx;
+    if (t >= 0 && t < hitT) { hitT = t; wall = "left"; }
+  } else if (dx > 0) {
+    const t = (maxX - x) / dx;
+    if (t >= 0 && t < hitT) { hitT = t; wall = "right"; }
+  }
+
+  if (dy < 0) {
+    const t = (minY - y) / dy;
+    if (t >= 0 && t < hitT) { hitT = t; wall = "top"; }
+  } else if (dy > 0) {
+    const t = (maxY - y) / dy;
+    if (t >= 0 && t < hitT) { hitT = t; wall = "bottom"; }
+  }
+
+  const overflow = distance * Math.max(0, 1 - hitT);
+  let hitX = x + dx * hitT;
+  let hitY = y + dy * hitT;
+
+  if (wall === "left" || wall === "right") {
+    hitY = clamp(hitY + Math.sin(angle) * overflow * 0.28, minY, maxY);
+    hitX = wall === "left" ? minX : maxX;
+  } else if (wall === "top" || wall === "bottom") {
+    hitX = clamp(hitX + Math.cos(angle) * overflow * 0.28, minX, maxX);
+    hitY = wall === "top" ? minY : maxY;
+  } else {
+    hitX = clamp(targetX, minX, maxX);
+    hitY = clamp(targetY, minY, maxY);
+  }
+
+  return { x: hitX, y: hitY, wall };
+}
+
+function drawEllipse(ctx, cx, cy, rx, ry, angle, color, alpha = 0.95) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, Math.max(1, rx), Math.max(1, ry), angle, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawTaperedStreak(ctx, x1, y1, x2, y2, width, color, alpha = 0.9) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const nx = Math.cos(angle + Math.PI / 2);
+  const ny = Math.sin(angle + Math.PI / 2);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.moveTo(x1 + nx * width, y1 + ny * width);
+  ctx.lineTo(x1 - nx * width, y1 - ny * width);
+  ctx.lineTo(x2, y2);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawWallSplat(ctx, droplet, color, bounds) {
+  const verticalWall = droplet.wall === "left" || droplet.wall === "right";
+  const normalRadius = droplet.r * (0.35 + Math.random() * 0.25);
+  const desiredLong = droplet.r * (2.4 + Math.random() * 2.2);
+  let cx = droplet.x;
+  let cy = droplet.y;
+  let rx = normalRadius;
+  let ry = desiredLong;
+
+  if (verticalWall) {
+    cx = droplet.wall === "left" ? bounds.left + normalRadius : bounds.right - normalRadius;
+    cy = clamp(cy, bounds.top + normalRadius, bounds.bottom - normalRadius);
+    ry = Math.min(desiredLong, Math.max(1, Math.min(cy - bounds.top, bounds.bottom - cy)));
+  } else {
+    cy = droplet.wall === "top" ? bounds.top + normalRadius : bounds.bottom - normalRadius;
+    cx = clamp(cx, bounds.left + normalRadius, bounds.right - normalRadius);
+    rx = Math.min(desiredLong, Math.max(1, Math.min(cx - bounds.left, bounds.right - cx)));
+    ry = normalRadius;
+  }
+
+  drawEllipse(ctx, cx, cy, rx, ry, 0, color);
+
+  for (let i = 0; i < 4; i++) {
+    const dotR = droplet.r * (0.22 + Math.random() * 0.45);
+    const tangentJitter = (Math.random() - 0.5) * desiredLong * 1.4;
+    const normalDepth = dotR + Math.random() * droplet.r * 1.6;
+    const px = verticalWall
+      ? (droplet.wall === "left" ? bounds.left + normalDepth : bounds.right - normalDepth)
+      : clamp(cx + tangentJitter, bounds.left + dotR, bounds.right - dotR);
+    const py = verticalWall
+      ? clamp(cy + tangentJitter, bounds.top + dotR, bounds.bottom - dotR)
+      : (droplet.wall === "top" ? bounds.top + normalDepth : bounds.bottom - normalDepth);
+    drawEllipse(ctx, px, py, dotR, dotR, 0, color, 0.9);
+  }
+}
+
+function drawSplatterRay(ctx, originX, originY, ray, color, bounds) {
+  const end = tracePaintDroplet(originX, originY, ray.angle, ray.length, ray.tipRadius, bounds);
+  const startDist = ray.start;
+  const startX = originX + Math.cos(ray.angle) * startDist;
+  const startY = originY + Math.sin(ray.angle) * startDist;
+  const hitWall = Boolean(end.wall);
+  const endX = end.x;
+  const endY = end.y;
+
+  if (!hitWall) {
+    if (ray.kind === "needle") {
+      drawTaperedStreak(ctx, startX, startY, endX, endY, ray.width, color, 0.88);
+    } else {
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2;
+      const length = Math.hypot(endX - startX, endY - startY);
+      drawEllipse(ctx, midX, midY, length / 2, ray.width, ray.angle, color, 0.88);
+    }
+
+    if (Math.random() < 0.72) {
+      drawInteriorSplat(ctx, { x: endX, y: endY, r: ray.tipRadius }, color, bounds);
+    }
+    return;
+  }
+
+  const safeEndX = clamp(endX, bounds.left + ray.tipRadius, bounds.right - ray.tipRadius);
+  const safeEndY = clamp(endY, bounds.top + ray.tipRadius, bounds.bottom - ray.tipRadius);
+  drawTaperedStreak(ctx, startX, startY, safeEndX, safeEndY, Math.max(1, ray.width * 0.75), color, 0.78);
+  drawWallSplat(ctx, { x: safeEndX, y: safeEndY, r: ray.tipRadius * 1.15, wall: end.wall }, color, bounds);
+}
+
+function drawInteriorSplat(ctx, droplet, color, bounds) {
+  const r = droplet.r;
+  const x = clamp(droplet.x, bounds.left + r, bounds.right - r);
+  const y = clamp(droplet.y, bounds.top + r, bounds.bottom - r);
+  const elongated = Math.random() < 0.28;
+  const angle = droplet.angle || Math.random() * Math.PI * 2;
+
+  drawEllipse(
+    ctx,
+    x,
+    y,
+    r * (elongated ? 1.4 + Math.random() * 1.5 : 0.85 + Math.random() * 0.55),
+    r * (elongated ? 0.35 + Math.random() * 0.35 : 0.85 + Math.random() * 0.55),
+    angle,
+    color
+  );
+
+  const satellites = Math.random() < 0.35 ? 2 : 1;
+  for (let i = 0; i < satellites; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = r * (0.8 + Math.random() * 1.8);
+    const sr = r * (0.18 + Math.random() * 0.35);
+    drawEllipse(
+      ctx,
+      clamp(x + Math.cos(angle) * dist, bounds.left + sr, bounds.right - sr),
+      clamp(y + Math.sin(angle) * dist, bounds.top + sr, bounds.bottom - sr),
+      sr,
+      sr,
+      0,
+      color,
+      0.85
+    );
+  }
+}
+
+function drawCoreSplat(ctx, x, y, radius, color, bounds) {
+  const coreRadius = radius * 0.55;
+  drawEllipse(ctx, x, y, coreRadius, coreRadius, 0, color);
+
+  const rays = 26 + Math.floor(Math.random() * 14);
+  for (let i = 0; i < rays; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const longRay = Math.random() < 0.35;
+    drawSplatterRay(ctx, x, y, {
+      angle,
+      start: coreRadius * (0.55 + Math.random() * 0.45),
+      length: radius * (0.9 + Math.random() * (longRay ? 3.4 : 1.8)),
+      width: radius * (longRay ? 0.018 + Math.random() * 0.035 : 0.035 + Math.random() * 0.07),
+      tipRadius: radius * (longRay ? 0.035 + Math.random() * 0.08 : 0.055 + Math.random() * 0.13),
+      kind: longRay ? "needle" : "smear"
+    }, color, bounds);
+  }
+
+  for (let i = 0; i < 18; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = coreRadius * (0.35 + Math.random() * 1.5);
+    const r = radius * (0.035 + Math.random() * 0.12);
+    drawInteriorSplat(ctx, {
+      x: x + Math.cos(angle) * dist,
+      y: y + Math.sin(angle) * dist,
+      r
+    }, color, bounds);
+  }
+}
+
 function drawSplatterOnCanvas(body) {
   if (splatters.has(body)) return;
 
   const x = body.position.x;
   const y = body.position.y;
+  const paintBounds = getPaintBounds();
   const splatterColors = {
     "HTML": "#F16529", "CSS": "#2965F1", "JavaScript": "#F7DF1E", "Python": "#3472A6",
     "C++": "#00599C", "C#": "#61DBFB", "Unity": "#8CC84B", "3D Modeling": "#56f52a",
@@ -338,78 +557,52 @@ function drawSplatterOnCanvas(body) {
   const color = splatterColors[body.label] || "#000";
 
   const droplets = [];
-  const numDroplets = 15 + Math.floor(Math.random() * 15);
+  const numDroplets = 24 + Math.floor(Math.random() * 18);
   const maxDist = skillRadius * 5;
-  const stretchedAreas = [];
 
   for (let i = 0; i < numDroplets; i++) {
     const angle = Math.random() * Math.PI * 2;
     const dist = Math.pow(Math.random(), 0.6) * maxDist;
-    const finalDx = Math.cos(angle) * dist;
-    const finalDy = Math.sin(angle) * dist;
     const r = Math.random() * 8 + 3;
     const delay = Math.random() * 50;
-    droplets.push({ finalDx, finalDy, r, angle, delay });
+    const target = tracePaintDroplet(
+      x,
+      y,
+      angle,
+      dist,
+      r,
+      paintBounds
+    );
+
+    droplets.push({
+      x: target.x,
+      y: target.y,
+      r,
+      angle,
+      delay,
+      wall: target.wall
+    });
   }
 
   const start = performance.now();
-  const duration = 80;
-  const easeOut = t => 1 - Math.pow(1 - t, 2.5);
-
-  function isInsideStretched(dx, dy, radius) {
-    for (let area of stretchedAreas) {
-      const nx = x + dx;
-      const ny = y + dy;
-      const cos = Math.cos(-area.angle);
-      const sin = Math.sin(-area.angle);
-      const tx = cos * (nx - area.ex) - sin * (ny - area.ey);
-      const ty = sin * (nx - area.ex) + cos * (ny - area.ey);
-      if ((tx*tx)/((area.rx + radius)*(area.rx + radius)) +
-          (ty*ty)/((area.ry + radius)*(area.ry + radius)) <= 1) {
-        return true;
-      }
-    }
-    return false;
-  }
+  const duration = 170;
+  let coreDrawn = false;
 
   function animate(time) {
     const progress = Math.min((time - start) / duration, 1);
-    const eased = easeOut(progress);
-
     sctx.globalCompositeOperation = "source-over";
-    sctx.globalAlpha = 0.95;
 
-    for (let d of droplets) {
-      if (time - start < d.delay) continue;
-      const localP = Math.max(0, Math.min(1, (time - start - d.delay) / duration));
-      const p = easeOut(localP);
-
-      const dx = d.finalDx * p;
-      const dy = d.finalDy * p;
-
-      if (Math.random() < 0.25) {
-        const ex = x + dx * 0.6;
-        const ey = y + dy * 0.6;
-        const rx = d.r * 7;
-        const ry = d.r * 0.5;
-        sctx.beginPath();
-        sctx.ellipse(ex, ey, rx, ry, d.angle, 0, Math.PI * 2);
-        sctx.fillStyle = color;
-        sctx.fill();
-        stretchedAreas.push({ ex, ey, rx, ry, angle: d.angle });
-      } else {
-        if (isInsideStretched(dx, dy, d.r)) continue;
-        sctx.beginPath();
-        sctx.fillStyle = color;
-        sctx.arc(x + dx, y + dy, d.r * (0.6 + 0.4 * p), 0, Math.PI * 2);
-        sctx.fill();
-      }
+    if (!coreDrawn) {
+      drawCoreSplat(sctx, x, y, body.circleRadius, color, paintBounds);
+      coreDrawn = true;
     }
 
-    sctx.beginPath();
-    sctx.fillStyle = color;
-    sctx.arc(x, y, body.circleRadius * eased, 0, Math.PI * 2);
-    sctx.fill();
+    for (let d of droplets) {
+      if (d.drawn || time - start < d.delay) continue;
+      if (d.wall) drawWallSplat(sctx, d, color, paintBounds);
+      else drawInteriorSplat(sctx, d, color, paintBounds);
+      d.drawn = true;
+    }
 
     if (progress < 1) requestAnimationFrame(animate);
   }
