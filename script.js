@@ -98,6 +98,49 @@ function setupCopyTooltips(selector) {
 // Apply to all tooltip elements
 setupCopyTooltips(".tooltip");
 
+const revealTiming = {
+  duration: 1000,
+  delayScale: 1,
+  tipDuration: 8000
+};
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function setupScrollResponsiveReveals() {
+  let lastY = window.scrollY;
+  let lastTime = performance.now();
+
+  function updateTiming() {
+    const now = performance.now();
+    const y = window.scrollY;
+    const elapsed = Math.max(16, now - lastTime);
+    const velocity = Math.abs(y - lastY) / elapsed;
+    const fastness = clamp((velocity - 0.45) / 2.2, 0, 1);
+
+    revealTiming.duration = Math.round(1000 - fastness * 560);
+    revealTiming.delayScale = Number((1 - fastness * 0.72).toFixed(2));
+    revealTiming.tipDuration = Math.round(8000 - fastness * 2600);
+
+    document.documentElement.style.setProperty("--reveal-duration", `${revealTiming.duration}ms`);
+    document.documentElement.style.setProperty("--reveal-delay-scale", revealTiming.delayScale);
+    document.documentElement.style.setProperty("--tip-duration", `${revealTiming.tipDuration}ms`);
+
+    lastY = y;
+    lastTime = now;
+  }
+
+  updateTiming();
+  window.addEventListener("scroll", updateTiming, { passive: true });
+}
+
+function applyRevealTiming(element) {
+  element.style.setProperty("--reveal-duration", `${revealTiming.duration}ms`);
+  element.style.setProperty("--reveal-delay-scale", revealTiming.delayScale);
+  element.style.setProperty("--tip-duration", `${revealTiming.tipDuration}ms`);
+}
+
 function runWhenVisible(elements, callback, options = {}) {
   const targets = Array.from(elements).filter(Boolean);
   if (!targets.length) return;
@@ -321,7 +364,10 @@ function setupDoodleReveal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  setupScrollResponsiveReveals();
+
   runWhenVisible(document.querySelectorAll(".page-section"), el => {
+    applyRevealTiming(el);
     el.classList.add("is-visible");
   });
 
