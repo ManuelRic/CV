@@ -151,12 +151,12 @@ h2 {
   width: min(42%, 460px);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .options p {
   font-weight: bold;
-  text-align: left;
+  text-align: center;
   margin: 0;
   width: 100%;
   font-size: 30px;
@@ -242,7 +242,8 @@ h2 {
   text-decoration: none;
   display: inline-block;
   position: relative;
-  transition: color 0.18s ease;
+  cursor: pointer;
+  transition: color 0.18s ease, transform 0.18s ease;
   padding-bottom: 4px; /* ensures hover includes underline area */
 }
 
@@ -279,6 +280,7 @@ h2 {
 /* CV button: slide-in then hover scale works */
 .cv-wrap {
   display: inline-block; /* necessary for transform to behave nicely */
+  align-self: center;
   transform: translateY(50px);
   opacity: 0;
   /* keep wrapper from stealing pointer events from the button */
@@ -405,6 +407,11 @@ h2 {
   transition: color 0.18s ease, transform 0.18s ease;
 }
 
+.project-info > .project-link {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .project-link img,
 .project-link svg {
   width: 28px;
@@ -418,9 +425,16 @@ h2 {
   transform: translateY(-2px);
 }
 
+.project-link:focus-visible {
+  outline: 3px solid rgba(211, 43, 49, 0.45);
+  outline-offset: 4px;
+}
+
 .project-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
   gap: 0 22px;
 }
 
