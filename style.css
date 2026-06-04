@@ -391,6 +391,10 @@ h2 {
   overflow: hidden;
 }
 
+.project-media-wide {
+  aspect-ratio: 16 / 9;
+}
+
 .project-img {
   position: absolute;
   inset: 0;
