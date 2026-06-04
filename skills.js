@@ -23,9 +23,16 @@ let sctx = splatterCanvas.getContext("2d");
 let render = null;
 const footerHeight = 50;
 const wallThickness = 200;
-const skillRadius = 60;
-const topPlayInset = 170;
-const bottomPlayInset = 85;
+const desktopSkillRadius = 60;
+const desktopTopPlayInset = 170;
+const mobileTopPlayInset = 150;
+const desktopBottomPlayInset = 85;
+const mobileBottomPlayInset = 64;
+let skillRadius = getResponsiveSkillRadius();
+
+function getResponsiveSkillRadius() {
+  return Math.max(42, Math.min(desktopSkillRadius, window.innerWidth * 0.13));
+}
 
 function getSkillsBounds() {
   const rect = skillsSection.getBoundingClientRect();
@@ -47,7 +54,11 @@ function getSideCutoff() {
 }
 
 function getTopCutoff() {
-  return topPlayInset;
+  return window.innerWidth <= 768 ? mobileTopPlayInset : desktopTopPlayInset;
+}
+
+function getBottomCutoff() {
+  return window.innerWidth <= 768 ? mobileBottomPlayInset : desktopBottomPlayInset;
 }
 
 function getPlayableBounds() {
@@ -57,7 +68,7 @@ function getPlayableBounds() {
     left: getSideCutoff(),
     right: width - getSideCutoff(),
     top: getTopCutoff() + wallThickness / 2,
-    bottom: height - bottomPlayInset
+    bottom: height - getBottomCutoff()
   };
 }
 
@@ -91,7 +102,6 @@ function resizeCanvases() {
 }
 
 resizeCanvases();
-window.addEventListener("resize", resizeCanvases);
 
 const engine = Engine.create();
 const world = engine.world;
@@ -198,8 +208,43 @@ const balls = skills.map((name, i) => {
 });
 Composite.add(world, balls);
 
+function syncResponsiveBallSizes() {
+  const nextRadius = getResponsiveSkillRadius();
+  if (Math.abs(nextRadius - skillRadius) < 0.5) return;
+
+  const scale = nextRadius / skillRadius;
+  balls.forEach(body => Body.scale(body, scale, scale));
+  skillRadius = nextRadius;
+}
+
+function keepBallsInsideBounds() {
+  const bounds = getPlayableBounds();
+
+  balls.forEach(body => {
+    const r = body.circleRadius || skillRadius;
+    const minX = bounds.left + r;
+    const maxX = bounds.right - r;
+    const minY = bounds.top + r;
+    const maxY = bounds.bottom - r;
+
+    Body.setPosition(body, {
+      x: minX <= maxX ? clamp(body.position.x, minX, maxX) : (bounds.left + bounds.right) / 2,
+      y: minY <= maxY ? clamp(body.position.y, minY, maxY) : (bounds.top + bounds.bottom) / 2
+    });
+  });
+}
+
 const mouse = Mouse.create(render.canvas);
 canvas.removeEventListener("wheel", mouse.mousewheel);
+
+const coarsePointerQuery = window.matchMedia("(pointer: coarse)");
+const hoverPointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+if (coarsePointerQuery.matches) {
+  canvas.removeEventListener("touchstart", mouse.mousedown);
+  canvas.removeEventListener("touchmove", mouse.mousemove);
+  canvas.removeEventListener("touchend", mouse.mouseup);
+}
 
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
@@ -209,6 +254,15 @@ const mouseConstraint = MouseConstraint.create(engine, {
 let hoveredBall = null;
 
 function checkMouseHover() {
+  if (!hoverPointerQuery.matches) {
+    if (hoveredBall) {
+      animateFlip(hoveredBall, 0);
+      hoveredBall = null;
+    }
+    requestAnimationFrame(checkMouseHover);
+    return;
+  }
+
   const mx = mouse.position.x;
   const my = mouse.position.y;
 
@@ -613,43 +667,51 @@ function drawSplatterOnCanvas(body) {
 
 const popup = document.getElementById("skillPopup");
 let activePopupBall = null;
-let mouseDownPos = null;
-let mouseMoved = false;
+let pointerDownPos = null;
+let pointerMoved = false;
+let activePointerId = null;
+let touchDragBall = null;
+let lastTouchPoint = null;
+let lastTouchTime = 0;
+let touchDragVelocity = { x: 0, y: 0 };
 let popupTimer = null;
 
-canvas.addEventListener("mousedown", e => {
-  mouseDownPos = { x: e.clientX, y: e.clientY };
-  mouseMoved = false;
-});
+function resetPointerState() {
+  pointerDownPos = null;
+  pointerMoved = false;
+  activePointerId = null;
+  touchDragBall = null;
+  lastTouchPoint = null;
+  lastTouchTime = 0;
+  touchDragVelocity = { x: 0, y: 0 };
+}
 
-
-canvas.addEventListener("mousemove", e => {
-  if (!mouseDownPos) return;
-  const dx = e.clientX - mouseDownPos.x;
-  const dy = e.clientY - mouseDownPos.y;
-  if (Math.sqrt(dx*dx + dy*dy) > 6) mouseMoved = true;
-});
-
-canvas.addEventListener("mouseup", e => {
+function getCanvasPointFromEvent(e) {
   const rect = canvas.getBoundingClientRect();
-  const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  const bounds = getSkillsBounds();
+  const scaleX = bounds.width / Math.max(1, rect.width);
+  const scaleY = bounds.height / Math.max(1, rect.height);
 
-  if (mouseMoved) { mouseDownPos = null; mouseMoved = false; return; }
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
 
-  const bodies = Composite.allBodies(world);
-  let clickedBall = null;
-  for (let b of bodies) {
-    if (!b.circleRadius) continue;
-    const dx = b.position.x - mousePos.x;
-    const dy = b.position.y - mousePos.y;
-    if (Math.sqrt(dx*dx + dy*dy) <= b.circleRadius) { clickedBall = b; break; }
+function findBallAt(point) {
+  for (let b of balls) {
+    const dx = b.position.x - point.x;
+    const dy = b.position.y - point.y;
+    if (Math.sqrt(dx * dx + dy * dy) <= b.circleRadius) return b;
   }
 
+  return null;
+}
+
+function handleSkillClick(clickedBall) {
   if (!clickedBall) {
     popup.style.display = "none";
     activePopupBall = null;
-    mouseDownPos = null;
-    mouseMoved = false;
     return;
   }
 
@@ -677,24 +739,92 @@ canvas.addEventListener("mouseup", e => {
     activePopupBall = null;
     popupTimer = null;
   }, 5500);
+}
 
-  mouseDownPos = null;
-  mouseMoved = false;
+canvas.addEventListener("pointerdown", e => {
+  pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
+  pointerMoved = false;
+  activePointerId = e.pointerId;
+
+  if (e.pointerType === "touch") {
+    const point = getCanvasPointFromEvent(e);
+    const ball = findBallAt(point);
+    touchDragBall = ball && !splatters.has(ball) ? ball : null;
+    lastTouchPoint = point;
+    lastTouchTime = performance.now();
+    touchDragVelocity = { x: 0, y: 0 };
+  }
 });
+
+canvas.addEventListener("pointermove", e => {
+  if (!pointerDownPos || e.pointerId !== activePointerId) return;
+
+  const dx = e.clientX - pointerDownPos.x;
+  const dy = e.clientY - pointerDownPos.y;
+  const moveLimit = pointerDownPos.type === "touch" ? 14 : 6;
+  if (Math.sqrt(dx * dx + dy * dy) > moveLimit) pointerMoved = true;
+
+  if (pointerDownPos.type === "touch" && pointerMoved && touchDragBall && lastTouchPoint) {
+    const point = getCanvasPointFromEvent(e);
+    const now = performance.now();
+    const dt = Math.max(16, now - lastTouchTime);
+    const bounds = getPlayableBounds();
+    const r = touchDragBall.circleRadius || skillRadius;
+    const nextPoint = {
+      x: clamp(point.x, bounds.left + r, bounds.right - r),
+      y: clamp(point.y, bounds.top + r, bounds.bottom - r)
+    };
+
+    touchDragVelocity = {
+      x: ((nextPoint.x - lastTouchPoint.x) / dt) * 16,
+      y: ((nextPoint.y - lastTouchPoint.y) / dt) * 16
+    };
+
+    Body.setPosition(touchDragBall, nextPoint);
+    Body.setVelocity(touchDragBall, touchDragVelocity);
+    Body.setAngularVelocity(touchDragBall, touchDragVelocity.x * 0.01);
+    touchDragBall.plugin.lastMotionTime = Date.now();
+    lastTouchPoint = nextPoint;
+    lastTouchTime = now;
+  }
+});
+
+canvas.addEventListener("pointerup", e => {
+  if (!pointerDownPos || e.pointerId !== activePointerId) return;
+
+  if (pointerMoved) {
+    if (touchDragBall) Body.setVelocity(touchDragBall, touchDragVelocity);
+    resetPointerState();
+    return;
+  }
+
+  const clickedBall = findBallAt(getCanvasPointFromEvent(e));
+  handleSkillClick(clickedBall);
+  resetPointerState();
+});
+
+canvas.addEventListener("pointercancel", resetPointerState);
 
 (function updatePopupPosition(){
   requestAnimationFrame(updatePopupPosition);
   if (activePopupBall){
-    popup.style.left = (activePopupBall.position.x + 10) + "px";
-    popup.style.top = (activePopupBall.position.y + 10) + "px";
+    const bounds = getSkillsBounds();
+    const popupWidth = popup.offsetWidth || 300;
+    const popupHeight = popup.offsetHeight || 120;
+    const left = clamp(activePopupBall.position.x + 12, 8, bounds.width - popupWidth - 8);
+    const top = clamp(activePopupBall.position.y + 12, 8, bounds.height - popupHeight - 8);
+    popup.style.left = left + "px";
+    popup.style.top = top + "px";
   }
 })();
 
 window.addEventListener("resize", ()=> {
   resizeCanvases();
+  syncResponsiveBallSizes();
   Composite.remove(world, walls);
   walls = createWalls();
   Composite.add(world, walls);
+  keepBallsInsideBounds();
 });
 
 setInterval(()=> {

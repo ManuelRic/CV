@@ -13,6 +13,18 @@
     --accent: #d32b31;
     --paper: #fff4f4;
     --ink: #333;
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 48px;
+    --space-6: 64px;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 body {
@@ -22,16 +34,27 @@ body {
     z-index: 0;
     margin: 0;
     line-height: 1.35;
+    overflow-x: hidden;
 }
 
 html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
 }
 
 .page-section {
     min-height: 100vh;
-    box-sizing: border-box;
     padding: var(--section-top) var(--page-x) var(--section-bottom);
+}
+
+@supports (min-height: 100svh) {
+    .page-section {
+        min-height: 100svh;
+    }
 }
 
 .skills-section {
@@ -67,9 +90,9 @@ html {
 
 .main {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    gap: 90px;
+    gap: var(--space-6);
 }
 
 .main-left {
@@ -83,7 +106,7 @@ html {
 
 .main-left h1 {
     font-size: 80px;
-    margin: 0 0 28px;
+    margin: 0 0 var(--space-3);
     opacity: 0;
     transform: translateX(-50px);
 }
@@ -94,7 +117,7 @@ html {
     max-width: 100%;
     height: auto;
     border-radius: 15px;
-    margin-bottom: 22px;
+    margin-bottom: var(--space-3);
     opacity: 0;
     transform: translateY(50px);
 }
@@ -107,34 +130,34 @@ html {
 
 #location {
     font-size: 28px;
-    margin: 10px 0 0;
+    margin: var(--space-1) 0 0;
 }
 
 .notname {
-    margin: 0 0 18px;
+    margin: 0 0 var(--space-4);
     opacity: 0;
     transform: translateX(-50px);
 }
 
 h1 {
     font-size: 80px;
-    margin: 0 0 28px;
+    margin: 0 0 var(--space-4);
 }
 
 h2 {
     width: fit-content;
     font-size: 40px;
-    margin: 0 0 24px;
+    margin: 0 0 var(--space-3);
     opacity: 0;
     transform: translateX(50px);
 }
 
 #lang_t {
-  font-size: 36px;
+  font-size: 1.08em;
 }
 
 #lang_p {
-    margin-top: 34px;
+    margin-top: var(--space-3);
     text-align: left;
     font-size: 26px;
 }
@@ -156,7 +179,7 @@ h2 {
 
 .options p {
   font-weight: bold;
-  text-align: center;
+  text-align: left;
   margin: 0;
   width: 100%;
   font-size: 30px;
@@ -167,7 +190,7 @@ h2 {
 /* Consolidated h3 rules */
 .options h3 {
   position: relative;
-  margin: 28px 0 0;
+  margin: var(--space-2) 0 0;
   font-size: 45px;
 
   /* starting state */
@@ -287,12 +310,27 @@ h2 {
   -webkit-tap-highlight-color: transparent;
 }
 
+.cv-download {
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+.cv-download:focus-visible {
+  outline: 3px solid rgba(211, 43, 49, 0.45);
+  outline-offset: 5px;
+}
+
 /* button itself only handles hover scale (no sliding translate here) */
 #cv_button {
+  display: inline-block;
   font-family: 'MyFont', sans-serif;
   width: fit-content;
-  margin-top: 40px;
+  margin-top: var(--space-3);
   font-size: 20px;
+  line-height: 1.1;
+  text-align: center;
   white-space: nowrap;
   padding: 12px;
   cursor: pointer;
@@ -316,22 +354,22 @@ h2 {
 
 .projects-grid {
   width: min(100%, var(--content-max));
-  margin: 0 auto;
+  margin: var(--space-4) auto 0;
   display: grid;
-  gap: 34px;
+  gap: var(--space-3);
 }
 
 .project-card {
   display: grid;
-  grid-template-columns: minmax(260px, 420px) minmax(240px, 1fr);
+  grid-template-columns: minmax(240px, 360px) minmax(240px, 1fr);
   align-items: center;
-  gap: 42px;
+  gap: var(--space-4);
   opacity: 0;
   transform: translateY(50px);
 }
 
 .project-card-reverse {
-  grid-template-columns: minmax(240px, 1fr) minmax(340px, 560px);
+  grid-template-columns: minmax(240px, 1fr) minmax(260px, 400px);
 }
 
 .project-card-reverse .project-info {
@@ -340,14 +378,14 @@ h2 {
 
 .project-card-reverse .project-media {
   order: 2;
-  max-width: 560px;
+  max-width: 400px;
   justify-self: end;
 }
 
 .project-media {
   position: relative;
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
   aspect-ratio: 4 / 5;
   box-sizing: border-box;
   overflow: hidden;
@@ -382,11 +420,11 @@ h2 {
 
 .project-info {
   border-left: 5px solid var(--accent);
-  padding-left: 24px;
+  padding-left: var(--space-3);
 }
 
 .project-info h2 {
-  margin-bottom: 14px;
+  margin-bottom: var(--space-2);
 }
 
 .project-info p {
@@ -398,9 +436,9 @@ h2 {
 .project-link {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-1);
   width: fit-content;
-  margin-top: 18px;
+  margin-top: var(--space-2);
   color: var(--ink);
   font-size: 22px;
   text-decoration: none;
@@ -408,8 +446,8 @@ h2 {
 }
 
 .project-info > .project-link {
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .project-link img,
@@ -418,6 +456,10 @@ h2 {
   height: 28px;
   object-fit: contain;
   flex: 0 0 auto;
+}
+
+.external-link-icon {
+  color: var(--ink);
 }
 
 .project-link:hover {
@@ -433,9 +475,9 @@ h2 {
 .project-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-  gap: 0 22px;
+  justify-content: flex-start;
+  width: fit-content;
+  gap: 0 var(--space-3);
 }
 
 #location_icon {
@@ -479,7 +521,7 @@ h2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   align-items: flex-start;
-  gap: 80px;
+  gap: var(--space-6);
   width: min(100%, var(--content-max));
   margin: 0 auto;
 }
@@ -496,11 +538,11 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-1);
 }
 
 #timeline h2 {
-  margin: 0 0 18px;
+  margin: 0 0 var(--space-2);
   text-align: center;
   width: 100%;
 }
@@ -528,7 +570,7 @@ h2 {
 @media (max-width: 1000px) {
   .about-row {
     grid-template-columns: 1fr;
-    gap: 34px;
+    gap: var(--space-4);
   }
 
   .about-row .description {
@@ -549,14 +591,14 @@ h2 {
     width: 100%;
     color: #242424;
     font-size: 26px;
-    margin: 0 0 24px;
+    margin: 0 0 var(--space-3);
 }
 
 
 #skill_images {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* 2 equal columns */
-    gap: 20px; /* space between images */
+    gap: var(--space-3); /* space between images */
     justify-items: center; /* center images in each column */
     float: left;
     margin: 2%;
@@ -584,7 +626,7 @@ footer {
     color: white;
     display: flex;
     padding: 0 2%;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     box-sizing: border-box;
     opacity: 0;
@@ -605,24 +647,23 @@ footer p {
     font-size: 16px;
 }
 
-.contacts {
-    margin-right: 2.5%;
-    display: flex;
-    gap: 25px;
-}
-
 .floating-contacts {
     position: fixed;
     top: 18px;
     right: 28px;
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: var(--space-2);
     z-index: 20;
 }
 
 .floating-contacts .tooltip {
     margin-right: 0;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .floating-contacts .tooltip-text {
@@ -637,23 +678,18 @@ footer p {
 .logos {
     width: 30px;
     height: auto;
+    display: block;
     transition: transform 0.2s ease, opacity 0.2s ease;
-    opacity: 0.8;
     filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.5));
 
 }
 
 .logos:hover {
     transform: scale(1.2);
-    opacity: 1;
 }
 
 #phone_logo {
     filter: invert(1);
-}
-
-#gmail_link {
-    padding-top: 3px;
 }
 
 .tooltip {
@@ -661,6 +697,7 @@ footer p {
     position: relative;
     display: inline-block;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .tooltip-text {
@@ -711,6 +748,7 @@ footer p {
     padding: 15px;
     border-radius: 8px;
     max-width: 300px;
+    line-height: 1.25;
     z-index: 4;
 }
 
@@ -838,7 +876,7 @@ footer p {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 38px;
+    gap: var(--space-5);
   }
 
   .main-left {
@@ -858,7 +896,7 @@ footer p {
   }
 
   .options p {
-    text-align: center;
+    text-align: left;
   }
 
   .options {
@@ -872,21 +910,34 @@ footer p {
 
   .options h3 {
     font-size: 36px;
-    margin-top: 20px;
+    margin-top: var(--space-2);
   }
 
   .about-row {
     grid-template-columns: 1fr;
-    gap: 34px;
+    gap: var(--space-4);
   }
 
   .project-card {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: var(--space-3);
+    justify-items: center;
+  }
+
+  .project-card-reverse .project-media,
+  .project-card .project-media {
+    order: 1;
+    justify-self: center;
+  }
+
+  .project-card-reverse .project-info,
+  .project-card .project-info {
+    order: 2;
   }
 
   .project-info {
-    padding-left: 18px;
+    width: min(100%, 560px);
+    padding-left: var(--space-3);
   }
 
   #timeline {
@@ -908,8 +959,10 @@ footer p {
 @media (max-width: 768px) {
   :root {
     --page-x: 6%;
-    --section-top: 36px;
+    --section-top: 34px;
     --section-bottom: 58px;
+    --space-4: 28px;
+    --space-5: 40px;
   }
 
   body {
@@ -919,17 +972,49 @@ footer p {
   .floating-contacts {
     top: 12px;
     right: 16px;
-    gap: 14px;
+    gap: 12px;
+  }
+
+  .floating-contacts .tooltip {
+    width: 36px;
+    height: 36px;
+  }
+
+  .floating-contacts .tooltip-text {
+    left: auto;
+    right: 0;
+    transform: none;
+    max-width: calc(100vw - 32px);
+    white-space: normal;
+    font-size: 14px;
+  }
+
+  .logos {
+    width: 28px;
   }
 
   .main {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding-top: 70px;
+  }
+
+  h1 {
+    font-size: clamp(52px, 16vw, 72px);
+    margin-bottom: var(--space-3);
+  }
+
+  .notname {
+    margin-bottom: var(--space-3);
   }
 
   .main-left h1 {
-    font-size: 48px;
+    font-size: clamp(34px, 10.8vw, 48px);
+    white-space: nowrap;
+    margin-bottom: var(--space-2);
   }
 
   .main-left h2 {
@@ -938,6 +1023,7 @@ footer p {
 
   #pf_img {
     width: 170px;
+    margin-bottom: var(--space-2);
   }
 
   #location {
@@ -952,12 +1038,18 @@ footer p {
 
   .options p {
     font-size: 24px;
-    text-align: center;
-    width: 90%;
+    text-align: left;
+    width: min(100%, 430px);
   }
 
   .options h3 {
     font-size: 32px;
+    margin-top: var(--space-2);
+  }
+
+  #lang_p {
+    font-size: 22px;
+    text-align: center;
   }
 
   .project-info p {
@@ -966,11 +1058,43 @@ footer p {
 
   .project-link {
     font-size: 20px;
+    min-height: 44px;
   }
 
-  .project-media {
+  .project-card .project-media,
+  .project-card-reverse .project-media {
     max-width: min(100%, 340px);
     justify-self: center;
+  }
+
+  .projects-grid {
+    margin-top: var(--space-4);
+    gap: var(--space-5);
+  }
+
+  .project-actions {
+    width: 100%;
+  }
+
+  #skill_tip {
+    max-width: min(88vw, 520px);
+    font-size: 19px;
+    line-height: 1.25;
+  }
+
+  #skillsCanvas {
+    touch-action: pan-y;
+  }
+
+  #skillPopup {
+    max-width: min(280px, calc(100vw - 32px));
+    padding: 12px;
+    font-size: 18px;
+  }
+
+  #whoIam p {
+    font-size: 22px;
+    margin-bottom: var(--space-2);
   }
 
   /* Sticky note moves BELOW text */
@@ -982,12 +1106,13 @@ footer p {
     order: 2;       /* forces it BELOW the text */
     width: min(100%, 300px);
     margin-top: 0;
+    justify-self: center;
   }
 
   /* One-column skill grid */
   #skill_images {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--space-2);
   }
 
   .skill_img {
@@ -998,7 +1123,7 @@ footer p {
   footer {
     position: static;
     height: 45px;
-    margin-top: 30px;
+    margin-top: var(--space-4);
   }
 }
 
@@ -1009,7 +1134,7 @@ footer p {
 @media (max-width: 480px) {
 
   .main-left h1 {
-    font-size: 38px;
+    font-size: clamp(32px, 10.6vw, 38px);
   }
 
   .main-left h2 {
@@ -1018,6 +1143,19 @@ footer p {
 
   #pf_img {
     width: 140px;
+  }
+
+  .project-card .project-media,
+  .project-card-reverse .project-media {
+    max-width: min(100%, 300px);
+  }
+
+  .project-info {
+    padding-left: var(--space-2);
+  }
+
+  .project-info p {
+    font-size: 21px;
   }
 
   #timeline {
@@ -1032,12 +1170,52 @@ footer p {
     font-size: 20px;
   }
 
+  #lang_p {
+    font-size: 19px;
+  }
+
+  #cv_button {
+    max-width: calc(100vw - 40px);
+    font-size: 18px;
+    white-space: normal;
+  }
+
   .skill_img {
     width: 34px;
+  }
+
+  #whoIam p {
+    font-size: 20px;
   }
 
   footer {
     font-size: 12px;
     height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .main-left h1,
+  #pf_img,
+  h2,
+  .notname,
+  #skill_tip,
+  .options p,
+  .options h3,
+  .cv-wrap,
+  .project-card {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
