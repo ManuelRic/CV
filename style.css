@@ -315,6 +315,8 @@ h2 {
 .projects-grid {
   width: min(100%, var(--content-max));
   margin: 0 auto;
+  display: grid;
+  gap: 34px;
 }
 
 .project-card {
@@ -326,12 +328,25 @@ h2 {
   transform: translateY(50px);
 }
 
+.project-card-reverse {
+  grid-template-columns: minmax(240px, 1fr) minmax(340px, 560px);
+}
+
+.project-card-reverse .project-info {
+  order: 1;
+}
+
+.project-card-reverse .project-media {
+  order: 2;
+  max-width: 560px;
+  justify-self: end;
+}
+
 .project-media {
   position: relative;
   width: 100%;
   max-width: 420px;
-  aspect-ratio: 2107 / 3262;
-  border: 3px solid var(--ink);
+  aspect-ratio: 4 / 5;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -341,17 +356,26 @@ h2 {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
-.project-doodle-img {
+.project-original-img {
   pointer-events: none;
   opacity: 1;
   mask-image: radial-gradient(circle 0 at 50% 50%, #000 0, transparent 100%);
   -webkit-mask-image: radial-gradient(circle 0 at 50% 50%, #000 0, transparent 100%);
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
+}
+
+.doodle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
 }
 
 .project-info {
@@ -367,6 +391,37 @@ h2 {
   margin: 0;
   font-size: 28px;
   color: #242424;
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin-top: 18px;
+  color: var(--ink);
+  font-size: 22px;
+  text-decoration: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.project-link img,
+.project-link svg {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.project-link:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 22px;
 }
 
 #location_icon {
@@ -893,6 +948,10 @@ footer p {
 
   .project-info p {
     font-size: 23px;
+  }
+
+  .project-link {
+    font-size: 20px;
   }
 
   .project-media {

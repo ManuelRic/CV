@@ -124,47 +124,127 @@ function runWhenVisible(elements, callback, options = {}) {
 
 function setupDoodleReveal() {
   document.querySelectorAll(".doodle-reveal").forEach(surface => {
-    const overlay = surface.querySelector(".project-doodle-img");
+    const baseImage = surface.querySelector(".project-img:not(.project-original-img)");
+    const overlay = surface.querySelector(".project-original-img");
     if (!overlay) return;
 
-    const trail = [];
+    const canvas = document.createElement("canvas");
+    const maskCanvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const maskCtx = maskCanvas.getContext("2d");
+    const strokes = [];
     let rafId = null;
     let lastPoint = null;
-    let pointerInside = false;
-    const trailLife = 780;
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    const strokeLife = 940;
 
-    function setMask(mask) {
-      overlay.style.maskImage = mask;
-      overlay.style.webkitMaskImage = mask;
-    }
+    canvas.className = "doodle-canvas";
+    overlay.style.display = "none";
+    surface.appendChild(canvas);
 
-    function updateTrail(time) {
-      if (pointerInside && lastPoint && trail.length) {
-        const activePoint = trail[trail.length - 1];
-        activePoint.x = lastPoint.x;
-        activePoint.y = lastPoint.y;
-        activePoint.created = time;
-      }
+    function resizeCanvas() {
+      const rect = surface.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      dpr = Math.min(window.devicePixelRatio || 1, 3);
 
-      for (let i = trail.length - 1; i >= 0; i--) {
-        if (time - trail[i].created > trailLife) trail.splice(i, 1);
-      }
-
-      if (!trail.length) {
-        setMask("radial-gradient(circle 0 at 50% 50%, #000 0, transparent 100%)");
-        rafId = null;
-        return;
-      }
-
-      const masks = trail.map(point => {
-        const age = time - point.created;
-        const strength = Math.max(0, 1 - age / trailLife);
-        const radius = point.radius * (0.75 + strength * 0.45);
-        return `radial-gradient(circle ${radius}px at ${point.x}px ${point.y}px, rgba(0,0,0,${strength}) 0%, rgba(0,0,0,${strength * 0.86}) 38%, rgba(0,0,0,0) 72%)`;
+      [canvas, maskCanvas].forEach(item => {
+        item.width = Math.max(1, Math.round(width * dpr));
+        item.height = Math.max(1, Math.round(height * dpr));
       });
 
-      setMask(masks.join(", "));
-      rafId = requestAnimationFrame(updateTrail);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      maskCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      maskCtx.imageSmoothingEnabled = true;
+      maskCtx.imageSmoothingQuality = "high";
+    }
+
+    function drawImageContain(targetCtx, image, fitImage = image) {
+      if (!image.naturalWidth || !image.naturalHeight || !fitImage.naturalWidth || !fitImage.naturalHeight || !width || !height) return;
+
+      const scale = Math.min(width / fitImage.naturalWidth, height / fitImage.naturalHeight);
+      const drawWidth = fitImage.naturalWidth * scale;
+      const drawHeight = fitImage.naturalHeight * scale;
+      const drawX = (width - drawWidth) / 2;
+      const drawY = (height - drawHeight) / 2;
+
+      targetCtx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+    }
+
+    function drawSoftEllipse(targetCtx, x, y, radiusX, radiusY, rotation, alpha) {
+      targetCtx.save();
+      targetCtx.translate(x, y);
+      targetCtx.rotate(rotation);
+      targetCtx.scale(radiusX, radiusY);
+
+      const gradient = targetCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      gradient.addColorStop(0.5, `rgba(255,255,255,${alpha * 0.82})`);
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+
+      targetCtx.fillStyle = gradient;
+      targetCtx.beginPath();
+      targetCtx.arc(0, 0, 1, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.restore();
+    }
+
+    function renderReveal(time) {
+      if (!width || !height) resizeCanvas();
+
+      for (let i = strokes.length - 1; i >= 0; i--) {
+        if (time - strokes[i].created > strokeLife) strokes.splice(i, 1);
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      maskCtx.clearRect(0, 0, width, height);
+      maskCtx.globalCompositeOperation = "source-over";
+      maskCtx.lineCap = "round";
+      maskCtx.lineJoin = "round";
+
+      strokes.forEach(stroke => {
+        const age = time - stroke.created;
+        const progress = Math.max(0, 1 - age / strokeLife);
+        const strength = progress * progress * (3 - 2 * progress);
+        const alpha = strength * 0.95;
+        const radius = stroke.radius;
+        const wobbleX = Math.cos(stroke.seed) * radius * 0.16;
+        const wobbleY = Math.sin(stroke.seed * 1.3) * radius * 0.16;
+
+        maskCtx.save();
+        maskCtx.globalCompositeOperation = "source-over";
+        maskCtx.shadowBlur = radius * 0.26;
+        maskCtx.shadowColor = `rgba(255,255,255,${alpha * 0.55})`;
+        maskCtx.strokeStyle = `rgba(255,255,255,${alpha})`;
+        maskCtx.lineWidth = radius * 0.42;
+        maskCtx.beginPath();
+        maskCtx.moveTo(stroke.x1, stroke.y1);
+        maskCtx.lineTo(stroke.x2, stroke.y2);
+        maskCtx.stroke();
+        maskCtx.restore();
+
+        maskCtx.globalCompositeOperation = "source-over";
+        drawSoftEllipse(maskCtx, stroke.x2, stroke.y2, radius * 0.56, radius * 0.34, stroke.angle, alpha * 0.82);
+        drawSoftEllipse(maskCtx, stroke.x2 + radius * 0.26 + wobbleX, stroke.y2 - radius * 0.16, radius * 0.26, radius * 0.18, stroke.angle + 0.8, alpha * 0.58);
+        drawSoftEllipse(maskCtx, stroke.x2 - radius * 0.22, stroke.y2 + radius * 0.2 + wobbleY, radius * 0.22, radius * 0.28, stroke.angle - 0.65, alpha * 0.5);
+        drawSoftEllipse(maskCtx, stroke.x2 - radius * 0.34 + wobbleX, stroke.y2 - radius * 0.24 + wobbleY, radius * 0.14, radius * 0.18, stroke.angle + 1.4, alpha * 0.42);
+        maskCtx.globalCompositeOperation = "source-over";
+      });
+
+      drawImageContain(ctx, overlay, baseImage || overlay);
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(maskCanvas, 0, 0, width, height);
+      ctx.globalCompositeOperation = "source-over";
+
+      if (strokes.length) {
+        rafId = requestAnimationFrame(renderReveal);
+      } else {
+        rafId = null;
+      }
     }
 
     function addTrailPoint(event) {
@@ -173,29 +253,68 @@ function setupDoodleReveal() {
       const y = event.clientY - rect.top;
 
       if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
-      pointerInside = true;
 
-      if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 7) {
-        lastPoint = { x, y };
-        if (!rafId) rafId = requestAnimationFrame(updateTrail);
+      if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 5) {
         return;
       }
 
-      lastPoint = { x, y };
-      trail.push({
-        x,
-        y,
-        created: performance.now(),
-        radius: Math.max(200, Math.min(rect.width, rect.height) * 0.5)
-      });
+      const previousPoint = lastPoint || { x, y };
+      const distance = Math.hypot(x - previousPoint.x, y - previousPoint.y);
+      const steps = Math.max(1, Math.ceil(distance / 26));
+      const radius = Math.max(86, Math.min(rect.width, rect.height) * 0.19);
 
-      if (trail.length > 18) trail.shift();
-      if (!rafId) rafId = requestAnimationFrame(updateTrail);
+      for (let i = 1; i <= steps; i++) {
+        const t1 = (i - 1) / steps;
+        const t2 = i / steps;
+        const x1 = previousPoint.x + (x - previousPoint.x) * t1;
+        const y1 = previousPoint.y + (y - previousPoint.y) * t1;
+        const x2 = previousPoint.x + (x - previousPoint.x) * t2;
+        const y2 = previousPoint.y + (y - previousPoint.y) * t2;
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+
+        strokes.push({
+          x1,
+          y1,
+          x2,
+          y2,
+          angle,
+          radius,
+          created: performance.now(),
+          seed: (strokes.length + 1) * 2.37
+        });
+      }
+
+      lastPoint = { x, y };
+      if (strokes.length > 110) strokes.splice(0, strokes.length - 110);
+      if (!rafId) rafId = requestAnimationFrame(renderReveal);
+    }
+
+    resizeCanvas();
+    if (overlay.complete) {
+      renderReveal(performance.now());
+    }
+
+    if (!overlay.complete) {
+      overlay.addEventListener("load", () => {
+        renderReveal(performance.now());
+      }, { once: true });
+    }
+
+    if ("ResizeObserver" in window) {
+      const observer = new ResizeObserver(() => {
+        resizeCanvas();
+        renderReveal(performance.now());
+      });
+      observer.observe(surface);
+    } else {
+      window.addEventListener("resize", () => {
+        resizeCanvas();
+        renderReveal(performance.now());
+      });
     }
 
     surface.addEventListener("pointermove", addTrailPoint);
     surface.addEventListener("pointerleave", () => {
-      pointerInside = false;
       lastPoint = null;
     });
   });
