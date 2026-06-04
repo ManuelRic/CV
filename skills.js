@@ -811,8 +811,10 @@ canvas.addEventListener("pointercancel", resetPointerState);
     const bounds = getSkillsBounds();
     const popupWidth = popup.offsetWidth || 300;
     const popupHeight = popup.offsetHeight || 120;
-    const left = clamp(activePopupBall.position.x + 12, 8, bounds.width - popupWidth - 8);
-    const top = clamp(activePopupBall.position.y + 12, 8, bounds.height - popupHeight - 8);
+    const maxLeft = Math.max(8, bounds.width - popupWidth - 8);
+    const maxTop = Math.max(8, bounds.height - popupHeight - 8);
+    const left = clamp(activePopupBall.position.x + 12, 8, maxLeft);
+    const top = clamp(activePopupBall.position.y + 12, 8, maxTop);
     popup.style.left = left + "px";
     popup.style.top = top + "px";
   }
