@@ -30,6 +30,10 @@ const desktopBottomPlayInset = 85;
 const mobileBottomPlayInset = 64;
 let skillRadius = getResponsiveSkillRadius();
 
+function getCanvasPixelRatio() {
+  return Math.max(1, Math.ceil(window.devicePixelRatio || 1));
+}
+
 function getResponsiveSkillRadius() {
   return Math.max(42, Math.min(desktopSkillRadius, window.innerWidth * 0.13));
 }
@@ -73,16 +77,18 @@ function getPlayableBounds() {
 }
 
 function resizeCanvases() {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = getCanvasPixelRatio();
   const { width: w, height: h } = getSkillsBounds();
 
-  canvas.style.width = w + "px";
-  canvas.style.height = h + "px";
-  canvas.width = Math.floor(w * dpr);
-  canvas.height = Math.floor(h * dpr);
-
-  const ctx = canvas.getContext("2d");
-  if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (render) {
+    Render.setSize(render, w, h);
+    Render.setPixelRatio(render, dpr);
+  } else {
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+  }
 
   splatterCanvas.style.width = w + "px";
   splatterCanvas.style.height = h + "px";
@@ -91,13 +97,6 @@ function resizeCanvases() {
 
   sctx = splatterCanvas.getContext("2d");
   if (sctx) sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  if (render) {
-    render.options.width = w;
-    render.options.height = h;
-    render.bounds.max.x = w;
-    render.bounds.max.y = h;
-  }
 
 }
 
@@ -114,6 +113,7 @@ render = Render.create({
   options: {
     width: getSkillsBounds().width,
     height: getSkillsBounds().height,
+    pixelRatio: getCanvasPixelRatio(),
     wireframes: false,
     background: "transparent"
   }
@@ -822,6 +822,7 @@ canvas.addEventListener("pointercancel", resetPointerState);
 
 window.addEventListener("resize", ()=> {
   resizeCanvases();
+  mouse.pixelRatio = render.options.pixelRatio || getCanvasPixelRatio();
   syncResponsiveBallSizes();
   Composite.remove(world, walls);
   walls = createWalls();
@@ -855,7 +856,9 @@ canvas.addEventListener("mousemove", e => {
 (function drawLabels(){
   const ctx = render.context;
   requestAnimationFrame(drawLabels);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const pixelRatio = render.options.pixelRatio || 1;
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  ctx.clearRect(0, 0, render.options.width, render.options.height);
   ctx.font="bold 18px MyFont, sans-serif";
   ctx.fillStyle="#fff";
   ctx.textAlign="center";
