@@ -20,7 +20,12 @@ const splatterCanvas = ensureSplatterCanvas();
 const canvas = document.getElementById("skillsCanvas");
 const skillsSection = document.getElementById("skills") || canvas.parentElement || document.body;
 let sctx = splatterCanvas.getContext("2d");
+const paintLayer = document.createElement("canvas");
+let pctx = paintLayer.getContext("2d");
+let paintLayerCssWidth = 0;
+let paintLayerCssHeight = 0;
 let render = null;
+let pointerStateReady = false;
 const footerHeight = 50;
 const wallThickness = 200;
 const desktopSkillRadius = 60;
@@ -79,6 +84,14 @@ function getPlayableBounds() {
 function resizeCanvases() {
   const dpr = getCanvasPixelRatio();
   const { width: w, height: h } = getSkillsBounds();
+  const hadPaintLayer = paintLayer.width > 0 && paintLayer.height > 0;
+  const paintSnapshot = hadPaintLayer ? document.createElement("canvas") : null;
+
+  if (paintSnapshot) {
+    paintSnapshot.width = paintLayer.width;
+    paintSnapshot.height = paintLayer.height;
+    paintSnapshot.getContext("2d").drawImage(paintLayer, 0, 0);
+  }
 
   if (render) {
     Render.setSize(render, w, h);
@@ -98,6 +111,35 @@ function resizeCanvases() {
   sctx = splatterCanvas.getContext("2d");
   if (sctx) sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+  paintLayer.width = Math.floor(w * dpr);
+  paintLayer.height = Math.floor(h * dpr);
+  pctx = paintLayer.getContext("2d");
+  if (pctx) {
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (paintSnapshot) {
+      pctx.drawImage(
+        paintSnapshot,
+        0,
+        0,
+        paintSnapshot.width,
+        paintSnapshot.height,
+        0,
+        0,
+        w,
+        h
+      );
+    }
+  }
+
+  paintLayerCssWidth = w;
+  paintLayerCssHeight = h;
+  syncVisibleSplatter();
+}
+
+function syncVisibleSplatter() {
+  if (!sctx || !paintLayerCssWidth || !paintLayerCssHeight) return;
+  sctx.clearRect(0, 0, paintLayerCssWidth, paintLayerCssHeight);
+  sctx.drawImage(paintLayer, 0, 0, paintLayerCssWidth, paintLayerCssHeight);
 }
 
 resizeCanvases();
@@ -118,8 +160,38 @@ render = Render.create({
     background: "transparent"
   }
 });
-Render.run(render);
-Runner.run(Runner.create(), engine);
+
+const runner = Runner.create();
+let skillsCanvasVisible = true;
+let simulationRunning = true;
+
+Runner.run(runner, engine);
+
+function setSimulationRunning(shouldRun) {
+  if (shouldRun === simulationRunning) return;
+
+  simulationRunning = shouldRun;
+  skillsCanvasVisible = shouldRun;
+
+  if (shouldRun) {
+    Runner.run(runner, engine);
+    syncVisibleSplatter();
+    return;
+  }
+
+  if (pointerStateReady) resetPointerState();
+  Runner.stop(runner);
+}
+
+if ("IntersectionObserver" in window) {
+  const simulationObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => setSimulationRunning(entry.isIntersecting));
+  }, {
+    threshold: 0,
+    rootMargin: "160px 0px 160px 0px"
+  });
+  simulationObserver.observe(skillsSection);
+}
 
 const skillDescriptions = {
   "HTML": "Built semantic, accessible, and responsive web pages for modern web applications.",
@@ -236,15 +308,12 @@ function keepBallsInsideBounds() {
 
 const mouse = Mouse.create(render.canvas);
 canvas.removeEventListener("wheel", mouse.mousewheel);
+canvas.removeEventListener("touchstart", mouse.mousedown);
+canvas.removeEventListener("touchmove", mouse.mousemove);
+canvas.removeEventListener("touchend", mouse.mouseup);
 
 const coarsePointerQuery = window.matchMedia("(pointer: coarse)");
 const hoverPointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
-
-if (coarsePointerQuery.matches) {
-  canvas.removeEventListener("touchstart", mouse.mousedown);
-  canvas.removeEventListener("touchmove", mouse.mousemove);
-  canvas.removeEventListener("touchend", mouse.mouseup);
-}
 
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
@@ -254,6 +323,11 @@ const mouseConstraint = MouseConstraint.create(engine, {
 let hoveredBall = null;
 
 function checkMouseHover() {
+  if (!skillsCanvasVisible) {
+    requestAnimationFrame(checkMouseHover);
+    return;
+  }
+
   if (!hoverPointerQuery.matches) {
     if (hoveredBall) {
       animateFlip(hoveredBall, 0);
@@ -599,6 +673,7 @@ function drawCoreSplat(ctx, x, y, radius, color, bounds) {
 
 function drawSplatterOnCanvas(body) {
   if (splatters.has(body)) return;
+  if (!pctx) return;
 
   const x = body.position.x;
   const y = body.position.y;
@@ -644,20 +719,21 @@ function drawSplatterOnCanvas(body) {
 
   function animate(time) {
     const progress = Math.min((time - start) / duration, 1);
-    sctx.globalCompositeOperation = "source-over";
+    pctx.globalCompositeOperation = "source-over";
 
     if (!coreDrawn) {
-      drawCoreSplat(sctx, x, y, body.circleRadius, color, paintBounds);
+      drawCoreSplat(pctx, x, y, body.circleRadius, color, paintBounds);
       coreDrawn = true;
     }
 
     for (let d of droplets) {
       if (d.drawn || time - start < d.delay) continue;
-      if (d.wall) drawWallSplat(sctx, d, color, paintBounds);
-      else drawInteriorSplat(sctx, d, color, paintBounds);
+      if (d.wall) drawWallSplat(pctx, d, color, paintBounds);
+      else drawInteriorSplat(pctx, d, color, paintBounds);
       d.drawn = true;
     }
 
+    syncVisibleSplatter();
     if (progress < 1) requestAnimationFrame(animate);
   }
 
@@ -674,6 +750,8 @@ let touchDragBall = null;
 let lastTouchPoint = null;
 let lastTouchTime = 0;
 let touchDragVelocity = { x: 0, y: 0 };
+let touchDragCommitted = false;
+let touchScrollIntent = false;
 let popupTimer = null;
 
 function resetPointerState() {
@@ -684,7 +762,11 @@ function resetPointerState() {
   lastTouchPoint = null;
   lastTouchTime = 0;
   touchDragVelocity = { x: 0, y: 0 };
+  touchDragCommitted = false;
+  touchScrollIntent = false;
 }
+
+pointerStateReady = true;
 
 function getCanvasPointFromEvent(e) {
   const rect = canvas.getBoundingClientRect();
@@ -742,18 +824,29 @@ function handleSkillClick(clickedBall) {
 }
 
 canvas.addEventListener("pointerdown", e => {
-  pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
-  pointerMoved = false;
-  activePointerId = e.pointerId;
-
   if (e.pointerType === "touch") {
     const point = getCanvasPointFromEvent(e);
     const ball = findBallAt(point);
+
+    if (!ball) {
+      handleSkillClick(null);
+      resetPointerState();
+      return;
+    }
+
+    pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
+    pointerMoved = false;
+    activePointerId = e.pointerId;
     touchDragBall = ball && !splatters.has(ball) ? ball : null;
     lastTouchPoint = point;
     lastTouchTime = performance.now();
     touchDragVelocity = { x: 0, y: 0 };
+    return;
   }
+
+  pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
+  pointerMoved = false;
+  activePointerId = e.pointerId;
 });
 
 canvas.addEventListener("pointermove", e => {
@@ -764,7 +857,20 @@ canvas.addEventListener("pointermove", e => {
   const moveLimit = pointerDownPos.type === "touch" ? 14 : 6;
   if (Math.sqrt(dx * dx + dy * dy) > moveLimit) pointerMoved = true;
 
-  if (pointerDownPos.type === "touch" && pointerMoved && touchDragBall && lastTouchPoint) {
+  if (pointerDownPos.type === "touch" && pointerMoved && !touchDragCommitted && !touchScrollIntent) {
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (absY > absX * 1.15) {
+      touchScrollIntent = true;
+      touchDragBall = null;
+      return;
+    }
+
+    touchDragCommitted = Boolean(touchDragBall);
+  }
+
+  if (pointerDownPos.type === "touch" && pointerMoved && touchDragCommitted && touchDragBall && lastTouchPoint) {
     const point = getCanvasPointFromEvent(e);
     const now = performance.now();
     const dt = Math.max(16, now - lastTouchTime);
@@ -807,7 +913,7 @@ canvas.addEventListener("pointercancel", resetPointerState);
 
 (function updatePopupPosition(){
   requestAnimationFrame(updatePopupPosition);
-  if (activePopupBall){
+  if (skillsCanvasVisible && activePopupBall){
     const bounds = getSkillsBounds();
     const popupWidth = popup.offsetWidth || 300;
     const popupHeight = popup.offsetHeight || 120;
@@ -820,7 +926,9 @@ canvas.addEventListener("pointercancel", resetPointerState);
   }
 })();
 
-window.addEventListener("resize", ()=> {
+let resizeRaf = null;
+
+function handleSkillsResize() {
   resizeCanvases();
   mouse.pixelRatio = render.options.pixelRatio || getCanvasPixelRatio();
   syncResponsiveBallSizes();
@@ -828,6 +936,14 @@ window.addEventListener("resize", ()=> {
   walls = createWalls();
   Composite.add(world, walls);
   keepBallsInsideBounds();
+}
+
+window.addEventListener("resize", () => {
+  if (resizeRaf) return;
+  resizeRaf = requestAnimationFrame(() => {
+    resizeRaf = null;
+    handleSkillsResize();
+  });
 });
 
 setInterval(()=> {
@@ -856,6 +972,8 @@ canvas.addEventListener("mousemove", e => {
 (function drawLabels(){
   const ctx = render.context;
   requestAnimationFrame(drawLabels);
+  if (!skillsCanvasVisible) return;
+
   const pixelRatio = render.options.pixelRatio || 1;
   ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   ctx.clearRect(0, 0, render.options.width, render.options.height);

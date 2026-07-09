@@ -111,8 +111,10 @@ function clamp(value, min, max) {
 function setupScrollResponsiveReveals() {
   let lastY = window.scrollY;
   let lastTime = performance.now();
+  let rafId = null;
 
   function updateTiming() {
+    rafId = null;
     const now = performance.now();
     const y = window.scrollY;
     const elapsed = Math.max(16, now - lastTime);
@@ -131,8 +133,13 @@ function setupScrollResponsiveReveals() {
     lastTime = now;
   }
 
+  function requestTimingUpdate() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(updateTiming);
+  }
+
   updateTiming();
-  window.addEventListener("scroll", updateTiming, { passive: true });
+  window.addEventListener("scroll", requestTimingUpdate, { passive: true });
 }
 
 function applyRevealTiming(element) {
@@ -373,8 +380,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupDoodleReveal();
 
-  runWhenVisible([document.getElementById("location_icon")], locationIcon => {
-    setTimeout(() => locationIcon.classList.add("animate"), 1200);
+  const locationIcon = document.getElementById("location_icon");
+
+  function playLocationPinAnimation() {
+    if (!locationIcon) return;
+    locationIcon.classList.remove("animate");
+    void locationIcon.offsetWidth;
+    locationIcon.classList.add("animate");
+  }
+
+  if (locationIcon) {
+    locationIcon.setAttribute("role", "button");
+    locationIcon.setAttribute("tabindex", "0");
+    locationIcon.setAttribute("aria-label", "Animate location pin");
+
+    locationIcon.addEventListener("click", playLocationPinAnimation);
+    locationIcon.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      playLocationPinAnimation();
+    });
+
+    locationIcon.addEventListener("animationend", event => {
+      if (event.animationName !== "bounce") return;
+      locationIcon.classList.remove("animate");
+    });
+  }
+
+  runWhenVisible([locationIcon], () => {
+    setTimeout(playLocationPinAnimation, 1200);
   }, { threshold: 1 });
 
   const footer = document.querySelector("footer");

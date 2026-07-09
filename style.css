@@ -272,9 +272,11 @@ h2 {
   will-change: transform, opacity;
 }
 
-/* Hover - scale h3 */
-.options h3:hover {
-  transform: translateX(0) scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .options h3:hover,
+  .options h3.animation-finished:hover {
+    transform: translateX(0) scale(1.05) !important;
+  }
 }
 
 /* Class added by JS after animation completes — locks final state */
@@ -338,11 +340,7 @@ h2 {
   cursor: pointer;
   transition: color 0.18s ease, transform 0.18s ease;
   padding-bottom: 4px; /* ensures hover includes underline area */
-}
-
-/* Hover effect for text & underline when h3 is hovered */
-.options h3:hover a {
-  color: #d32b31;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Underline effect */
@@ -359,14 +357,18 @@ h2 {
   pointer-events: none; /* ensures underline is not hoverable */
 }
 
-/* Animate underline when h3 is hovered */
-.options h3:hover a::after {
-  width: 100%;
-}
+@media (hover: hover) and (pointer: fine) {
+  .options h3:hover a {
+    color: var(--accent);
+  }
 
-/* Optional inner link hover style (if used elsewhere) */
-.link-inner:hover {
-  color: var(--accent);
+  .options h3:hover a::after {
+    width: 100%;
+  }
+
+  .link-inner:hover {
+    color: var(--accent);
+  }
 }
 
 
@@ -574,6 +576,8 @@ h2 {
 #location_icon {
     display: inline-block;
     font-size: 2rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
     transition: 
       transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
       filter 0.15s ease,
@@ -581,12 +585,20 @@ h2 {
     transform-origin: center bottom; /* makes transform pivot from bottom point */
   }
 
+  #location_icon:focus-visible {
+    outline: 3px solid rgba(211, 43, 49, 0.45);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+
+@media (hover: hover) and (pointer: fine) {
   #location_icon:hover {
     animation: bounce;
     transform: scaleY(0.85) scaleX(1.1) translateY(2px); /* squish down slightly */
     filter: brightness(0.9); /* make it look pressed */
     text-shadow: 0 1px 0 #00000033; /* subtle depth shadow */
   }
+}
 
 #location_icon.animate {
   animation: bounce 0.3s ease-in-out 2;
@@ -1024,6 +1036,13 @@ footer p {
     grid-template-columns: 1fr;
     gap: var(--space-3);
     justify-items: center;
+    width: 100%;
+  }
+
+  .project-card-large,
+  .project-card-reverse,
+  .project-card-reverse.project-card-large {
+    grid-template-columns: 1fr;
   }
 
   .project-card-reverse .project-media,
@@ -1166,6 +1185,37 @@ footer p {
     font-size: 23px;
   }
 
+  .projects-grid {
+    width: 100%;
+    max-width: 560px;
+    margin-top: var(--space-4);
+    gap: var(--space-5);
+  }
+
+  .project-card,
+  .project-card-large,
+  .project-card-reverse,
+  .project-card-reverse.project-card-large {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
+    justify-items: stretch;
+    overflow: hidden;
+  }
+
+  .project-card-reverse .project-info,
+  .project-card .project-info,
+  .project-card-reverse .project-media,
+  .project-card .project-media {
+    order: initial;
+  }
+
+  .project-info {
+    width: 100%;
+    max-width: 100%;
+    padding-left: var(--space-2);
+  }
+
   .project-link {
     font-size: 20px;
     min-height: 44px;
@@ -1177,17 +1227,13 @@ footer p {
 
   .project-card .project-media,
   .project-card-reverse .project-media {
+    width: 100%;
     max-width: min(100%, 340px);
     justify-self: center;
   }
 
   .project-card-large .project-media {
     max-width: min(100%, 520px);
-  }
-
-  .projects-grid {
-    margin-top: var(--space-4);
-    gap: var(--space-5);
   }
 
   .project-actions {
@@ -1202,8 +1248,9 @@ footer p {
     line-height: 1.25;
   }
 
+  .skills-section,
   #skillsCanvas {
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
   }
 
   #skillPopup {
