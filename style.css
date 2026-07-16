@@ -452,7 +452,7 @@ h2 {
   width: min(100%, var(--content-max));
   margin: var(--space-4) auto 0;
   display: grid;
-  gap: var(--space-5);
+  row-gap: clamp(64px, 7vw, 96px);
 }
 
 .project-card {
@@ -505,6 +505,8 @@ h2 {
 }
 
 .project-media-doodle {
+  --doodle-image-size: 118%;
+  --doodle-image-offset: -9%;
   aspect-ratio: 6 / 5;
 }
 
@@ -518,6 +520,9 @@ h2 {
 }
 
 .project-media-doodle .project-img {
+  inset: auto auto 0 var(--doodle-image-offset);
+  width: var(--doodle-image-size);
+  height: var(--doodle-image-size);
   object-fit: cover;
   object-position: center bottom;
 }
@@ -552,6 +557,15 @@ h2 {
 
 .project-carousel-tts .project-img {
   object-fit: cover;
+}
+
+[data-carousel-natural-size] .project-img {
+  object-fit: contain;
+}
+
+[data-carousel-natural-size] {
+  background: transparent;
+  max-height: min(70vh, 480px);
 }
 
 .project-carousel-tts .project-img-align-top {
@@ -1369,7 +1383,7 @@ footer p {
     width: 100%;
     max-width: 560px;
     margin-top: var(--space-4);
-    gap: var(--space-5);
+    row-gap: var(--space-6);
   }
 
   .project-card,

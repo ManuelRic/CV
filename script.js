@@ -164,7 +164,7 @@ function runWhenVisible(elements, callback, options = {}) {
       obs.unobserve(entry.target);
     });
   }, {
-    threshold: 0.25,
+    threshold: 0.05,
     rootMargin: "0px 0px -10% 0px",
     ...options
   });
@@ -187,6 +187,8 @@ function setupProjectCarousels() {
     const carouselId = `project-carousel-${carouselIndex + 1}`;
     const autoplayDelay = 5000;
     const resumeDelay = 3000;
+    const minimumAspectRatio = 1.5;
+    const maximumAspectRatio = 2.5;
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let currentIndex = 0;
     let pointerStartX = null;
@@ -200,6 +202,27 @@ function setupProjectCarousels() {
     track.id = `${carouselId}-track`;
     previousButton.setAttribute("aria-controls", track.id);
     nextButton.setAttribute("aria-controls", track.id);
+
+    if (carousel.hasAttribute("data-carousel-natural-size")) {
+      const slideAspectRatios = slides
+        .map(slide => slide.querySelector("img[width][height]"))
+        .filter(Boolean)
+        .map(image => {
+          const naturalWidth = Number(image.getAttribute("width"));
+          const naturalHeight = Number(image.getAttribute("height"));
+          const naturalAspectRatio = naturalWidth / naturalHeight;
+
+          return Math.min(
+            maximumAspectRatio,
+            Math.max(minimumAspectRatio, naturalAspectRatio)
+          );
+        })
+        .filter(Number.isFinite);
+
+      if (slideAspectRatios.length) {
+        carousel.style.aspectRatio = String(Math.min(...slideAspectRatios));
+      }
+    }
 
     const dots = slides.map((slide, index) => {
       const slideNumber = index + 1;
@@ -397,15 +420,48 @@ function setupDoodleReveal() {
       if (!image.naturalWidth || !image.naturalHeight || !fitImage.naturalWidth || !fitImage.naturalHeight || !width || !height) return;
 
       const useCoverFit = surface.classList.contains("project-media-doodle");
+      const surfaceRect = surface.getBoundingClientRect();
+      const fitRect = fitImage.getBoundingClientRect();
       const scale = useCoverFit
-        ? Math.max(width / fitImage.naturalWidth, height / fitImage.naturalHeight)
-        : Math.min(width / fitImage.naturalWidth, height / fitImage.naturalHeight);
+        ? Math.max(fitRect.width / fitImage.naturalWidth, fitRect.height / fitImage.naturalHeight)
+        : Math.min(fitRect.width / fitImage.naturalWidth, fitRect.height / fitImage.naturalHeight);
       const drawWidth = fitImage.naturalWidth * scale;
       const drawHeight = fitImage.naturalHeight * scale;
-      const drawX = (width - drawWidth) / 2;
-      const drawY = useCoverFit ? height - drawHeight : (height - drawHeight) / 2;
+      const boxX = fitRect.left - surfaceRect.left;
+      const boxY = fitRect.top - surfaceRect.top;
+      const drawX = boxX + (fitRect.width - drawWidth) / 2;
+      const drawY = useCoverFit
+        ? boxY + fitRect.height - drawHeight
+        : boxY + (fitRect.height - drawHeight) / 2;
 
-      targetCtx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+      const targetAspectRatio = drawWidth / drawHeight;
+      const sourceAspectRatio = image.naturalWidth / image.naturalHeight;
+      let sourceX = 0;
+      let sourceY = 0;
+      let sourceWidth = image.naturalWidth;
+      let sourceHeight = image.naturalHeight;
+
+      if (sourceAspectRatio > targetAspectRatio) {
+        sourceWidth = sourceHeight * targetAspectRatio;
+        sourceX = (image.naturalWidth - sourceWidth) / 2;
+      } else if (sourceAspectRatio < targetAspectRatio) {
+        sourceHeight = sourceWidth / targetAspectRatio;
+        sourceY = useCoverFit
+          ? image.naturalHeight - sourceHeight
+          : (image.naturalHeight - sourceHeight) / 2;
+      }
+
+      targetCtx.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
     }
 
     function drawSoftEllipse(targetCtx, x, y, radiusX, radiusY, rotation, alpha) {
@@ -481,11 +537,12 @@ function setupDoodleReveal() {
     }
 
     function addTrailPoint(event) {
-      const rect = surface.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const canvasRect = canvas.getBoundingClientRect();
+      const surfaceRect = surface.getBoundingClientRect();
+      const x = event.clientX - canvasRect.left;
+      const y = event.clientY - canvasRect.top;
 
-      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+      if (x < 0 || y < 0 || x > canvasRect.width || y > canvasRect.height) return;
 
       if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 5) {
         return;
@@ -494,7 +551,7 @@ function setupDoodleReveal() {
       const previousPoint = lastPoint || { x, y };
       const distance = Math.hypot(x - previousPoint.x, y - previousPoint.y);
       const steps = Math.max(1, Math.ceil(distance / 26));
-      const radius = Math.max(86, Math.min(rect.width, rect.height) * 0.19);
+      const radius = Math.max(86, Math.min(surfaceRect.width, surfaceRect.height) * 0.19);
 
       for (let i = 1; i <= steps; i++) {
         const t1 = (i - 1) / steps;
