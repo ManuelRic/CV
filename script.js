@@ -709,16 +709,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }, { threshold: 1 });
 
   const footer = document.querySelector("footer");
+  const backToTop = document.getElementById("back-to-top");
+
   function updateFooterVisibility() {
     if (!footer) return;
     const scrollBottom = window.scrollY + window.innerHeight;
     const pageBottom = document.documentElement.scrollHeight;
-    footer.classList.toggle("footer-visible", scrollBottom >= pageBottom - 8);
+    const footerIsVisible = scrollBottom >= pageBottom - 8;
+
+    footer.classList.toggle("footer-visible", footerIsVisible);
+
+    if (backToTop) {
+      const footerClearance = footerIsVisible ? footer.offsetHeight + 12 : 0;
+      backToTop.style.setProperty("--footer-clearance", `${footerClearance}px`);
+    }
   }
 
   updateFooterVisibility();
   window.addEventListener("scroll", updateFooterVisibility, { passive: true });
   window.addEventListener("resize", updateFooterVisibility);
+
+  if (backToTop) {
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function updateBackToTopVisibility() {
+      backToTop.classList.toggle("is-visible", window.scrollY > 8);
+    }
+
+    backToTop.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: reducedMotionQuery.matches ? "auto" : "smooth"
+      });
+    });
+
+    updateBackToTopVisibility();
+    window.addEventListener("scroll", updateBackToTopVisibility, { passive: true });
+  }
 });
 
 // Add a class when the slideInRight animation completes so hover transforms work reliably
