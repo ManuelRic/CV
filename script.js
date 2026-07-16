@@ -1,3 +1,59 @@
+function setupSiteLoader() {
+  const loader = document.getElementById("site-loader");
+  const root = document.documentElement;
+
+  if (!loader) {
+    root.classList.remove("is-loading");
+    return;
+  }
+
+  const startedAt = performance.now();
+  const minimumVisibleTime = 350;
+  const maximumWaitTime = 12000;
+  const wait = duration => new Promise(resolve => window.setTimeout(resolve, duration));
+
+  function waitForImage(image) {
+    const loaded = image.complete
+      ? Promise.resolve()
+      : new Promise(resolve => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", resolve, { once: true });
+        });
+
+    return loaded.then(() => {
+      if (!image.naturalWidth || typeof image.decode !== "function") return;
+      return image.decode().catch(() => {});
+    });
+  }
+
+  async function finishLoading() {
+    const imagePromises = Array.from(document.images, waitForImage);
+    const documentImagesReady = Promise.allSettled(imagePromises);
+    const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+    const skillsReady = window.skillsAssetsReady || Promise.resolve();
+    const assetsReady = Promise.allSettled([documentImagesReady, fontsReady, skillsReady]);
+
+    await Promise.race([assetsReady, wait(maximumWaitTime)]);
+    await wait(Math.max(0, minimumVisibleTime - (performance.now() - startedAt)));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    root.classList.remove("is-loading");
+    loader.classList.add("is-hidden");
+    loader.setAttribute("aria-hidden", "true");
+
+    loader.addEventListener("transitionend", () => loader.remove(), { once: true });
+    window.setTimeout(() => loader.remove(), 500);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", finishLoading, { once: true });
+  } else {
+    finishLoading();
+  }
+}
+
+setupSiteLoader();
+
 // Wait until the page loads
 window.addEventListener("DOMContentLoaded", () => {
   const returnBtn = document.getElementById("return");

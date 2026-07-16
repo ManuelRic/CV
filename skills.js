@@ -247,11 +247,26 @@ let walls = createWalls();
 Composite.add(world, walls);
 
 const loadedImages = {};
+const skillImagePromises = [];
 for (const [name, src] of Object.entries(skillImageMap)) {
   const img = new Image();
+  const imageReady = new Promise(resolve => {
+    img.addEventListener("load", () => {
+      if (typeof img.decode === "function") {
+        img.decode().catch(() => {}).finally(resolve);
+      } else {
+        resolve();
+      }
+    }, { once: true });
+    img.addEventListener("error", resolve, { once: true });
+  });
+
+  img.decoding = "async";
   img.src = src;
   loadedImages[name] = img;
+  skillImagePromises.push(imageReady);
 }
+window.skillsAssetsReady = Promise.allSettled(skillImagePromises);
 
 const balls = skills.map((name, i) => {
   const bounds = getPlayableBounds();

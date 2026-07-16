@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" translate="no">
+<html lang="en" translate="no" class="is-loading">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MR CV</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="img/favicontest_120_red2_outlined2.png">
+  <noscript><style>html.is-loading { overflow-y: auto; } #site-loader { display: none; }</style></noscript>
 </head>
 <body>
+  <div id="site-loader" class="site-loader" role="status" aria-live="polite" aria-label="Loading portfolio">
+    <span class="site-loader-mark" aria-hidden="true">MR<span>.</span></span>
+  </div>
+
   <div class="floating-contacts" aria-label="Contact links">
     <a class="tooltip" href="mailto:manuel.ricart.soler@gmail.com" data-copy="manuel.ricart.soler@gmail.com" aria-label="Copy Gmail address">
       <img class="logos" src="img/Gmail_icon.png" alt="Gmail">
