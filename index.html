@@ -47,7 +47,7 @@
 
     <div class="options">
       <div class="home-copy">
-        <p>I enjoy designing and building <span class="red_txt">interactive</span> projects that connect technology, <span class="red_txt">creativity</span>, and <span class="red_txt">design</span>.</p>
+        <p>I enjoy designing and building <span class="red_txt">interactive</span> projects that connect technology, <span class="red_txt">creativity</span> and <span class="red_txt">design</span>.</p>
         <p id="lang_p"><span id="lang_t">Languages:</span> Spanish (<span class="red_txt">Native</span>)&nbsp;+&nbsp;English (<span class="red_txt">C1</span>)</p>
       </div>
 
@@ -81,14 +81,14 @@
     <h1 class="notname">Projects</h1>
 
     <div class="projects-grid">
-      <article class="project-card">
-        <div class="project-media doodle-reveal">
+      <article class="project-card project-card-large">
+        <div class="project-media project-media-doodle doodle-reveal">
           <img class="project-img" src="img/projectImages/doodleIt/peacockV2_doodled.png" alt="Doodled peacock image used for doodleIt">
           <img class="project-img project-original-img" src="img/projectImages/doodleIt/peacockV.jpg" alt="">
         </div>
         <div class="project-info">
           <h2>doodleIt</h2>
-          <p>An image-based doodle experiment focused on playful visual interaction.</p>
+          <p>A Python image-processing tool that rebuilds photos from small doodle tiles. A pixelated version of the source sits underneath to keep colors consistent and prevent transparency issues.</p>
           <a class="project-link" href="https://github.com/ManuelRic/doodleIt" target="_blank" rel="noopener noreferrer">
             <img src="img/gitHub.png" alt="">
             <span>View on GitHub</span>
@@ -97,12 +97,36 @@
       </article>
 
       <article class="project-card project-card-reverse project-card-large">
-        <div class="project-media project-media-wide">
-          <img class="project-img" src="img/tts_example3.png" alt="TTS Project preview">
+        <div class="project-media project-media-wide project-carousel project-carousel-tts" data-project-carousel aria-label="TTS Project screenshots">
+          <div class="project-carousel-viewport">
+            <div class="project-carousel-track">
+              <figure class="project-carousel-slide" data-carousel-slide>
+                <img class="project-img" src="img/tts_example3.png" alt="Parametric speech spectrogram from the TTS Project">
+              </figure>
+              <figure class="project-carousel-slide" data-carousel-slide>
+                <img class="project-img" src="img/tts_example2.png" alt="Interactive concatenative speech synthesis demo">
+              </figure>
+              <figure class="project-carousel-slide" data-carousel-slide>
+                <img class="project-img project-img-align-top" src="img/tts_example1.png" alt="WaveNet and causal convolution explanation page">
+              </figure>
+            </div>
+          </div>
+          <button class="project-carousel-button project-carousel-prev" type="button" aria-label="Previous screenshot">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+          </button>
+          <button class="project-carousel-button project-carousel-next" type="button" aria-label="Next screenshot">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </button>
+          <div class="project-carousel-dots" aria-label="Choose a TTS Project screenshot"></div>
+          <p class="project-carousel-status sr-only" aria-live="polite"></p>
         </div>
         <div class="project-info">
           <h2>TTS Project</h2>
-          <p>An interactive website explaining the evolution of text-to-speech.</p>
+          <p>An interactive website exploring how text-to-speech has evolved, from concatenative and parametric systems to neural models and WaveNet, with audio examples and practical demos.</p>
           <div class="project-actions">
             <a class="project-link" href="https://manuelric.github.io/proyecto_voz/index.html" target="_blank" rel="noopener noreferrer">
               <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -126,7 +150,7 @@
         </div>
         <div class="project-info">
           <h2>eyesec</h2>
-          <p>A passive website assessment tool for checking HTTPS, TLS, security headers, redirects, cookies, DNS/email posture, metadata, CORS, and visible frontend risks.</p>
+          <p>A Three.js cybersecurity website featuring an animated 3D eye that follows the cursor and reacts to clicks, supported by sections on threats, monitoring, and security services.</p>
           <a class="project-link" href="https://github.com/ManuelRic/eyesec" target="_blank" rel="noopener noreferrer">
             <img src="img/gitHub.png" alt="">
             <span>View on GitHub</span>
@@ -140,11 +164,56 @@
         </div>
         <div class="project-info">
           <h2>Water and Wake System</h2>
-          <p>A Three.js water prototype with interactive waves, buoyancy, wakes, foam, caustics, and ship movement.</p>
+          <p>A Three.js water simulation with wind-driven waves, buoyancy, ship wakes, foam, reflections, and caustics. Wakes remain in the water and curve naturally as the ship turns.</p>
           <a class="project-link" href="https://github.com/ManuelRic/threejs-reactive-water" target="_blank" rel="noopener noreferrer">
             <img src="img/gitHub.png" alt="">
             <span>View on GitHub</span>
           </a>
+        </div>
+      </article>
+
+      <article class="project-card project-card-large">
+        <div class="project-media project-media-wide project-carousel" data-project-carousel aria-label="Mosaic Studio 21 screenshots">
+          <div class="project-carousel-viewport">
+            <div class="project-carousel-track">
+              <figure class="project-carousel-slide" data-carousel-slide>
+                <img class="project-img" src="img/projectImages/mosaicStudio/homePageMosaic.png" alt="Mosaic Studio 21 home page with illustrated domino pieces">
+              </figure>
+                            <figure class="project-carousel-slide" data-carousel-slide>
+                <img class="project-img" src="img/projectImages/mosaicStudio/mickey.png" alt="Mickey Mouse image recreated as a domino mosaic in Mosaic Studio 21">
+              </figure>
+            </div>
+          </div>
+          <button class="project-carousel-button project-carousel-prev" type="button" aria-label="Previous screenshot">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+          </button>
+          <button class="project-carousel-button project-carousel-next" type="button" aria-label="Next screenshot">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </button>
+          <div class="project-carousel-dots" aria-label="Choose a Mosaic Studio 21 screenshot"></div>
+          <p class="project-carousel-status sr-only" aria-live="polite"></p>
+        </div>
+        <div class="project-info">
+          <h2>Mosaic Studio 21</h2>
+          <p>A browser-based tool that turns photos or typed text into domino mosaics. Users can adjust the piece count, orientation, and finish, then export a build plan with exact dimensions.</p>
+          <div class="project-actions">
+            <a class="project-link" href="https://manuelric.github.io/Mosaic-Studio-21/" target="_blank" rel="noopener noreferrer">
+              <svg class="external-link-icon" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6"/>
+                <path d="M10 14 21 3"/>
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              </svg>
+              <span>Visit site</span>
+            </a>
+            <a class="project-link" href="https://github.com/ManuelRic/Mosaic-Studio-21" target="_blank" rel="noopener noreferrer">
+              <img src="img/gitHub.png" alt="">
+              <span>View on GitHub</span>
+            </a>
+          </div>
         </div>
       </article>
     </div>

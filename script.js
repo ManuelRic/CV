@@ -172,6 +172,186 @@ function runWhenVisible(elements, callback, options = {}) {
   targets.forEach(target => observer.observe(target));
 }
 
+function setupProjectCarousels() {
+  document.querySelectorAll("[data-project-carousel]").forEach((carousel, carouselIndex) => {
+    const viewport = carousel.querySelector(".project-carousel-viewport");
+    const track = carousel.querySelector(".project-carousel-track");
+    const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
+    const previousButton = carousel.querySelector(".project-carousel-prev");
+    const nextButton = carousel.querySelector(".project-carousel-next");
+    const dotsContainer = carousel.querySelector(".project-carousel-dots");
+    const status = carousel.querySelector(".project-carousel-status");
+
+    if (!viewport || !track || !previousButton || !nextButton || !dotsContainer || slides.length < 2) return;
+
+    const carouselId = `project-carousel-${carouselIndex + 1}`;
+    const autoplayDelay = 5000;
+    const resumeDelay = 3000;
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let currentIndex = 0;
+    let pointerStartX = null;
+    let autoplayTimer = null;
+    let resumeTimer = null;
+    let isHovered = false;
+    let isFocusWithin = false;
+
+    carousel.setAttribute("role", "region");
+    carousel.setAttribute("aria-roledescription", "carousel");
+    track.id = `${carouselId}-track`;
+    previousButton.setAttribute("aria-controls", track.id);
+    nextButton.setAttribute("aria-controls", track.id);
+
+    const dots = slides.map((slide, index) => {
+      const slideNumber = index + 1;
+      const slideId = `${carouselId}-slide-${slideNumber}`;
+      const dot = document.createElement("button");
+
+      slide.id = slideId;
+      slide.setAttribute("role", "group");
+      slide.setAttribute("aria-roledescription", "slide");
+      slide.setAttribute("aria-label", `${slideNumber} of ${slides.length}`);
+      slide.querySelectorAll("img").forEach(image => image.setAttribute("draggable", "false"));
+
+      dot.className = "project-carousel-dot";
+      dot.type = "button";
+      dot.setAttribute("aria-label", `Show screenshot ${slideNumber} of ${slides.length}`);
+      dot.setAttribute("aria-controls", slideId);
+      dot.addEventListener("click", () => selectSlide(index));
+      dotsContainer.appendChild(dot);
+
+      return dot;
+    });
+
+    function showSlide(index, announce = true) {
+      currentIndex = (index + slides.length) % slides.length;
+      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+      slides.forEach((slide, slideIndex) => {
+        slide.setAttribute("aria-hidden", String(slideIndex !== currentIndex));
+      });
+
+      dots.forEach((dot, dotIndex) => {
+        if (dotIndex === currentIndex) {
+          dot.setAttribute("aria-current", "true");
+        } else {
+          dot.removeAttribute("aria-current");
+        }
+      });
+
+      if (announce && status) {
+        status.textContent = `Showing screenshot ${currentIndex + 1} of ${slides.length}`;
+      }
+    }
+
+    function stopAutoplay() {
+      if (autoplayTimer !== null) {
+        window.clearInterval(autoplayTimer);
+        autoplayTimer = null;
+      }
+
+      if (resumeTimer !== null) {
+        window.clearTimeout(resumeTimer);
+        resumeTimer = null;
+      }
+    }
+
+    function startAutoplay() {
+      stopAutoplay();
+      if (isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
+
+      autoplayTimer = window.setInterval(() => {
+        showSlide(currentIndex + 1, false);
+      }, autoplayDelay);
+    }
+
+    function resumeAutoplayAfterDelay() {
+      stopAutoplay();
+      if (isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
+
+      resumeTimer = window.setTimeout(() => {
+        resumeTimer = null;
+        if (isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
+        showSlide(currentIndex + 1, false);
+        startAutoplay();
+      }, resumeDelay);
+    }
+
+    function selectSlide(index) {
+      showSlide(index);
+      startAutoplay();
+    }
+
+    previousButton.addEventListener("click", () => selectSlide(currentIndex - 1));
+    nextButton.addEventListener("click", () => selectSlide(currentIndex + 1));
+
+    carousel.addEventListener("keydown", event => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        selectSlide(currentIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        selectSlide(currentIndex + 1);
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        selectSlide(0);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        selectSlide(slides.length - 1);
+      }
+    });
+
+    carousel.addEventListener("mouseenter", () => {
+      isHovered = true;
+      stopAutoplay();
+    });
+
+    carousel.addEventListener("mouseleave", () => {
+      isHovered = false;
+      resumeAutoplayAfterDelay();
+    });
+
+    carousel.addEventListener("focusin", event => {
+      if (!event.target.matches(":focus-visible")) return;
+      isFocusWithin = true;
+      stopAutoplay();
+    });
+
+    carousel.addEventListener("focusout", event => {
+      if (event.relatedTarget && carousel.contains(event.relatedTarget)) return;
+      isFocusWithin = false;
+      startAutoplay();
+    });
+
+    viewport.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse") return;
+      stopAutoplay();
+      pointerStartX = event.clientX;
+    });
+
+    viewport.addEventListener("pointerup", event => {
+      if (pointerStartX === null) return;
+      const distance = event.clientX - pointerStartX;
+      pointerStartX = null;
+      if (Math.abs(distance) >= 40) {
+        showSlide(currentIndex + (distance < 0 ? 1 : -1));
+      }
+      startAutoplay();
+    });
+
+    viewport.addEventListener("pointercancel", () => {
+      pointerStartX = null;
+      startAutoplay();
+    });
+
+    document.addEventListener("visibilitychange", startAutoplay);
+    reducedMotionQuery.addEventListener("change", startAutoplay);
+
+    showSlide(0, false);
+    carousel.classList.add("is-ready");
+    startAutoplay();
+  });
+}
+
 function setupDoodleReveal() {
   document.querySelectorAll(".doodle-reveal").forEach(surface => {
     const baseImage = surface.querySelector(".project-img:not(.project-original-img)");
@@ -213,14 +393,17 @@ function setupDoodleReveal() {
       maskCtx.imageSmoothingQuality = "high";
     }
 
-    function drawImageContain(targetCtx, image, fitImage = image) {
+    function drawImageFitted(targetCtx, image, fitImage = image) {
       if (!image.naturalWidth || !image.naturalHeight || !fitImage.naturalWidth || !fitImage.naturalHeight || !width || !height) return;
 
-      const scale = Math.min(width / fitImage.naturalWidth, height / fitImage.naturalHeight);
+      const useCoverFit = surface.classList.contains("project-media-doodle");
+      const scale = useCoverFit
+        ? Math.max(width / fitImage.naturalWidth, height / fitImage.naturalHeight)
+        : Math.min(width / fitImage.naturalWidth, height / fitImage.naturalHeight);
       const drawWidth = fitImage.naturalWidth * scale;
       const drawHeight = fitImage.naturalHeight * scale;
       const drawX = (width - drawWidth) / 2;
-      const drawY = (height - drawHeight) / 2;
+      const drawY = useCoverFit ? height - drawHeight : (height - drawHeight) / 2;
 
       targetCtx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
     }
@@ -285,7 +468,7 @@ function setupDoodleReveal() {
         maskCtx.globalCompositeOperation = "source-over";
       });
 
-      drawImageContain(ctx, overlay, baseImage || overlay);
+      drawImageFitted(ctx, overlay, baseImage || overlay);
       ctx.globalCompositeOperation = "destination-in";
       ctx.drawImage(maskCanvas, 0, 0, width, height);
       ctx.globalCompositeOperation = "source-over";
@@ -378,6 +561,7 @@ document.addEventListener("DOMContentLoaded", () => {
     el.classList.add("is-visible");
   });
 
+  setupProjectCarousels();
   setupDoodleReveal();
 
   const locationIcon = document.getElementById("location_icon");
