@@ -718,11 +718,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const footerIsVisible = scrollBottom >= pageBottom - 8;
 
     footer.classList.toggle("footer-visible", footerIsVisible);
-
-    if (backToTop) {
-      const footerClearance = footerIsVisible ? footer.offsetHeight + 12 : 0;
-      backToTop.style.setProperty("--footer-clearance", `${footerClearance}px`);
-    }
   }
 
   updateFooterVisibility();
@@ -732,7 +727,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (backToTop) {
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    function updateBackToTopVisibility() {
+    function updateBackToTopPosition() {
+      const maximumScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const scrollProgress = Math.min(1, Math.max(0, window.scrollY / maximumScroll));
+      const startingTop = Number.parseFloat(getComputedStyle(backToTop).top) || 16;
+      const footerHeight = footer ? footer.offsetHeight : 0;
+      const footerGap = 12;
+      const maximumTravel = Math.max(
+        0,
+        window.innerHeight - (startingTop * 2) - backToTop.offsetHeight - footerHeight - footerGap
+      );
+
+      backToTop.style.setProperty("--scroll-offset", `${scrollProgress * maximumTravel}px`);
       backToTop.classList.toggle("is-visible", window.scrollY > 8);
     }
 
@@ -743,8 +749,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    updateBackToTopVisibility();
-    window.addEventListener("scroll", updateBackToTopVisibility, { passive: true });
+    updateBackToTopPosition();
+    window.addEventListener("scroll", updateBackToTopPosition, { passive: true });
+    window.addEventListener("resize", updateBackToTopPosition);
   }
 });
 
