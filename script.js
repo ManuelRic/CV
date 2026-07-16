@@ -726,19 +726,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (backToTop) {
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileBackToTopQuery = window.matchMedia("(max-width: 768px)");
 
     function updateBackToTopPosition() {
-      const maximumScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      const scrollProgress = Math.min(1, Math.max(0, window.scrollY / maximumScroll));
-      const startingTop = Number.parseFloat(getComputedStyle(backToTop).top) || 16;
-      const footerHeight = footer ? footer.offsetHeight : 0;
-      const footerGap = 12;
-      const maximumTravel = Math.max(
-        0,
-        window.innerHeight - (startingTop * 2) - backToTop.offsetHeight - footerHeight - footerGap
-      );
+      if (mobileBackToTopQuery.matches) {
+        backToTop.style.setProperty("--scroll-offset", "0px");
+      } else {
+        const maximumScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const scrollProgress = Math.min(1, Math.max(0, window.scrollY / maximumScroll));
+        const startingTop = Number.parseFloat(getComputedStyle(backToTop).top) || 16;
+        const footerHeight = footer ? footer.offsetHeight : 0;
+        const footerGap = 12;
+        const maximumTravel = Math.max(
+          0,
+          window.innerHeight - (startingTop * 2) - backToTop.offsetHeight - footerHeight - footerGap
+        );
 
-      backToTop.style.setProperty("--scroll-offset", `${scrollProgress * maximumTravel}px`);
+        backToTop.style.setProperty("--scroll-offset", `${scrollProgress * maximumTravel}px`);
+      }
+
       backToTop.classList.toggle("is-visible", window.scrollY > 8);
     }
 

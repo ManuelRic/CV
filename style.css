@@ -1572,6 +1572,24 @@ footer p {
     height: 45px;
     margin-top: var(--space-4);
   }
+
+  .back-to-top {
+    top: auto;
+    bottom: 57px;
+    left: 16px;
+    width: 48px;
+    height: 60px;
+    transform: translateY(12px);
+    will-change: auto;
+  }
+
+  .back-to-top.is-visible {
+    transform: translateY(0);
+  }
+
+  .back-to-top img {
+    height: 52px;
+  }
 }
 
 
@@ -1642,6 +1660,10 @@ footer p {
   footer {
     font-size: 12px;
     height: 40px;
+  }
+
+  .back-to-top {
+    bottom: 52px;
   }
 }
 
