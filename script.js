@@ -745,7 +745,8 @@ document.addEventListener("DOMContentLoaded", () => {
         backToTop.style.setProperty("--scroll-offset", `${scrollProgress * maximumTravel}px`);
       }
 
-      backToTop.classList.toggle("is-visible", window.scrollY > 8);
+      const visibilityThreshold = mobileBackToTopQuery.matches ? window.innerHeight : 8;
+      backToTop.classList.toggle("is-visible", window.scrollY > visibilityThreshold);
     }
 
     backToTop.addEventListener("click", () => {

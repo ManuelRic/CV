@@ -1576,9 +1576,9 @@ footer p {
   .back-to-top {
     top: auto;
     bottom: 57px;
-    left: 16px;
-    width: 48px;
-    height: 60px;
+    left: 14px;
+    width: 44px;
+    height: 54px;
     transform: translateY(12px);
     will-change: auto;
   }
@@ -1588,7 +1588,7 @@ footer p {
   }
 
   .back-to-top img {
-    height: 52px;
+    height: 46px;
   }
 }
 
