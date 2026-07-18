@@ -33,6 +33,7 @@ const desktopTopPlayInset = 170;
 const mobileTopPlayInset = 150;
 const desktopBottomPlayInset = 85;
 const mobileBottomPlayInset = 64;
+const maximumSkillSpeed = 28;
 let skillRadius = getResponsiveSkillRadius();
 
 function getCanvasPixelRatio() {
@@ -304,21 +305,63 @@ function syncResponsiveBallSizes() {
   skillRadius = nextRadius;
 }
 
-function keepBallsInsideBounds() {
+function confineSkillBall(body, resetMotion = false) {
   const bounds = getPlayableBounds();
+  const r = body.circleRadius || skillRadius;
+  const minX = bounds.left + r;
+  const maxX = bounds.right - r;
+  const minY = bounds.top + r;
+  const maxY = bounds.bottom - r;
+  const fallbackX = (bounds.left + bounds.right) / 2;
+  const fallbackY = (bounds.top + bounds.bottom) / 2;
+  const invalidPosition = !Number.isFinite(body.position.x) || !Number.isFinite(body.position.y);
+  const currentX = invalidPosition ? fallbackX : body.position.x;
+  const currentY = invalidPosition ? fallbackY : body.position.y;
+  const targetX = minX <= maxX ? clamp(currentX, minX, maxX) : fallbackX;
+  const targetY = minY <= maxY ? clamp(currentY, minY, maxY) : fallbackY;
+  const escapedX = currentX !== targetX;
+  const escapedY = currentY !== targetY;
+  const hardEscape = invalidPosition ||
+    currentX < minX - r || currentX > maxX + r ||
+    currentY < minY - r || currentY > maxY + r;
+  const velocityX = Number.isFinite(body.velocity.x) ? body.velocity.x : 0;
+  const velocityY = Number.isFinite(body.velocity.y) ? body.velocity.y : 0;
 
-  balls.forEach(body => {
-    const r = body.circleRadius || skillRadius;
-    const minX = bounds.left + r;
-    const maxX = bounds.right - r;
-    const minY = bounds.top + r;
-    const maxY = bounds.bottom - r;
+  if (escapedX || escapedY || invalidPosition) {
+    Body.setPosition(body, { x: targetX, y: targetY });
 
-    Body.setPosition(body, {
-      x: minX <= maxX ? clamp(body.position.x, minX, maxX) : (bounds.left + bounds.right) / 2,
-      y: minY <= maxY ? clamp(body.position.y, minY, maxY) : (bounds.top + bounds.bottom) / 2
+    if (resetMotion || hardEscape) {
+      Body.setVelocity(body, { x: 0, y: 0 });
+      Body.setAngularVelocity(body, 0);
+    } else {
+      const velocity = {
+        x: escapedX
+          ? (currentX < targetX ? Math.abs(velocityX) : -Math.abs(velocityX)) * 0.35
+          : velocityX,
+        y: escapedY
+          ? (currentY < targetY ? Math.abs(velocityY) : -Math.abs(velocityY)) * 0.35
+          : velocityY
+      };
+      Body.setVelocity(body, velocity);
+    }
+
+    if (mouseConstraint?.body === body) {
+      mouseConstraint.constraint.bodyB = null;
+    }
+  }
+
+  const speed = Math.hypot(body.velocity.x, body.velocity.y);
+  if (speed > maximumSkillSpeed) {
+    const speedScale = maximumSkillSpeed / speed;
+    Body.setVelocity(body, {
+      x: body.velocity.x * speedScale,
+      y: body.velocity.y * speedScale
     });
-  });
+  }
+}
+
+function keepBallsInsideBounds() {
+  balls.forEach(body => confineSkillBall(body, true));
 }
 
 const mouse = Mouse.create(render.canvas);
@@ -996,17 +1039,6 @@ window.addEventListener("resize", () => {
   });
 });
 
-setInterval(()=> {
-  const { width: w, height: h } = getSkillsBounds();
-  Composite.allBodies(world).forEach(body=>{
-    if(!body.position) return;
-    if(body.position.y>h+1000||body.position.x<-1000||body.position.x>w+1000){
-      Body.setPosition(body,{x:Math.random()*w,y:Math.random()*(h/2)});
-      Body.setVelocity(body,{x:0,y:0});
-    }
-  });
-},3000);
-
 canvas.addEventListener("mousemove", e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
@@ -1087,6 +1119,7 @@ canvas.addEventListener("mousemove", e => {
 Events.on(engine, "afterUpdate", () => {
   const now = performance.now();
   balls.forEach(body => {
+    confineSkillBall(body);
     if (splatters.has(body)) return;
     const speed = Math.sqrt(body.velocity.x**2 + body.velocity.y**2);
     const angularSpeed = Math.abs(body.angularVelocity);

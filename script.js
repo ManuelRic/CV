@@ -284,8 +284,43 @@ const revealTiming = {
   tipDuration: 8000
 };
 
+const scrollResponsiveAnimationNames = new Set([
+  "slideInLeft",
+  "slideInRight",
+  "slideInUp"
+]);
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function accelerateActiveReveals(section) {
+  if (typeof section.getAnimations !== "function") return;
+
+  let animations;
+
+  try {
+    animations = section.getAnimations({ subtree: true });
+  } catch {
+    animations = Array.from(section.querySelectorAll("*"))
+      .flatMap(element => element.getAnimations?.() || []);
+  }
+
+  animations.forEach(animation => {
+    if (!scrollResponsiveAnimationNames.has(animation.animationName)) return;
+
+    const animationDuration = Number(animation.effect?.getTiming().duration);
+    if (!Number.isFinite(animationDuration) || animationDuration <= 0) return;
+
+    const targetRate = clamp(animationDuration / revealTiming.duration, 1, 3);
+    if (targetRate <= Math.abs(animation.playbackRate)) return;
+
+    if (typeof animation.updatePlaybackRate === "function") {
+      animation.updatePlaybackRate(targetRate);
+    } else {
+      animation.playbackRate = targetRate;
+    }
+  });
 }
 
 function setupScrollResponsiveReveals() {
@@ -297,17 +332,23 @@ function setupScrollResponsiveReveals() {
     rafId = null;
     const now = performance.now();
     const y = window.scrollY;
-    const elapsed = Math.max(16, now - lastTime);
+    // Cap idle time so the first large scroll after a pause is still treated as fast.
+    const elapsed = clamp(now - lastTime, 16, 80);
     const velocity = Math.abs(y - lastY) / elapsed;
-    const fastness = clamp((velocity - 0.45) / 2.2, 0, 1);
+    const fastness = clamp((velocity - 0.3) / 1.8, 0, 1);
 
-    revealTiming.duration = Math.round(1000 - fastness * 560);
-    revealTiming.delayScale = Number((1 - fastness * 0.72).toFixed(2));
-    revealTiming.tipDuration = Math.round(8000 - fastness * 2600);
+    revealTiming.duration = Math.round(1000 - fastness * 640);
+    revealTiming.delayScale = Number((1 - fastness * 0.88).toFixed(2));
+    revealTiming.tipDuration = Math.round(8000 - fastness * 3200);
 
     document.documentElement.style.setProperty("--reveal-duration", `${revealTiming.duration}ms`);
     document.documentElement.style.setProperty("--reveal-delay-scale", revealTiming.delayScale);
     document.documentElement.style.setProperty("--tip-duration", `${revealTiming.tipDuration}ms`);
+
+    if (fastness > 0) {
+      document.querySelectorAll(".page-section.is-visible")
+        .forEach(accelerateActiveReveals);
+    }
 
     lastY = y;
     lastTime = now;
@@ -1179,6 +1220,7 @@ document.addEventListener("DOMContentLoaded", () => {
   runWhenVisible(document.querySelectorAll(".page-section"), el => {
     applyRevealTiming(el);
     el.classList.add("is-visible");
+    requestAnimationFrame(() => accelerateActiveReveals(el));
   });
 
   setupProjectCarousels();
