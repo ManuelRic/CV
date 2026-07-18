@@ -766,7 +766,7 @@ let lastTouchPoint = null;
 let lastTouchTime = 0;
 let touchDragVelocity = { x: 0, y: 0 };
 let touchDragCommitted = false;
-let touchScrollIntent = false;
+let activeDragTouchId = null;
 let popupTimer = null;
 
 function resetPointerState() {
@@ -778,21 +778,25 @@ function resetPointerState() {
   lastTouchTime = 0;
   touchDragVelocity = { x: 0, y: 0 };
   touchDragCommitted = false;
-  touchScrollIntent = false;
+  activeDragTouchId = null;
 }
 
 pointerStateReady = true;
 
-function getCanvasPointFromEvent(e) {
+function getCanvasPoint(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   const bounds = getSkillsBounds();
   const scaleX = bounds.width / Math.max(1, rect.width);
   const scaleY = bounds.height / Math.max(1, rect.height);
 
   return {
-    x: (e.clientX - rect.left) * scaleX,
-    y: (e.clientY - rect.top) * scaleY
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
   };
+}
+
+function getCanvasPointFromEvent(e) {
+  return getCanvasPoint(e.clientX, e.clientY);
 }
 
 function findBallAt(point) {
@@ -838,6 +842,40 @@ function handleSkillClick(clickedBall) {
   }, 5500);
 }
 
+canvas.addEventListener("touchstart", event => {
+  for (const touch of Array.from(event.changedTouches)) {
+    const ball = findBallAt(getCanvasPoint(touch.clientX, touch.clientY));
+    if (!ball || splatters.has(ball)) continue;
+
+    activeDragTouchId = touch.identifier;
+    event.preventDefault();
+    break;
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchmove", event => {
+  if (activeDragTouchId === null) return;
+
+  for (const touch of Array.from(event.touches)) {
+    if (touch.identifier !== activeDragTouchId) continue;
+    event.preventDefault();
+    return;
+  }
+}, { passive: false });
+
+function releaseActiveDragTouch(event) {
+  if (activeDragTouchId === null) return;
+
+  for (const touch of Array.from(event.changedTouches)) {
+    if (touch.identifier !== activeDragTouchId) continue;
+    activeDragTouchId = null;
+    return;
+  }
+}
+
+canvas.addEventListener("touchend", releaseActiveDragTouch, { passive: true });
+canvas.addEventListener("touchcancel", releaseActiveDragTouch, { passive: true });
+
 canvas.addEventListener("pointerdown", e => {
   if (e.pointerType === "touch") {
     const point = getCanvasPointFromEvent(e);
@@ -847,6 +885,11 @@ canvas.addEventListener("pointerdown", e => {
       handleSkillClick(null);
       resetPointerState();
       return;
+    }
+
+    if (!splatters.has(ball)) {
+      e.preventDefault();
+      canvas.setPointerCapture?.(e.pointerId);
     }
 
     pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
@@ -862,7 +905,7 @@ canvas.addEventListener("pointerdown", e => {
   pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
   pointerMoved = false;
   activePointerId = e.pointerId;
-});
+}, { passive: false });
 
 canvas.addEventListener("pointermove", e => {
   if (!pointerDownPos || e.pointerId !== activePointerId) return;
@@ -872,20 +915,12 @@ canvas.addEventListener("pointermove", e => {
   const moveLimit = pointerDownPos.type === "touch" ? 14 : 6;
   if (Math.sqrt(dx * dx + dy * dy) > moveLimit) pointerMoved = true;
 
-  if (pointerDownPos.type === "touch" && pointerMoved && !touchDragCommitted && !touchScrollIntent) {
-    const absX = Math.abs(dx);
-    const absY = Math.abs(dy);
-
-    if (absY > absX * 1.15) {
-      touchScrollIntent = true;
-      touchDragBall = null;
-      return;
-    }
-
+  if (pointerDownPos.type === "touch" && pointerMoved && !touchDragCommitted) {
     touchDragCommitted = Boolean(touchDragBall);
   }
 
   if (pointerDownPos.type === "touch" && pointerMoved && touchDragCommitted && touchDragBall && lastTouchPoint) {
+    e.preventDefault();
     const point = getCanvasPointFromEvent(e);
     const now = performance.now();
     const dt = Math.max(16, now - lastTouchTime);
@@ -908,7 +943,7 @@ canvas.addEventListener("pointermove", e => {
     lastTouchPoint = nextPoint;
     lastTouchTime = now;
   }
-});
+}, { passive: false });
 
 canvas.addEventListener("pointerup", e => {
   if (!pointerDownPos || e.pointerId !== activePointerId) return;

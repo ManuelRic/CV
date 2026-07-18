@@ -511,6 +511,7 @@ function setupDoodleReveal() {
     const strokes = [];
     let rafId = null;
     let lastPoint = null;
+    let activePointerId = null;
     let width = 0;
     let height = 0;
     let dpr = 1;
@@ -726,7 +727,33 @@ function setupDoodleReveal() {
       });
     }
 
-    surface.addEventListener("pointermove", addTrailPoint);
+    surface.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse") return;
+
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      lastPoint = null;
+      surface.setPointerCapture?.(event.pointerId);
+      addTrailPoint(event);
+    }, { passive: false });
+
+    surface.addEventListener("pointermove", event => {
+      if (event.pointerType !== "mouse" && event.pointerId !== activePointerId) return;
+      if (event.pointerType !== "mouse") event.preventDefault();
+      addTrailPoint(event);
+    }, { passive: false });
+
+    function finishTouchReveal(event) {
+      if (event.pointerId !== activePointerId) return;
+      if (surface.hasPointerCapture?.(event.pointerId)) {
+        surface.releasePointerCapture(event.pointerId);
+      }
+      activePointerId = null;
+      lastPoint = null;
+    }
+
+    surface.addEventListener("pointerup", finishTouchReveal);
+    surface.addEventListener("pointercancel", finishTouchReveal);
     surface.addEventListener("pointerleave", () => {
       lastPoint = null;
     });
