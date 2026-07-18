@@ -832,7 +832,13 @@ function setupProjectLightbox() {
   let closeTimer = null;
   let lightboxImages = [];
   let currentImageIndex = 0;
-  let swipeStart = null;
+  const activeImagePointers = new Map();
+  let zoomScale = 1;
+  let panX = 0;
+  let panY = 0;
+  let singlePointerStart = null;
+  let pinchStart = null;
+  let gestureUsedPinch = false;
 
   function getProjectImages(media) {
     if (media.matches("[data-project-carousel]")) {
@@ -843,9 +849,68 @@ function setupProjectLightbox() {
     return image ? [image] : [];
   }
 
+  function applyImageTransform() {
+    if (zoomScale <= 1.001 && Math.abs(panX) < 0.5 && Math.abs(panY) < 0.5) {
+      lightboxImage.style.removeProperty("transform");
+      lightboxImage.classList.remove("is-zoomed");
+      return;
+    }
+
+    lightboxImage.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoomScale})`;
+    lightboxImage.classList.toggle("is-zoomed", zoomScale > 1.001);
+  }
+
+  function constrainImagePan() {
+    if (zoomScale <= 1) {
+      panX = 0;
+      panY = 0;
+      return;
+    }
+
+    const scaledWidth = lightboxImage.clientWidth * zoomScale;
+    const scaledHeight = lightboxImage.clientHeight * zoomScale;
+    const maximumPanX = Math.max(0, (scaledWidth - window.innerWidth) / 2);
+    const maximumPanY = Math.max(0, (scaledHeight - window.innerHeight) / 2);
+    panX = clamp(panX, -maximumPanX, maximumPanX);
+    panY = clamp(panY, -maximumPanY, maximumPanY);
+  }
+
+  function resetImageGesture() {
+    activeImagePointers.clear();
+    zoomScale = 1;
+    panX = 0;
+    panY = 0;
+    singlePointerStart = null;
+    pinchStart = null;
+    gestureUsedPinch = false;
+    applyImageTransform();
+  }
+
+  function beginPinchGesture() {
+    const pointers = Array.from(activeImagePointers.values()).slice(0, 2);
+    if (pointers.length < 2) return;
+
+    const [firstPointer, secondPointer] = pointers;
+    const midpointX = (firstPointer.x + secondPointer.x) / 2;
+    const midpointY = (firstPointer.y + secondPointer.y) / 2;
+    const imageRect = lightboxImage.getBoundingClientRect();
+
+    pinchStart = {
+      distance: Math.max(1, Math.hypot(secondPointer.x - firstPointer.x, secondPointer.y - firstPointer.y)),
+      scale: zoomScale,
+      panX,
+      panY,
+      midpointX,
+      midpointY,
+      imageCenterX: imageRect.left + imageRect.width / 2 - panX,
+      imageCenterY: imageRect.top + imageRect.height / 2 - panY
+    };
+  }
+
   function showLightboxImage(index) {
     if (!lightboxImages.length) return;
 
+    resetImageGesture();
     currentImageIndex = (index + lightboxImages.length) % lightboxImages.length;
     const image = lightboxImages[currentImageIndex];
     const hasMultipleImages = lightboxImages.length > 1;
@@ -888,6 +953,7 @@ function setupProjectLightbox() {
   function finishClosing() {
     if (lightbox.classList.contains("is-open")) return;
     lightbox.hidden = true;
+    resetImageGesture();
     lightboxImage.removeAttribute("src");
     lightboxImages = [];
     currentImageIndex = 0;
@@ -963,27 +1029,118 @@ function setupProjectLightbox() {
   lightboxImage.addEventListener("pointerdown", event => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.preventDefault();
-    swipeStart = {
-      id: event.pointerId,
-      x: event.clientX,
-      y: event.clientY
-    };
+    activeImagePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     lightboxImage.setPointerCapture?.(event.pointerId);
+
+    if (activeImagePointers.size === 1) {
+      gestureUsedPinch = false;
+      singlePointerStart = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        panX,
+        panY,
+        scale: zoomScale
+      };
+    } else if (activeImagePointers.size >= 2) {
+      gestureUsedPinch = true;
+      singlePointerStart = null;
+      beginPinchGesture();
+    }
   });
+
+  lightboxImage.addEventListener("pointermove", event => {
+    if (!activeImagePointers.has(event.pointerId)) return;
+    event.preventDefault();
+    activeImagePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activeImagePointers.size >= 2) {
+      if (!pinchStart) beginPinchGesture();
+      const pointers = Array.from(activeImagePointers.values()).slice(0, 2);
+      if (!pinchStart || pointers.length < 2) return;
+
+      const [firstPointer, secondPointer] = pointers;
+      const midpointX = (firstPointer.x + secondPointer.x) / 2;
+      const midpointY = (firstPointer.y + secondPointer.y) / 2;
+      const distance = Math.max(1, Math.hypot(
+        secondPointer.x - firstPointer.x,
+        secondPointer.y - firstPointer.y
+      ));
+      const nextScale = clamp(pinchStart.scale * (distance / pinchStart.distance), 1, 4);
+      const scaleRatio = nextScale / pinchStart.scale;
+
+      zoomScale = nextScale;
+      panX = midpointX - pinchStart.imageCenterX
+        - scaleRatio * (pinchStart.midpointX - pinchStart.imageCenterX - pinchStart.panX);
+      panY = midpointY - pinchStart.imageCenterY
+        - scaleRatio * (pinchStart.midpointY - pinchStart.imageCenterY - pinchStart.panY);
+      constrainImagePan();
+      applyImageTransform();
+      return;
+    }
+
+    if (zoomScale > 1 && singlePointerStart?.id === event.pointerId) {
+      panX = singlePointerStart.panX + event.clientX - singlePointerStart.x;
+      panY = singlePointerStart.panY + event.clientY - singlePointerStart.y;
+      constrainImagePan();
+      applyImageTransform();
+    }
+  });
+
+  function finishImagePointer(event, allowSwipe) {
+    if (!activeImagePointers.has(event.pointerId)) return;
+
+    const pointerStart = singlePointerStart?.id === event.pointerId
+      ? singlePointerStart
+      : null;
+    activeImagePointers.delete(event.pointerId);
+
+    if (activeImagePointers.size >= 2) {
+      beginPinchGesture();
+      return;
+    }
+
+    if (activeImagePointers.size === 1) {
+      const [remainingPointerId, remainingPointer] = activeImagePointers.entries().next().value;
+      singlePointerStart = {
+        id: remainingPointerId,
+        x: remainingPointer.x,
+        y: remainingPointer.y,
+        panX,
+        panY,
+        scale: zoomScale
+      };
+      pinchStart = null;
+      return;
+    }
+
+    if (zoomScale <= 1.001) {
+      zoomScale = 1;
+      panX = 0;
+      panY = 0;
+      applyImageTransform();
+    }
+
+    if (allowSwipe && !gestureUsedPinch && pointerStart?.scale <= 1.001) {
+      const deltaX = event.clientX - pointerStart.x;
+      const deltaY = event.clientY - pointerStart.y;
+
+      if (lightboxImages.length > 1 && Math.abs(deltaX) >= 45 && Math.abs(deltaX) >= Math.abs(deltaY)) {
+        showLightboxImage(currentImageIndex + (deltaX < 0 ? 1 : -1));
+      }
+    }
+
+    singlePointerStart = null;
+    pinchStart = null;
+    gestureUsedPinch = false;
+  }
 
   lightboxImage.addEventListener("pointerup", event => {
-    if (!swipeStart || event.pointerId !== swipeStart.id) return;
-
-    const deltaX = event.clientX - swipeStart.x;
-    const deltaY = event.clientY - swipeStart.y;
-    swipeStart = null;
-
-    if (lightboxImages.length < 2 || Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY)) return;
-    showLightboxImage(currentImageIndex + (deltaX < 0 ? 1 : -1));
+    finishImagePointer(event, true);
   });
 
-  lightboxImage.addEventListener("pointercancel", () => {
-    swipeStart = null;
+  lightboxImage.addEventListener("pointercancel", event => {
+    finishImagePointer(event, false);
   });
 
   closeButton.addEventListener("click", closeLightbox);

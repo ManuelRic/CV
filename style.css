@@ -707,6 +707,8 @@ html.project-lightbox-open body {
 }
 
 .project-lightbox-image {
+  position: relative;
+  z-index: 1;
   display: block;
   width: auto;
   height: auto;
@@ -719,6 +721,16 @@ html.project-lightbox-open body {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.project-lightbox-image.is-zoomed {
+  cursor: grab;
+}
+
+.project-lightbox-image.is-zoomed:active {
+  cursor: grabbing;
 }
 
 .project-lightbox-nav {
