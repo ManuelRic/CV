@@ -290,11 +290,144 @@ const balls = skills.map((name, i) => {
         lineWidth: 0
       },
       label: name,
-      plugin: { lastMotionTime: Date.now(), flipAngle: 0 }
+      plugin: { lastMotionTime: Date.now(), flipAngle: 0, appearanceScale: 0 }
     }
   );
 });
 Composite.add(world, balls);
+
+let sphereEntranceStarted = false;
+let stopSphereFocusTracking = null;
+
+function startSphereEntrance() {
+  if (sphereEntranceStarted) return;
+  sphereEntranceStarted = true;
+  stopSphereFocusTracking?.();
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    balls.forEach(body => { body.plugin.appearanceScale = 1; });
+    return;
+  }
+
+  const startTime = performance.now();
+  const popDuration = 460;
+  const staggerDelay = 48;
+  const overshoot = 1.70158;
+
+  function animateSphereEntrance(time) {
+    let entranceComplete = true;
+
+    balls.forEach((body, index) => {
+      const progress = clamp(
+        (time - startTime - index * staggerDelay) / popDuration,
+        0,
+        1
+      );
+      const shiftedProgress = progress - 1;
+
+      body.plugin.appearanceScale = progress === 0
+        ? 0
+        : 1 + (overshoot + 1) * shiftedProgress ** 3 + overshoot * shiftedProgress ** 2;
+
+      if (progress < 1) entranceComplete = false;
+    });
+
+    if (!entranceComplete) requestAnimationFrame(animateSphereEntrance);
+  }
+
+  requestAnimationFrame(animateSphereEntrance);
+}
+
+function setupSphereEntrance() {
+  const heading = skillsSection.querySelector(".notname");
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    startSphereEntrance();
+    return;
+  }
+
+  let headingRevealComplete = !heading;
+  let sectionFocused = false;
+  let focusSettleTimer = null;
+  let focusRaf = null;
+
+  const maybeStartEntrance = () => {
+    if (!headingRevealComplete || !sectionFocused || sphereEntranceStarted) {
+      if (focusSettleTimer) {
+        clearTimeout(focusSettleTimer);
+        focusSettleTimer = null;
+      }
+      return;
+    }
+
+    if (focusSettleTimer) return;
+    focusSettleTimer = setTimeout(() => {
+      focusSettleTimer = null;
+      if (headingRevealComplete && sectionFocused) startSphereEntrance();
+    }, 100);
+  };
+
+  const updateSectionFocus = () => {
+    focusRaf = null;
+    const rect = skillsSection.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+
+    sectionFocused = rect.top <= viewportHeight * 0.38 &&
+      rect.bottom >= viewportHeight * 0.62;
+    maybeStartEntrance();
+  };
+
+  const requestFocusUpdate = () => {
+    if (!focusRaf) focusRaf = requestAnimationFrame(updateSectionFocus);
+  };
+
+  window.addEventListener("scroll", requestFocusUpdate, { passive: true });
+  window.addEventListener("resize", requestFocusUpdate, { passive: true });
+  stopSphereFocusTracking = () => {
+    window.removeEventListener("scroll", requestFocusUpdate);
+    window.removeEventListener("resize", requestFocusUpdate);
+    if (focusRaf) cancelAnimationFrame(focusRaf);
+    if (focusSettleTimer) clearTimeout(focusSettleTimer);
+    focusRaf = null;
+    focusSettleTimer = null;
+  };
+
+  requestFocusUpdate();
+
+  if (!heading) {
+    maybeStartEntrance();
+    return;
+  }
+
+  const finishHeadingReveal = event => {
+    if (event.animationName && event.animationName !== "slideInLeft") return;
+    headingRevealComplete = true;
+    maybeStartEntrance();
+  };
+
+  heading.addEventListener("animationend", finishHeadingReveal, { once: true });
+  heading.addEventListener("animationcancel", finishHeadingReveal, { once: true });
+
+  let fallbackArmed = false;
+  const armFallback = () => {
+    if (fallbackArmed || !skillsSection.classList.contains("is-visible")) return;
+    fallbackArmed = true;
+    setTimeout(() => {
+      headingRevealComplete = true;
+      maybeStartEntrance();
+    }, 1600);
+  };
+
+  armFallback();
+  if (!fallbackArmed && "MutationObserver" in window) {
+    const visibilityObserver = new MutationObserver(() => {
+      armFallback();
+      if (fallbackArmed) visibilityObserver.disconnect();
+    });
+    visibilityObserver.observe(skillsSection, { attributes: true, attributeFilter: ["class"] });
+  }
+}
+
+setupSphereEntrance();
 
 function syncResponsiveBallSizes() {
   const nextRadius = getResponsiveSkillRadius();
@@ -307,7 +440,8 @@ function syncResponsiveBallSizes() {
 
 function confineSkillBall(body, resetMotion = false) {
   const bounds = getPlayableBounds();
-  const r = body.circleRadius || skillRadius;
+  const appearanceScale = body.plugin.appearanceScale ?? 1;
+  const r = (body.circleRadius || skillRadius) * Math.max(1, appearanceScale);
   const minX = bounds.left + r;
   const maxX = bounds.right - r;
   const minY = bounds.top + r;
@@ -400,6 +534,7 @@ function checkMouseHover() {
 
   let newHover = null;
   for (let b of balls) {
+    if ((b.plugin.appearanceScale ?? 1) < 0.85) continue;
     const dx = b.position.x - mx;
     const dy = b.position.y - my;
     if (Math.sqrt(dx * dx + dy * dy) <= b.circleRadius) {
@@ -844,6 +979,7 @@ function getCanvasPointFromEvent(e) {
 
 function findBallAt(point) {
   for (let b of balls) {
+    if ((b.plugin.appearanceScale ?? 1) < 0.85) continue;
     const dx = b.position.x - point.x;
     const dy = b.position.y - point.y;
     if (Math.sqrt(dx * dx + dy * dy) <= b.circleRadius) return b;
@@ -1069,10 +1205,14 @@ canvas.addEventListener("mousemove", e => {
     const flip = body.plugin.flipAngle;
     const flipped = flip > Math.PI / 2;
     const scaleX = Math.cos(flip);
+    const appearanceScale = body.plugin.appearanceScale ?? 1;
+
+    if (appearanceScale <= 0) return;
 
     ctx.save();
     ctx.translate(body.position.x, body.position.y);
     ctx.rotate(body.angle);
+    ctx.scale(appearanceScale, appearanceScale);
 
     ctx.beginPath();
     ctx.arc(0, 0, body.circleRadius, 0, Math.PI * 2);
@@ -1108,7 +1248,7 @@ canvas.addEventListener("mousemove", e => {
 
     if (body.render.lineWidth > 0) {
       ctx.beginPath();
-      ctx.arc(body.position.x, body.position.y, body.circleRadius, 0, Math.PI*2);
+      ctx.arc(body.position.x, body.position.y, body.circleRadius * appearanceScale, 0, Math.PI*2);
       ctx.strokeStyle = body.render.strokeStyle || "#000";
       ctx.lineWidth = body.render.lineWidth;
       ctx.stroke();
