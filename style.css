@@ -74,6 +74,7 @@ html.is-loading body {
     place-content: center;
     justify-items: center;
     gap: 10px;
+    overflow: visible;
     background: var(--paper);
     color: var(--ink);
     opacity: 1;
@@ -89,49 +90,62 @@ html.is-loading body {
 
 .site-loader-mark {
     position: relative;
+    z-index: 0;
     display: inline-block;
+    overflow: visible;
+    isolation: isolate;
     font-size: clamp(34px, 6vw, 52px);
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.06em;
 }
 
-.site-loader-dot {
+.site-loader-letters {
+    position: relative;
+    z-index: 0;
+    display: inline-block;
+}
+
+.site-loader-orbit {
     position: absolute;
-    top: 0.72em;
-    left: calc(100% + 0.08em);
-    width: 0.13em;
-    height: 0.13em;
-    transform-origin: -1.03em -0.22em;
+    z-index: 10;
+    top: -0.85em;
+    left: calc(100% - 2.3em);
+    width: 2.7em;
+    height: 2.7em;
+    overflow: visible;
+    transform-origin: 50% 50%;
     animation: loaderDotOrbit 1.6s linear infinite;
     will-change: transform;
 }
 
-.site-loader-dot::after {
-    content: "";
-    display: block;
-    width: 100%;
-    height: 100%;
+.site-loader-dot {
+    position: absolute;
+    z-index: 1;
+    top: 1.57em;
+    left: 2.38em;
+    width: 0.13em;
+    height: 0.13em;
     border-radius: 50%;
     background-color: var(--accent);
 }
 
-.site-loader-dot.is-landing::after {
-    animation: loaderDotImpact 0.38s ease-out both;
+.site-loader-orbit.is-landing {
+    z-index: 20;
+    overflow: visible;
+    clip-path: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+    contain: none;
+}
+
+.site-loader-orbit.is-landing .site-loader-dot {
+    z-index: 1;
 }
 
 @keyframes loaderDotOrbit {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
-}
-
-@keyframes loaderDotImpact {
-    0% { transform: scale(1); }
-    8% { transform: scale(1.55, 0.58); }
-    38% { transform: translateY(-32%) scale(0.82, 1.24); }
-    64% { transform: scale(1.16, 0.88); }
-    82% { transform: translateY(-10%) scale(0.94, 1.08); }
-    100% { transform: scale(1); }
 }
 
 .back-to-top {

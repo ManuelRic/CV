@@ -12,46 +12,100 @@ function setupSiteLoader() {
   const wait = duration => new Promise(resolve => window.setTimeout(resolve, duration));
 
   async function playDotLanding() {
-    const dot = loader.querySelector(".site-loader-dot");
+    const dot = loader.querySelector(".site-loader-orbit");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!dot || prefersReducedMotion || typeof dot.animate !== "function") return;
 
-    const orbitAnimation = dot.getAnimations().find(animation => {
+    const dotAnimations = typeof dot.getAnimations === "function" ? dot.getAnimations() : [];
+    const orbitAnimation = dotAnimations.find(animation => {
       return animation.animationName === "loaderDotOrbit";
-    });
-    const orbitTiming = orbitAnimation?.effect?.getComputedTiming();
-    const progress = orbitTiming?.progress ?? 0;
-    const orbitDuration = Number(orbitTiming?.duration) || 1600;
-    const startAngle = progress * 360;
+    }) || dotAnimations[0];
     const landingAngle = 360;
-    const degreesRemaining = Math.max(0, landingAngle - startAngle);
     const landingSpeedMultiplier = 1.8;
-    const approachDuration = Math.max(
-      40,
-      orbitDuration * (degreesRemaining / 360) / landingSpeedMultiplier
-    );
     const bounceDuration = 380;
+    let continuedOrbit = false;
+    dot.classList.add("is-landing");
 
-    dot.style.animation = "none";
-    dot.style.transform = `rotate(${startAngle}deg)`;
+    if (orbitAnimation?.effect && typeof orbitAnimation.effect.updateTiming === "function") {
+      try {
+        const timing = orbitAnimation.effect.getComputedTiming();
+        const currentIteration = Number.isFinite(timing.currentIteration)
+          ? timing.currentIteration
+          : 0;
 
-    const approach = dot.animate([
-      { transform: `rotate(${startAngle}deg)` },
-      { transform: `rotate(${landingAngle}deg)` }
-    ], {
-      duration: approachDuration,
-      easing: "linear",
-      fill: "forwards"
-    });
+        orbitAnimation.effect.updateTiming({
+          iterations: currentIteration + 1,
+          fill: "forwards"
+        });
 
-    await Promise.race([
-      approach.finished.catch(() => {}),
-      wait(approachDuration + 100)
-    ]);
+        if (typeof orbitAnimation.updatePlaybackRate === "function") {
+          orbitAnimation.updatePlaybackRate(orbitAnimation.playbackRate * landingSpeedMultiplier);
+        } else {
+          orbitAnimation.playbackRate *= landingSpeedMultiplier;
+        }
+
+        await orbitAnimation.finished;
+        continuedOrbit = true;
+      } catch {
+        continuedOrbit = false;
+      }
+    }
+
+    if (!continuedOrbit) {
+      dot.style.animationPlayState = "paused";
+      orbitAnimation?.pause();
+
+      try {
+        orbitAnimation?.commitStyles();
+      } catch {
+        // Older mobile browsers use the frozen computed transform below.
+      }
+
+      const renderedTransform = getComputedStyle(dot).transform;
+      const Matrix = window.DOMMatrixReadOnly || window.DOMMatrix || window.WebKitCSSMatrix;
+      let startAngle = NaN;
+
+      if (renderedTransform && renderedTransform !== "none") {
+        try {
+          const matrix = new Matrix(renderedTransform);
+          startAngle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
+        } catch {
+          const matrixValues = renderedTransform.match(/^matrix\(([^)]+)\)$/)?.[1].split(",");
+          if (matrixValues?.length >= 2) {
+            startAngle = Math.atan2(Number(matrixValues[1]), Number(matrixValues[0])) * (180 / Math.PI);
+          }
+        }
+      }
+
+      startAngle = Number.isFinite(startAngle) ? (startAngle + 360) % 360 : 0;
+      const degreesRemaining = Math.max(0, landingAngle - startAngle);
+      const approachDuration = Math.max(
+        40,
+        1600 * (degreesRemaining / 360) / landingSpeedMultiplier
+      );
+      const startTransform = `rotate(${startAngle}deg)`;
+
+      dot.style.transform = startTransform;
+      dot.style.animation = "none";
+      orbitAnimation?.cancel();
+
+      const approach = dot.animate([
+        { transform: startTransform },
+        { transform: `rotate(${landingAngle}deg)` }
+      ], {
+        duration: approachDuration,
+        easing: "linear",
+        fill: "forwards"
+      });
+
+      await approach.finished.catch(() => {});
+      dot.style.transform = `rotate(${landingAngle}deg)`;
+      approach.cancel();
+    }
 
     dot.style.transform = `rotate(${landingAngle}deg)`;
-    approach.cancel();
-    dot.classList.add("is-landing");
+    dot.style.animation = "none";
+    orbitAnimation?.cancel();
 
     const bounce = dot.animate([
       { transform: `rotate(${landingAngle}deg)`, offset: 0 },
@@ -74,7 +128,10 @@ function setupSiteLoader() {
     ]);
 
     dot.style.transform = "rotate(0deg)";
+    dot.style.animation = "none";
     bounce.cancel();
+    orbitAnimation?.cancel();
+    dot.classList.remove("is-landing");
   }
 
   function waitForImage(image) {
