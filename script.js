@@ -817,6 +817,205 @@ function setupDoodleReveal() {
   });
 }
 
+function setupProjectLightbox() {
+  const lightbox = document.getElementById("project-lightbox");
+  const lightboxImage = lightbox?.querySelector(".project-lightbox-image");
+  const closeButton = lightbox?.querySelector(".project-lightbox-close");
+  const previousButton = lightbox?.querySelector(".project-lightbox-prev");
+  const nextButton = lightbox?.querySelector(".project-lightbox-next");
+  const status = lightbox?.querySelector(".project-lightbox-status");
+  if (!lightbox || !lightboxImage || !closeButton || !previousButton || !nextButton || !status) return;
+
+  const root = document.documentElement;
+  const movementLimit = 10;
+  let returnFocusTo = null;
+  let closeTimer = null;
+  let lightboxImages = [];
+  let currentImageIndex = 0;
+  let swipeStart = null;
+
+  function getProjectImages(media) {
+    if (media.matches("[data-project-carousel]")) {
+      return Array.from(media.querySelectorAll("[data-carousel-slide] .project-img"));
+    }
+
+    const image = media.querySelector(".project-img:not(.project-original-img)");
+    return image ? [image] : [];
+  }
+
+  function showLightboxImage(index) {
+    if (!lightboxImages.length) return;
+
+    currentImageIndex = (index + lightboxImages.length) % lightboxImages.length;
+    const image = lightboxImages[currentImageIndex];
+    const hasMultipleImages = lightboxImages.length > 1;
+
+    lightboxImage.src = image.currentSrc || image.src;
+    lightboxImage.alt = image.alt || "Expanded project image";
+    previousButton.hidden = !hasMultipleImages;
+    nextButton.hidden = !hasMultipleImages;
+    status.hidden = !hasMultipleImages;
+    status.textContent = hasMultipleImages
+      ? `${currentImageIndex + 1} / ${lightboxImages.length}`
+      : "";
+  }
+
+  function openLightbox(media, trigger) {
+    lightboxImages = getProjectImages(media);
+    if (!lightboxImages.length) return;
+
+    if (closeTimer !== null) {
+      window.clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+
+    returnFocusTo = trigger;
+    const visibleImage = media.matches("[data-project-carousel]")
+      ? media.querySelector('[data-carousel-slide][aria-hidden="false"] .project-img')
+      : lightboxImages[0];
+    const visibleImageIndex = lightboxImages.indexOf(visibleImage);
+    showLightboxImage(visibleImageIndex >= 0 ? visibleImageIndex : 0);
+    lightbox.hidden = false;
+    lightbox.setAttribute("aria-hidden", "false");
+    root.classList.add("project-lightbox-open");
+
+    requestAnimationFrame(() => {
+      lightbox.classList.add("is-open");
+      closeButton.focus({ preventScroll: true });
+    });
+  }
+
+  function finishClosing() {
+    if (lightbox.classList.contains("is-open")) return;
+    lightbox.hidden = true;
+    lightboxImage.removeAttribute("src");
+    lightboxImages = [];
+    currentImageIndex = 0;
+    root.classList.remove("project-lightbox-open");
+    returnFocusTo?.focus({ preventScroll: true });
+    returnFocusTo = null;
+    closeTimer = null;
+  }
+
+  function closeLightbox() {
+    if (lightbox.hidden || !lightbox.classList.contains("is-open")) return;
+    lightbox.classList.remove("is-open");
+    lightbox.setAttribute("aria-hidden", "true");
+    closeTimer = window.setTimeout(finishClosing, 240);
+  }
+
+  document.querySelectorAll(".project-media").forEach(media => {
+    const trigger = media.matches("[data-project-carousel]")
+      ? media.querySelector(".project-carousel-viewport")
+      : media;
+    if (!trigger) return;
+
+    const projectName = media.closest(".project-card")?.querySelector(".project-info h2")?.textContent?.trim();
+    trigger.classList.add("project-expand-trigger");
+    trigger.setAttribute("role", "button");
+    trigger.setAttribute("tabindex", "0");
+    trigger.setAttribute("aria-label", `Expand ${projectName || "project"} image`);
+
+    let pointerStart = null;
+
+    trigger.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      pointerStart = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        moved: false
+      };
+    });
+
+    trigger.addEventListener("pointermove", event => {
+      if (!pointerStart || event.pointerId !== pointerStart.id) return;
+      const distance = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
+      if (distance > movementLimit) pointerStart.moved = true;
+    });
+
+    trigger.addEventListener("pointerup", event => {
+      if (!pointerStart || event.pointerId !== pointerStart.id) return;
+      const shouldOpen = !pointerStart.moved;
+      pointerStart = null;
+      if (shouldOpen) openLightbox(media, trigger);
+    });
+
+    trigger.addEventListener("pointercancel", () => {
+      pointerStart = null;
+    });
+
+    trigger.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openLightbox(media, trigger);
+    });
+  });
+
+  previousButton.addEventListener("click", () => {
+    showLightboxImage(currentImageIndex - 1);
+  });
+
+  nextButton.addEventListener("click", () => {
+    showLightboxImage(currentImageIndex + 1);
+  });
+
+  lightboxImage.addEventListener("pointerdown", event => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    swipeStart = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY
+    };
+    lightboxImage.setPointerCapture?.(event.pointerId);
+  });
+
+  lightboxImage.addEventListener("pointerup", event => {
+    if (!swipeStart || event.pointerId !== swipeStart.id) return;
+
+    const deltaX = event.clientX - swipeStart.x;
+    const deltaY = event.clientY - swipeStart.y;
+    swipeStart = null;
+
+    if (lightboxImages.length < 2 || Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+    showLightboxImage(currentImageIndex + (deltaX < 0 ? 1 : -1));
+  });
+
+  lightboxImage.addEventListener("pointercancel", () => {
+    swipeStart = null;
+  });
+
+  closeButton.addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", event => {
+    if (event.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener("keydown", event => {
+    if (lightbox.hidden) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeLightbox();
+    } else if (event.key === "ArrowLeft" && lightboxImages.length > 1) {
+      event.preventDefault();
+      showLightboxImage(currentImageIndex - 1);
+    } else if (event.key === "ArrowRight" && lightboxImages.length > 1) {
+      event.preventDefault();
+      showLightboxImage(currentImageIndex + 1);
+    } else if (event.key === "Tab") {
+      event.preventDefault();
+      const controls = [closeButton, previousButton, nextButton].filter(control => !control.hidden);
+      const currentControlIndex = controls.indexOf(document.activeElement);
+      const direction = event.shiftKey ? -1 : 1;
+      const nextControlIndex = currentControlIndex < 0
+        ? 0
+        : (currentControlIndex + direction + controls.length) % controls.length;
+      controls[nextControlIndex].focus();
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupScrollResponsiveReveals();
 
@@ -827,6 +1026,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupProjectCarousels();
   setupDoodleReveal();
+  setupProjectLightbox();
 
   const locationIcon = document.getElementById("location_icon");
 

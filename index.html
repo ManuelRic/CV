@@ -324,6 +324,26 @@
     <p>Manuel Ricart</p>
   </footer>
 
+  <div id="project-lightbox" class="project-lightbox" role="dialog" aria-modal="true" aria-label="Expanded project image" aria-hidden="true" hidden>
+    <button class="project-lightbox-close" type="button" aria-label="Close expanded image">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M6 6l12 12M18 6 6 18"/>
+      </svg>
+    </button>
+    <button class="project-lightbox-nav project-lightbox-prev" type="button" aria-label="Previous expanded image" hidden>
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+    </button>
+    <img class="project-lightbox-image" src="" alt="" draggable="false">
+    <button class="project-lightbox-nav project-lightbox-next" type="button" aria-label="Next expanded image" hidden>
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m9 18 6-6-6-6"/>
+      </svg>
+    </button>
+    <p class="project-lightbox-status" aria-live="polite" hidden></p>
+  </div>
+
   <script src="matter-js-master/build/matter.min.js"></script>
   <script src="script.js"></script>
   <script src="skills.js"></script>
