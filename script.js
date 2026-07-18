@@ -7,10 +7,74 @@ function setupSiteLoader() {
     return;
   }
 
-  const startedAt = performance.now();
-  const minimumVisibleTime = 350;
   const maximumWaitTime = 12000;
   const wait = duration => new Promise(resolve => window.setTimeout(resolve, duration));
+
+  async function playDotLanding() {
+    const dot = loader.querySelector(".site-loader-dot");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!dot || prefersReducedMotion || typeof dot.animate !== "function") return;
+
+    const orbitAnimation = dot.getAnimations().find(animation => {
+      return animation.animationName === "loaderDotOrbit";
+    });
+    const orbitTiming = orbitAnimation?.effect?.getComputedTiming();
+    const progress = orbitTiming?.progress ?? 0;
+    const orbitDuration = Number(orbitTiming?.duration) || 1600;
+    const startAngle = progress * 360;
+    const landingAngle = 360;
+    const degreesRemaining = Math.max(0, landingAngle - startAngle);
+    const landingSpeedMultiplier = 1.8;
+    const approachDuration = Math.max(
+      40,
+      orbitDuration * (degreesRemaining / 360) / landingSpeedMultiplier
+    );
+    const bounceDuration = 380;
+
+    dot.style.animation = "none";
+    dot.style.transform = `rotate(${startAngle}deg)`;
+
+    const approach = dot.animate([
+      { transform: `rotate(${startAngle}deg)` },
+      { transform: `rotate(${landingAngle}deg)` }
+    ], {
+      duration: approachDuration,
+      easing: "linear",
+      fill: "forwards"
+    });
+
+    await Promise.race([
+      approach.finished.catch(() => {}),
+      wait(approachDuration + 100)
+    ]);
+
+    dot.style.transform = `rotate(${landingAngle}deg)`;
+    approach.cancel();
+    dot.classList.add("is-landing");
+
+    const bounce = dot.animate([
+      { transform: `rotate(${landingAngle}deg)`, offset: 0 },
+      {
+        transform: `rotate(${landingAngle - 11}deg)`,
+        offset: 0.3,
+        easing: "cubic-bezier(0.16, 0.8, 0.3, 1)"
+      },
+      { transform: `rotate(${landingAngle + 4}deg)`, offset: 0.55 },
+      { transform: `rotate(${landingAngle - 1.5}deg)`, offset: 0.78 },
+      { transform: `rotate(${landingAngle}deg)`, offset: 1 }
+    ], {
+      duration: bounceDuration,
+      fill: "forwards"
+    });
+
+    await Promise.race([
+      bounce.finished.catch(() => {}),
+      wait(bounceDuration + 100)
+    ]);
+
+    dot.style.transform = "rotate(0deg)";
+    bounce.cancel();
+  }
 
   function waitForImage(image) {
     const loaded = image.complete
@@ -34,7 +98,7 @@ function setupSiteLoader() {
     const assetsReady = Promise.allSettled([documentImagesReady, fontsReady, skillsReady]);
 
     await Promise.race([assetsReady, wait(maximumWaitTime)]);
-    await wait(Math.max(0, minimumVisibleTime - (performance.now() - startedAt)));
+    await playDotLanding();
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     root.classList.remove("is-loading");

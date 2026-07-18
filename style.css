@@ -88,14 +88,50 @@ html.is-loading body {
 }
 
 .site-loader-mark {
+    position: relative;
+    display: inline-block;
     font-size: clamp(34px, 6vw, 52px);
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.06em;
 }
 
-.site-loader-mark span {
-    color: var(--accent);
+.site-loader-dot {
+    position: absolute;
+    top: 0.72em;
+    left: calc(100% + 0.08em);
+    width: 0.13em;
+    height: 0.13em;
+    transform-origin: -1.03em -0.22em;
+    animation: loaderDotOrbit 1.6s linear infinite;
+    will-change: transform;
+}
+
+.site-loader-dot::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--accent);
+}
+
+.site-loader-dot.is-landing::after {
+    animation: loaderDotImpact 0.38s ease-out both;
+}
+
+@keyframes loaderDotOrbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes loaderDotImpact {
+    0% { transform: scale(1); }
+    8% { transform: scale(1.55, 0.58); }
+    38% { transform: translateY(-32%) scale(0.82, 1.24); }
+    64% { transform: scale(1.16, 0.88); }
+    82% { transform: translateY(-10%) scale(0.94, 1.08); }
+    100% { transform: scale(1); }
 }
 
 .back-to-top {
