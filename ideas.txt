@@ -6,3 +6,9 @@ add mouse pointer that throws a ball around, instead of telling the user how it 
 
 
 change img for videos on project showcase
+
+change top arrow to something more creative + animation:
+    rocket that launches w/ more or less force upwards depending on where you are in the page
+    or hand that crumbles page in a ball of paper
+    or hand that pulls page upwards
+    

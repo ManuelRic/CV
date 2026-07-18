@@ -205,6 +205,37 @@ html.is-loading body {
     padding-right: 0;
 }
 
+.projects-section,
+.about-section {
+    position: relative;
+}
+
+.section-wave {
+    position: absolute;
+    top: 0;
+    left: var(--page-x);
+    right: var(--page-x);
+    z-index: 4;
+    height: 32px;
+    color: var(--accent);
+    pointer-events: none;
+    opacity: 0.72;
+}
+
+.section-wave svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.section-wave path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+
 .skills-section .notname,
 .skills-section #skill_tip,
 .projects-section .notname,
