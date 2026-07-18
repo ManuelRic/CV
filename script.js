@@ -4,6 +4,7 @@ function setupSiteLoader() {
 
   if (!loader) {
     root.classList.remove("is-loading");
+    window.siteIsReady = true;
     return;
   }
 
@@ -104,6 +105,8 @@ function setupSiteLoader() {
     root.classList.remove("is-loading");
     loader.classList.add("is-hidden");
     loader.setAttribute("aria-hidden", "true");
+    window.siteIsReady = true;
+    window.dispatchEvent(new Event("site:ready"));
 
     loader.addEventListener("transitionend", () => loader.remove(), { once: true });
     window.setTimeout(() => loader.remove(), 500);
@@ -768,9 +771,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  runWhenVisible([locationIcon], () => {
-    setTimeout(playLocationPinAnimation, 1200);
-  }, { threshold: 1 });
+  function scheduleLocationPinAnimation() {
+    window.setTimeout(playLocationPinAnimation, 4000);
+  }
+
+  if (window.siteIsReady) {
+    scheduleLocationPinAnimation();
+  } else {
+    window.addEventListener("site:ready", scheduleLocationPinAnimation, { once: true });
+  }
 
   const footer = document.querySelector("footer");
   const backToTop = document.getElementById("back-to-top");
