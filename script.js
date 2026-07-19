@@ -159,13 +159,17 @@ function setupProgressiveImageSkeletons() {
     }
 
     images.forEach(image => {
-      if (image.complete) {
-        settleImage(image);
-        return;
-      }
+      const loadPromise = image.complete
+        ? Promise.resolve()
+        : new Promise(resolve => {
+            image.addEventListener("load", resolve, { once: true });
+            image.addEventListener("error", resolve, { once: true });
+          });
 
-      image.addEventListener("load", () => settleImage(image), { once: true });
-      image.addEventListener("error", () => settleImage(image), { once: true });
+      loadPromise
+        .then(() => typeof image.decode === "function" ? image.decode() : undefined)
+        .catch(() => {})
+        .then(() => settleImage(image));
     });
   }
 
@@ -173,9 +177,10 @@ function setupProgressiveImageSkeletons() {
     const carouselSlides = Array.from(media.querySelectorAll(".project-carousel-slide"));
 
     if (carouselSlides.length) {
-      carouselSlides.forEach(slide => {
-        trackImageGroup(slide, Array.from(slide.querySelectorAll(".project-img")));
+      const carouselImages = carouselSlides.flatMap(slide => {
+        return Array.from(slide.querySelectorAll(".project-img"));
       });
+      trackImageGroup(media, carouselImages);
       return;
     }
 
@@ -528,6 +533,7 @@ function setupProjectCarousels() {
     let resumeTimer = null;
     let isHovered = false;
     let isFocusWithin = false;
+    let isCarouselReady = false;
     let trackIndex = 1;
     let isTransitioning = false;
     let pendingSelection = null;
@@ -635,20 +641,20 @@ function setupProjectCarousels() {
       }
     }
 
-    function showSlide(index, announce = true) {
+    function showSlide(index, announce = true, direction = 0) {
       const normalizedIndex = (index + slides.length) % slides.length;
 
       if (isTransitioning) {
-        pendingSelection = { index: normalizedIndex, announce };
+        pendingSelection = { index: normalizedIndex, announce, direction };
         return;
       }
 
       const previousIndex = currentIndex;
       let nextTrackIndex = normalizedIndex + 1;
 
-      if (previousIndex === slides.length - 1 && normalizedIndex === 0) {
+      if (previousIndex === slides.length - 1 && normalizedIndex === 0 && direction >= 0) {
         nextTrackIndex = slides.length + 1;
-      } else if (previousIndex === 0 && normalizedIndex === slides.length - 1) {
+      } else if (previousIndex === 0 && normalizedIndex === slides.length - 1 && direction <= 0) {
         nextTrackIndex = 0;
       }
 
@@ -672,7 +678,7 @@ function setupProjectCarousels() {
       if (pendingSelection) {
         const selection = pendingSelection;
         pendingSelection = null;
-        showSlide(selection.index, selection.announce);
+        showSlide(selection.index, selection.announce, selection.direction);
       }
     });
 
@@ -690,40 +696,40 @@ function setupProjectCarousels() {
 
     function startAutoplay() {
       stopAutoplay();
-      if (isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
+      if (!isCarouselReady || isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
 
       autoplayTimer = window.setInterval(() => {
-        showSlide(currentIndex + 1, false);
+        showSlide(currentIndex + 1, false, 1);
       }, autoplayDelay);
     }
 
     function resumeAutoplayAfterDelay() {
       stopAutoplay();
-      if (isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
+      if (!isCarouselReady || isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
 
       resumeTimer = window.setTimeout(() => {
         resumeTimer = null;
-        if (isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
-        showSlide(currentIndex + 1, false);
+        if (!isCarouselReady || isHovered || isFocusWithin || document.hidden || reducedMotionQuery.matches) return;
+        showSlide(currentIndex + 1, false, 1);
         startAutoplay();
       }, resumeDelay);
     }
 
-    function selectSlide(index) {
-      showSlide(index);
+    function selectSlide(index, direction = 0) {
+      showSlide(index, true, direction);
       startAutoplay();
     }
 
-    previousButton.addEventListener("click", () => selectSlide(currentIndex - 1));
-    nextButton.addEventListener("click", () => selectSlide(currentIndex + 1));
+    previousButton.addEventListener("click", () => selectSlide(currentIndex - 1, -1));
+    nextButton.addEventListener("click", () => selectSlide(currentIndex + 1, 1));
 
     carousel.addEventListener("keydown", event => {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        selectSlide(currentIndex - 1);
+        selectSlide(currentIndex - 1, -1);
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
-        selectSlide(currentIndex + 1);
+        selectSlide(currentIndex + 1, 1);
       } else if (event.key === "Home") {
         event.preventDefault();
         selectSlide(0);
@@ -766,7 +772,8 @@ function setupProjectCarousels() {
       const distance = event.clientX - pointerStartX;
       pointerStartX = null;
       if (Math.abs(distance) >= 40) {
-        showSlide(currentIndex + (distance < 0 ? 1 : -1));
+        const direction = distance < 0 ? 1 : -1;
+        showSlide(currentIndex + direction, true, direction);
       }
       startAutoplay();
     });
@@ -781,8 +788,26 @@ function setupProjectCarousels() {
 
     setTrackPosition(1, true);
     showSlide(0, false);
-    carousel.classList.add("is-ready");
-    startAutoplay();
+
+    const carouselImages = slides.flatMap(slide => Array.from(slide.querySelectorAll(".project-img")));
+    carouselImages.forEach(image => { image.loading = "eager"; });
+
+    Promise.all(carouselImages.map(image => {
+      const loadPromise = image.complete
+        ? Promise.resolve()
+        : new Promise(resolve => {
+            image.addEventListener("load", resolve, { once: true });
+            image.addEventListener("error", resolve, { once: true });
+          });
+
+      return loadPromise
+        .then(() => typeof image.decode === "function" ? image.decode() : undefined)
+        .catch(() => {});
+    })).then(() => {
+      isCarouselReady = true;
+      carousel.classList.add("is-ready");
+      startAutoplay();
+    });
   });
 }
 
