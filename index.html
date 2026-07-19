@@ -123,7 +123,10 @@
       </svg>
     </div>
     <h1 class="notname">My Skills</h1>
-    <p id="skill_tip">Small tip: you can <span class="red_txt">drag</span> and <span class="red_txt">toss</span> the orbs around, or <span class="red_txt">click</span> to learn more</p>
+    <button id="skill_tip" type="button" aria-expanded="true" tabindex="-1">
+      <span class="skill-tip-copy">Small tip: you can <span class="red_txt">drag</span> and <span class="red_txt">toss</span> the orbs around, or <span class="red_txt">click</span> to learn more</span>
+      <span class="skill-tip-question" aria-hidden="true">?</span>
+    </button>
 
     <canvas id="splatterCanvas"></canvas>
     <canvas id="skillsCanvas"></canvas>

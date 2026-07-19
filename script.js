@@ -9,8 +9,6 @@ function setupSkeletonLoader() {
     return;
   }
 
-  const maximumWaitTime = 3000;
-  const minimumSkeletonTime = 500;
   const wait = duration => new Promise(resolve => window.setTimeout(resolve, duration));
 
   async function playDotLanding() {
@@ -22,7 +20,10 @@ function setupSkeletonLoader() {
     skeleton.classList.add("is-intro-active");
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-    if (prefersReducedMotion || typeof orbit.animate !== "function") return;
+    if (prefersReducedMotion || typeof orbit.animate !== "function") {
+      await wait(700);
+      return;
+    }
 
     const orbitAnimations = typeof orbit.getAnimations === "function" ? orbit.getAnimations() : [];
     const orbitAnimation = orbitAnimations.find(animation => {
@@ -115,34 +116,8 @@ function setupSkeletonLoader() {
     orbit.classList.remove("is-landing");
   }
 
-  function waitForImage(image) {
-    if (!image) return Promise.resolve();
-
-    const loaded = image.complete
-      ? Promise.resolve()
-      : new Promise(resolve => {
-          image.addEventListener("load", resolve, { once: true });
-          image.addEventListener("error", resolve, { once: true });
-        });
-
-    return loaded.then(() => {
-      if (!image.naturalWidth || typeof image.decode !== "function") return;
-      return image.decode().catch(() => {});
-    });
-  }
-
-  async function finishLoading() {
-    const profileReady = waitForImage(document.getElementById("pf_img"));
-    const fontReady = document.fonts
-      ? document.fonts.load("1em MyFont").catch(() => {})
-      : Promise.resolve();
-    const heroReady = Promise.allSettled([profileReady, fontReady]);
-    const criticalAssetsReady = Promise.race([heroReady, wait(maximumWaitTime)]);
-
-    await Promise.race([fontReady, wait(800)]);
+  async function finishIntro() {
     await playDotLanding();
-    skeleton.classList.add("is-skeleton-active");
-    await Promise.allSettled([criticalAssetsReady, wait(minimumSkeletonTime)]);
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     root.classList.remove("is-skeleton-loading");
@@ -157,9 +132,9 @@ function setupSkeletonLoader() {
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", finishLoading, { once: true });
+    document.addEventListener("DOMContentLoaded", finishIntro, { once: true });
   } else {
-    finishLoading();
+    finishIntro();
   }
 }
 
@@ -403,6 +378,92 @@ function applyRevealTiming(element) {
   element.style.setProperty("--reveal-duration", `${revealTiming.duration}ms`);
   element.style.setProperty("--reveal-delay-scale", revealTiming.delayScale);
   element.style.setProperty("--tip-duration", `${revealTiming.tipDuration}ms`);
+}
+
+function setupSkillTipToggle() {
+  const tip = document.getElementById("skill_tip");
+  const skillsSection = tip?.closest(".skills-section");
+  if (!tip || !skillsSection) return;
+
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const expandedDisplayTime = 7000;
+  let collapseTimer = null;
+  let morphAnimation = null;
+  let initialCountdownStarted = false;
+
+  function clearCollapseTimer() {
+    if (!collapseTimer) return;
+    clearTimeout(collapseTimer);
+    collapseTimer = null;
+  }
+
+  function setCollapsed(collapsed) {
+    if (tip.classList.contains("is-collapsed") === collapsed) return;
+
+    clearCollapseTimer();
+    const startRect = tip.getBoundingClientRect();
+    morphAnimation?.cancel();
+    tip.classList.toggle("is-collapsed", collapsed);
+    tip.setAttribute("aria-expanded", String(!collapsed));
+    tip.tabIndex = collapsed ? 0 : -1;
+
+    if (collapsed) {
+      tip.setAttribute("aria-label", "Show the sphere interaction tip");
+      tip.title = "Show tip";
+    } else {
+      tip.removeAttribute("aria-label");
+      tip.title = "";
+    }
+
+    const endRect = tip.getBoundingClientRect();
+    if (reducedMotionQuery.matches || typeof tip.animate !== "function") return;
+
+    morphAnimation = tip.animate([
+      { width: `${startRect.width}px`, height: `${startRect.height}px` },
+      { width: `${endRect.width}px`, height: `${endRect.height}px` }
+    ], {
+      duration: 540,
+      easing: "cubic-bezier(.22, 1, .36, 1)"
+    });
+    morphAnimation.addEventListener("finish", () => {
+      morphAnimation = null;
+    }, { once: true });
+  }
+
+  function scheduleCollapse(delay = expandedDisplayTime) {
+    clearCollapseTimer();
+    collapseTimer = setTimeout(() => setCollapsed(true), delay);
+  }
+
+  function startInitialCountdown() {
+    if (initialCountdownStarted) return;
+    initialCountdownStarted = true;
+    const revealDelay = 700 * revealTiming.delayScale;
+    scheduleCollapse(revealTiming.tipDuration + revealDelay);
+  }
+
+  tip.addEventListener("click", () => {
+    if (!tip.classList.contains("is-collapsed")) return;
+    setCollapsed(false);
+    scheduleCollapse();
+  });
+
+  tip.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || tip.classList.contains("is-collapsed")) return;
+    setCollapsed(true);
+  });
+
+  if (skillsSection.classList.contains("is-visible")) {
+    startInitialCountdown();
+    return;
+  }
+
+  const visibilityObserver = new MutationObserver(() => {
+    if (!skillsSection.classList.contains("is-visible")) return;
+    startInitialCountdown();
+    visibilityObserver.disconnect();
+  });
+  visibilityObserver.observe(skillsSection, { attributes: true, attributeFilter: ["class"] });
 }
 
 function runWhenVisible(elements, callback, options = {}) {
@@ -1252,6 +1313,7 @@ function setupProjectLightbox() {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupScrollResponsiveReveals();
+  setupSkillTipToggle();
 
   function revealSection(el) {
     applyRevealTiming(el);

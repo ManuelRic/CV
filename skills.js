@@ -33,7 +33,11 @@ const desktopTopPlayInset = 170;
 const mobileTopPlayInset = 150;
 const desktopBottomPlayInset = 85;
 const mobileBottomPlayInset = 64;
-const maximumSkillSpeed = 28;
+const desktopBoundaryExpansion = 22;
+const mobileBoundaryExpansion = 12;
+const maximumSkillSpeed = 34;
+const maximumThrowSpeed = 26;
+const dragVelocitySmoothing = 0.38;
 let skillRadius = getResponsiveSkillRadius();
 
 function getCanvasPixelRatio() {
@@ -59,16 +63,22 @@ function getPageInsetRatio() {
   return 0.1;
 }
 
+function getBoundaryExpansion() {
+  return window.innerWidth <= 768 ? mobileBoundaryExpansion : desktopBoundaryExpansion;
+}
+
 function getSideCutoff() {
-  return getSkillsBounds().width * getPageInsetRatio();
+  return Math.max(0, getSkillsBounds().width * getPageInsetRatio() - getBoundaryExpansion());
 }
 
 function getTopCutoff() {
-  return window.innerWidth <= 768 ? mobileTopPlayInset : desktopTopPlayInset;
+  const inset = window.innerWidth <= 768 ? mobileTopPlayInset : desktopTopPlayInset;
+  return Math.max(0, inset - getBoundaryExpansion());
 }
 
 function getBottomCutoff() {
-  return window.innerWidth <= 768 ? mobileBottomPlayInset : desktopBottomPlayInset;
+  const inset = window.innerWidth <= 768 ? mobileBottomPlayInset : desktopBottomPlayInset;
+  return Math.max(0, inset - getBoundaryExpansion());
 }
 
 function getPlayableBounds() {
@@ -149,6 +159,9 @@ const engine = Engine.create();
 const world = engine.world;
 engine.world.gravity.y = 0.02;
 engine.world.gravity.x = 0;
+engine.positionIterations = 8;
+engine.velocityIterations = 6;
+engine.constraintIterations = 3;
 
 render = Render.create({
   canvas: canvas,
@@ -281,8 +294,10 @@ const balls = skills.map((name, i) => {
     yMin + Math.random() * (yMax - yMin),
     skillRadius,
     {
-      restitution: 0.7,
-      frictionAir: 0.02,
+      restitution: 0.82,
+      friction: 0.025,
+      frictionStatic: 0.06,
+      frictionAir: 0.012,
       mass: 5,
       render: {
         fillStyle: ballColors[i % ballColors.length],
@@ -470,18 +485,15 @@ function confineSkillBall(body, resetMotion = false) {
     } else {
       const velocity = {
         x: escapedX
-          ? (currentX < targetX ? Math.abs(velocityX) : -Math.abs(velocityX)) * 0.35
+          ? (currentX < targetX ? Math.abs(velocityX) : -Math.abs(velocityX)) * 0.55
           : velocityX,
         y: escapedY
-          ? (currentY < targetY ? Math.abs(velocityY) : -Math.abs(velocityY)) * 0.35
+          ? (currentY < targetY ? Math.abs(velocityY) : -Math.abs(velocityY)) * 0.55
           : velocityY
       };
       Body.setVelocity(body, velocity);
     }
 
-    if (mouseConstraint?.body === body) {
-      mouseConstraint.constraint.bodyB = null;
-    }
   }
 
   const speed = Math.hypot(body.velocity.x, body.velocity.y);
@@ -509,7 +521,73 @@ const hoverPointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)"
 
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
-  constraint: { stiffness: 0.15, damping: 0.15, render: { visible: false } }
+  constraint: {
+    stiffness: 0.24,
+    damping: 0.2,
+    angularStiffness: 0.45,
+    render: { visible: false }
+  }
+});
+
+function getBodyDragBounds(body) {
+  const bounds = getPlayableBounds();
+  const appearanceScale = body.plugin.appearanceScale ?? 1;
+  const radius = (body.circleRadius || skillRadius) * Math.max(1, appearanceScale);
+
+  return {
+    left: bounds.left + radius,
+    right: bounds.right - radius,
+    top: bounds.top + radius,
+    bottom: bounds.bottom - radius
+  };
+}
+
+function clampPointToBodyDragBounds(point, body) {
+  const dragBounds = getBodyDragBounds(body);
+  return {
+    x: clamp(point.x, dragBounds.left, dragBounds.right),
+    y: clamp(point.y, dragBounds.top, dragBounds.bottom)
+  };
+}
+
+function limitVelocity(vector, maximum = maximumThrowSpeed) {
+  const x = Number.isFinite(vector?.x) ? vector.x : 0;
+  const y = Number.isFinite(vector?.y) ? vector.y : 0;
+  const speed = Math.hypot(x, y);
+  if (!speed || speed <= maximum) return { x, y };
+
+  const scale = maximum / speed;
+  return { x: x * scale, y: y * scale };
+}
+
+function sampleMouseDragVelocity(body, point) {
+  const now = performance.now();
+  const previousPoint = body.plugin.dragPointerSample;
+
+  if (previousPoint) {
+    const dt = clamp(now - previousPoint.time, 8, 50);
+    const frameScale = 1000 / 60 / dt;
+    const rawVelocity = limitVelocity({
+      x: (point.x - previousPoint.x) * frameScale,
+      y: (point.y - previousPoint.y) * frameScale
+    });
+    const previousVelocity = body.plugin.dragReleaseVelocity || { x: 0, y: 0 };
+
+    body.plugin.dragReleaseVelocity = limitVelocity({
+      x: previousVelocity.x * (1 - dragVelocitySmoothing) + rawVelocity.x * dragVelocitySmoothing,
+      y: previousVelocity.y * (1 - dragVelocitySmoothing) + rawVelocity.y * dragVelocitySmoothing
+    });
+  }
+
+  body.plugin.dragPointerSample = { x: point.x, y: point.y, time: now };
+}
+
+Events.on(engine, "beforeUpdate", () => {
+  const draggedBody = mouseConstraint.body || mouseConstraint.constraint.bodyB;
+  if (!draggedBody) return;
+
+  mouseConstraint.constraint.pointA = clampPointToBodyDragBounds(mouse.position, draggedBody);
+  draggedBody.plugin.lastMotionTime = Date.now();
 });
 
 let hoveredBall = null;
@@ -567,25 +645,49 @@ render.mouse = mouse;
 Events.on(mouseConstraint, "mousemove", () => {
   if (mouseConstraint.body) {
     const body = mouseConstraint.body;
-    const r = body.circleRadius;
-    const bounds = getPlayableBounds();
-
-    const minX = bounds.left + r;
-    const maxX = bounds.right - r;
-    const minY = bounds.top + r;
-    const maxY = bounds.bottom - r;
-
-    if (mouse.position.x < minX || mouse.position.x > maxX ||
-        mouse.position.y < minY || mouse.position.y > maxY) {
-      mouseConstraint.constraint.bodyB = null;
-      return;
-    }
-
-    const dx = mouse.position.x - body.position.x;
-    const dy = mouse.position.y - body.position.y;
-    Body.applyForce(body, body.position, { x: dx * 0.00018, y: dy * 0.00018 });
+    const dragTarget = clampPointToBodyDragBounds(mouse.position, body);
+    mouseConstraint.constraint.pointA = dragTarget;
+    sampleMouseDragVelocity(body, dragTarget);
     body.plugin.lastMotionTime = Date.now();
   }
+});
+
+Events.on(mouseConstraint, "startdrag", event => {
+  const body = event.body;
+  if (!body) return;
+
+  const dragTarget = clampPointToBodyDragBounds(mouse.position, body);
+  body.plugin.dragPointerSample = {
+    x: dragTarget.x,
+    y: dragTarget.y,
+    time: performance.now()
+  };
+  body.plugin.dragReleaseVelocity = { x: 0, y: 0 };
+  Body.setAngularVelocity(body, body.angularVelocity * 0.3);
+});
+
+Events.on(mouseConstraint, "enddrag", event => {
+  const body = event.body;
+  if (!body) return;
+
+  const sampleAge = performance.now() - (body.plugin.dragPointerSample?.time || 0);
+  const releaseStrength = clamp(1 - sampleAge / 180, 0, 1);
+  const sampledVelocity = body.plugin.dragReleaseVelocity || { x: 0, y: 0 };
+  const releaseVelocity = limitVelocity({
+    x: sampledVelocity.x * releaseStrength + body.velocity.x * 0.18,
+    y: sampledVelocity.y * releaseStrength + body.velocity.y * 0.18
+  });
+
+  if (body.constraintImpulse) {
+    body.constraintImpulse.x = 0;
+    body.constraintImpulse.y = 0;
+    body.constraintImpulse.angle = 0;
+  }
+  Body.setVelocity(body, releaseVelocity);
+  Body.setAngularVelocity(body, clamp(releaseVelocity.x * 0.016, -0.34, 0.34));
+  delete body.plugin.dragPointerSample;
+  delete body.plugin.dragReleaseVelocity;
+  body.plugin.lastMotionTime = Date.now();
 });
 
 function smoothSetAngle(body, targetAngle = 0, duration = 500) {
@@ -1081,6 +1183,10 @@ canvas.addEventListener("pointerdown", e => {
     return;
   }
 
+  const point = getCanvasPointFromEvent(e);
+  const ball = findBallAt(point);
+  if (ball && !splatters.has(ball)) canvas.setPointerCapture?.(e.pointerId);
+
   pointerDownPos = { x: e.clientX, y: e.clientY, type: e.pointerType };
   pointerMoved = false;
   activePointerId = e.pointerId;
@@ -1103,21 +1209,20 @@ canvas.addEventListener("pointermove", e => {
     const point = getCanvasPointFromEvent(e);
     const now = performance.now();
     const dt = Math.max(16, now - lastTouchTime);
-    const bounds = getPlayableBounds();
-    const r = touchDragBall.circleRadius || skillRadius;
-    const nextPoint = {
-      x: clamp(point.x, bounds.left + r, bounds.right - r),
-      y: clamp(point.y, bounds.top + r, bounds.bottom - r)
-    };
+    const nextPoint = clampPointToBodyDragBounds(point, touchDragBall);
 
-    touchDragVelocity = {
+    const rawTouchVelocity = limitVelocity({
       x: ((nextPoint.x - lastTouchPoint.x) / dt) * 16,
       y: ((nextPoint.y - lastTouchPoint.y) / dt) * 16
-    };
+    });
+    touchDragVelocity = limitVelocity({
+      x: touchDragVelocity.x * (1 - dragVelocitySmoothing) + rawTouchVelocity.x * dragVelocitySmoothing,
+      y: touchDragVelocity.y * (1 - dragVelocitySmoothing) + rawTouchVelocity.y * dragVelocitySmoothing
+    });
 
     Body.setPosition(touchDragBall, nextPoint);
     Body.setVelocity(touchDragBall, touchDragVelocity);
-    Body.setAngularVelocity(touchDragBall, touchDragVelocity.x * 0.01);
+    Body.setAngularVelocity(touchDragBall, clamp(touchDragVelocity.x * 0.016, -0.34, 0.34));
     touchDragBall.plugin.lastMotionTime = Date.now();
     lastTouchPoint = nextPoint;
     lastTouchTime = now;
@@ -1128,7 +1233,16 @@ canvas.addEventListener("pointerup", e => {
   if (!pointerDownPos || e.pointerId !== activePointerId) return;
 
   if (pointerMoved) {
-    if (touchDragBall) Body.setVelocity(touchDragBall, touchDragVelocity);
+    if (touchDragBall) {
+      const sampleAge = performance.now() - lastTouchTime;
+      const releaseStrength = clamp(1 - sampleAge / 180, 0, 1);
+      const releaseVelocity = limitVelocity({
+        x: touchDragVelocity.x * releaseStrength,
+        y: touchDragVelocity.y * releaseStrength
+      });
+      Body.setVelocity(touchDragBall, releaseVelocity);
+      Body.setAngularVelocity(touchDragBall, clamp(releaseVelocity.x * 0.016, -0.34, 0.34));
+    }
     resetPointerState();
     return;
   }
