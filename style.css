@@ -1100,8 +1100,6 @@ html.project-lightbox-open body {
 }
 
 .project-media-doodle {
-  --doodle-image-size: 118%;
-  --doodle-image-offset: -9%;
   aspect-ratio: 6 / 5;
 }
 
@@ -1121,11 +1119,8 @@ html.project-lightbox-open body {
 }
 
 .project-media-doodle .project-img {
-  inset: auto auto 0 var(--doodle-image-offset);
-  width: var(--doodle-image-size);
-  height: var(--doodle-image-size);
   object-fit: cover;
-  object-position: center bottom;
+  object-position: center;
 }
 
 .project-carousel {
@@ -1303,6 +1298,11 @@ html.project-lightbox-open body {
   height: 100%;
   pointer-events: none;
   display: block;
+  transition: opacity 0.24s ease;
+}
+
+.doodle-reveal.is-image-loading .doodle-canvas {
+  opacity: 0;
 }
 
 .project-info {

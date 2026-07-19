@@ -150,10 +150,10 @@ function setupProgressiveImageSkeletons() {
     function settleImage(image) {
       if (image.dataset.loadSettled === "true") return;
       image.dataset.loadSettled = "true";
-      image.classList.add("is-image-ready");
       pendingImages -= 1;
 
       if (pendingImages === 0) {
+        images.forEach(groupImage => groupImage.classList.add("is-image-ready"));
         container.classList.remove("is-image-loading");
       }
     }
