@@ -1,140 +1,123 @@
-function setupSiteLoader() {
-  const loader = document.getElementById("site-loader");
+function setupSkeletonLoader() {
+  const skeleton = document.getElementById("home-skeleton");
+  const home = document.getElementById("home");
   const root = document.documentElement;
 
-  if (!loader) {
-    root.classList.remove("is-loading");
+  if (!skeleton) {
+    root.classList.remove("is-skeleton-loading");
     window.siteIsReady = true;
     return;
   }
 
-  const maximumWaitTime = 12000;
+  const maximumWaitTime = 3000;
+  const minimumSkeletonTime = 500;
   const wait = duration => new Promise(resolve => window.setTimeout(resolve, duration));
 
   async function playDotLanding() {
-    const dot = loader.querySelector(".site-loader-orbit");
+    const orbit = skeleton.querySelector(".skeleton-welcome-orbit");
+    const dot = skeleton.querySelector(".skeleton-welcome-dot");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!dot || prefersReducedMotion || typeof dot.animate !== "function") return;
+    if (!orbit) return;
 
-    const dotAnimations = typeof dot.getAnimations === "function" ? dot.getAnimations() : [];
-    const orbitAnimation = dotAnimations.find(animation => {
-      return animation.animationName === "loaderDotOrbit";
-    }) || dotAnimations[0];
+    skeleton.classList.add("is-intro-active");
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    if (prefersReducedMotion || typeof orbit.animate !== "function") return;
+
+    const orbitAnimations = typeof orbit.getAnimations === "function" ? orbit.getAnimations() : [];
+    const orbitAnimation = orbitAnimations.find(animation => {
+      return animation.animationName === "skeletonWelcomeOrbit";
+    }) || orbitAnimations[0];
     const landingAngle = 360;
-    const landingSpeedMultiplier = 1.8;
-    const bounceDuration = 380;
-    let continuedOrbit = false;
-    dot.classList.add("is-landing");
+    const orbitDuration = 1000;
+    const bounceDuration = 520;
+    orbit.classList.add("is-landing");
 
-    if (orbitAnimation?.effect && typeof orbitAnimation.effect.updateTiming === "function") {
-      try {
-        const timing = orbitAnimation.effect.getComputedTiming();
-        const currentIteration = Number.isFinite(timing.currentIteration)
-          ? timing.currentIteration
-          : 0;
-
-        orbitAnimation.effect.updateTiming({
-          iterations: currentIteration + 1,
-          fill: "forwards"
-        });
-
-        if (typeof orbitAnimation.updatePlaybackRate === "function") {
-          orbitAnimation.updatePlaybackRate(orbitAnimation.playbackRate * landingSpeedMultiplier);
-        } else {
-          orbitAnimation.playbackRate *= landingSpeedMultiplier;
-        }
-
-        await orbitAnimation.finished;
-        continuedOrbit = true;
-      } catch {
-        continuedOrbit = false;
-      }
-    }
-
-    if (!continuedOrbit) {
-      dot.style.animationPlayState = "paused";
-      orbitAnimation?.pause();
-
-      try {
-        orbitAnimation?.commitStyles();
-      } catch {
-        // Older mobile browsers use the frozen computed transform below.
-      }
-
-      const renderedTransform = getComputedStyle(dot).transform;
-      const Matrix = window.DOMMatrixReadOnly || window.DOMMatrix || window.WebKitCSSMatrix;
-      let startAngle = NaN;
-
-      if (renderedTransform && renderedTransform !== "none") {
-        try {
-          const matrix = new Matrix(renderedTransform);
-          startAngle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
-        } catch {
-          const matrixValues = renderedTransform.match(/^matrix\(([^)]+)\)$/)?.[1].split(",");
-          if (matrixValues?.length >= 2) {
-            startAngle = Math.atan2(Number(matrixValues[1]), Number(matrixValues[0])) * (180 / Math.PI);
-          }
-        }
-      }
-
-      startAngle = Number.isFinite(startAngle) ? (startAngle + 360) % 360 : 0;
-      const degreesRemaining = Math.max(0, landingAngle - startAngle);
-      const approachDuration = Math.max(
-        40,
-        1600 * (degreesRemaining / 360) / landingSpeedMultiplier
-      );
-      const startTransform = `rotate(${startAngle}deg)`;
-
-      dot.style.transform = startTransform;
-      dot.style.animation = "none";
-      orbitAnimation?.cancel();
-
-      const approach = dot.animate([
-        { transform: startTransform },
+    if (orbitAnimation) {
+      await Promise.race([
+        orbitAnimation.finished.catch(() => {}),
+        wait(orbitDuration + 300)
+      ]);
+    } else {
+      const fallbackOrbit = orbit.animate([
+        { transform: "rotate(0deg)" },
         { transform: `rotate(${landingAngle}deg)` }
       ], {
-        duration: approachDuration,
-        easing: "linear",
+        duration: orbitDuration,
+        easing: "cubic-bezier(0.24, 0.15, 0.8, 0.5)",
         fill: "forwards"
       });
 
-      await approach.finished.catch(() => {});
-      dot.style.transform = `rotate(${landingAngle}deg)`;
-      approach.cancel();
+      await fallbackOrbit.finished.catch(() => {});
+      fallbackOrbit.cancel();
     }
 
-    dot.style.transform = `rotate(${landingAngle}deg)`;
-    dot.style.animation = "none";
+    orbit.style.transform = `rotate(${landingAngle}deg)`;
+    orbit.style.animation = "none";
     orbitAnimation?.cancel();
 
-    const bounce = dot.animate([
-      { transform: `rotate(${landingAngle}deg)`, offset: 0 },
+    const bounce = orbit.animate([
       {
-        transform: `rotate(${landingAngle - 11}deg)`,
-        offset: 0.3,
-        easing: "cubic-bezier(0.16, 0.8, 0.3, 1)"
+        transform: `rotate(${landingAngle}deg)`,
+        offset: 0,
+        easing: "cubic-bezier(0.12, 0.8, 0.24, 1)"
       },
-      { transform: `rotate(${landingAngle + 4}deg)`, offset: 0.55 },
-      { transform: `rotate(${landingAngle - 1.5}deg)`, offset: 0.78 },
+      {
+        transform: `rotate(${landingAngle - 20}deg)`,
+        offset: 0.2,
+        easing: "cubic-bezier(0.3, 0, 0.2, 1)"
+      },
+      {
+        transform: `rotate(${landingAngle + 9}deg)`,
+        offset: 0.43,
+        easing: "cubic-bezier(0.3, 0, 0.2, 1)"
+      },
+      {
+        transform: `rotate(${landingAngle - 5}deg)`,
+        offset: 0.64,
+        easing: "cubic-bezier(0.3, 0, 0.2, 1)"
+      },
+      { transform: `rotate(${landingAngle + 2}deg)`, offset: 0.82 },
       { transform: `rotate(${landingAngle}deg)`, offset: 1 }
     ], {
       duration: bounceDuration,
       fill: "forwards"
     });
 
+    const impact = dot && typeof dot.animate === "function"
+      ? dot.animate([
+          { transform: "scale(1)", offset: 0 },
+          { transform: "scale(1.7, 0.58)", offset: 0.1 },
+          { transform: "scale(0.78, 1.35)", offset: 0.27 },
+          { transform: "scale(1.18, 0.86)", offset: 0.48 },
+          { transform: "scale(0.94, 1.08)", offset: 0.7 },
+          { transform: "scale(1)", offset: 1 }
+        ], {
+          duration: bounceDuration,
+          easing: "cubic-bezier(0.22, 0.7, 0.3, 1)",
+          fill: "forwards"
+        })
+      : null;
+
+    const impactAnimationsFinished = [bounce.finished.catch(() => {})];
+    if (impact) impactAnimationsFinished.push(impact.finished.catch(() => {}));
+
     await Promise.race([
-      bounce.finished.catch(() => {}),
+      Promise.all(impactAnimationsFinished),
       wait(bounceDuration + 100)
     ]);
 
-    dot.style.transform = "rotate(0deg)";
-    dot.style.animation = "none";
+    orbit.style.transform = "rotate(0deg)";
+    orbit.style.animation = "none";
     bounce.cancel();
+    impact?.cancel();
     orbitAnimation?.cancel();
-    dot.classList.remove("is-landing");
+    orbit.classList.remove("is-landing");
   }
 
   function waitForImage(image) {
+    if (!image) return Promise.resolve();
+
     const loaded = image.complete
       ? Promise.resolve()
       : new Promise(resolve => {
@@ -149,24 +132,28 @@ function setupSiteLoader() {
   }
 
   async function finishLoading() {
-    const imagePromises = Array.from(document.images, waitForImage);
-    const documentImagesReady = Promise.allSettled(imagePromises);
-    const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
-    const skillsReady = window.skillsAssetsReady || Promise.resolve();
-    const assetsReady = Promise.allSettled([documentImagesReady, fontsReady, skillsReady]);
+    const profileReady = waitForImage(document.getElementById("pf_img"));
+    const fontReady = document.fonts
+      ? document.fonts.load("1em MyFont").catch(() => {})
+      : Promise.resolve();
+    const heroReady = Promise.allSettled([profileReady, fontReady]);
+    const criticalAssetsReady = Promise.race([heroReady, wait(maximumWaitTime)]);
 
-    await Promise.race([assetsReady, wait(maximumWaitTime)]);
+    await Promise.race([fontReady, wait(800)]);
     await playDotLanding();
+    skeleton.classList.add("is-skeleton-active");
+    await Promise.allSettled([criticalAssetsReady, wait(minimumSkeletonTime)]);
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-    root.classList.remove("is-loading");
-    loader.classList.add("is-hidden");
-    loader.setAttribute("aria-hidden", "true");
+    root.classList.remove("is-skeleton-loading");
+    skeleton.classList.add("is-hidden");
+    skeleton.setAttribute("aria-hidden", "true");
+    home?.setAttribute("aria-busy", "false");
     window.siteIsReady = true;
     window.dispatchEvent(new Event("site:ready"));
 
-    loader.addEventListener("transitionend", () => loader.remove(), { once: true });
-    window.setTimeout(() => loader.remove(), 500);
+    skeleton.addEventListener("transitionend", () => skeleton.remove(), { once: true });
+    window.setTimeout(() => skeleton.remove(), 500);
   }
 
   if (document.readyState === "loading") {
@@ -176,7 +163,56 @@ function setupSiteLoader() {
   }
 }
 
-setupSiteLoader();
+setupSkeletonLoader();
+
+function setupProgressiveImageSkeletons() {
+  function trackImageGroup(container, images) {
+    if (!images.length) return;
+
+    container.classList.add("is-image-loading");
+    let pendingImages = images.length;
+
+    function settleImage(image) {
+      if (image.dataset.loadSettled === "true") return;
+      image.dataset.loadSettled = "true";
+      image.classList.add("is-image-ready");
+      pendingImages -= 1;
+
+      if (pendingImages === 0) {
+        container.classList.remove("is-image-loading");
+      }
+    }
+
+    images.forEach(image => {
+      if (image.complete) {
+        settleImage(image);
+        return;
+      }
+
+      image.addEventListener("load", () => settleImage(image), { once: true });
+      image.addEventListener("error", () => settleImage(image), { once: true });
+    });
+  }
+
+  document.querySelectorAll(".project-media").forEach(media => {
+    const carouselSlides = Array.from(media.querySelectorAll(".project-carousel-slide"));
+
+    if (carouselSlides.length) {
+      carouselSlides.forEach(slide => {
+        trackImageGroup(slide, Array.from(slide.querySelectorAll(".project-img")));
+      });
+      return;
+    }
+
+    trackImageGroup(media, Array.from(media.querySelectorAll(".project-img")));
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupProgressiveImageSkeletons, { once: true });
+} else {
+  setupProgressiveImageSkeletons();
+}
 
 // Wait until the page loads
 window.addEventListener("DOMContentLoaded", () => {
@@ -1217,10 +1253,19 @@ function setupProjectLightbox() {
 document.addEventListener("DOMContentLoaded", () => {
   setupScrollResponsiveReveals();
 
-  runWhenVisible(document.querySelectorAll(".page-section"), el => {
+  function revealSection(el) {
     applyRevealTiming(el);
     el.classList.add("is-visible");
     requestAnimationFrame(() => accelerateActiveReveals(el));
+  }
+
+  runWhenVisible(document.querySelectorAll(".page-section"), el => {
+    if (el.id === "home" && !window.siteIsReady) {
+      window.addEventListener("site:ready", () => revealSection(el), { once: true });
+      return;
+    }
+
+    revealSection(el);
   });
 
   setupProjectCarousels();

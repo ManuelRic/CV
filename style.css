@@ -61,52 +61,63 @@ img {
     max-width: 100%;
 }
 
-html.is-loading,
-html.is-loading body {
-    overflow: hidden;
-}
-
-.site-loader {
-    position: fixed;
+.home-skeleton {
+    position: absolute;
     inset: 0;
-    z-index: 10000;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: 10px;
-    overflow: visible;
-    background: var(--paper);
-    color: var(--ink);
+    z-index: 5;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--section-top) var(--page-x) var(--section-bottom);
+    background: transparent;
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.24s ease, visibility 0.24s ease;
+    pointer-events: none;
+    transition: opacity 0.28s ease, visibility 0.28s ease;
 }
 
-.site-loader.is-hidden {
+.home-skeleton.is-hidden {
     opacity: 0;
+    visibility: hidden;
+}
+
+html.is-skeleton-loading .main > .main-left,
+html.is-skeleton-loading .main > .options {
     visibility: hidden;
     pointer-events: none;
 }
 
-.site-loader-mark {
-    position: relative;
-    z-index: 0;
+.skeleton-welcome-mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 10;
     display: inline-block;
-    overflow: visible;
     isolation: isolate;
+    overflow: visible;
     font-size: clamp(34px, 6vw, 52px);
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.06em;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.site-loader-letters {
+.home-skeleton.is-intro-active .skeleton-welcome-mark {
+    opacity: 1;
+    visibility: visible;
+}
+
+.skeleton-welcome-letters {
     position: relative;
     z-index: 0;
     display: inline-block;
 }
 
-.site-loader-orbit {
+.skeleton-welcome-orbit {
     position: absolute;
     z-index: 10;
     top: -0.85em;
@@ -115,11 +126,15 @@ html.is-loading body {
     height: 2.7em;
     overflow: visible;
     transform-origin: 50% 50%;
-    animation: loaderDotOrbit 1.6s linear infinite;
+    transform: rotate(0deg);
     will-change: transform;
 }
 
-.site-loader-dot {
+.home-skeleton.is-intro-active .skeleton-welcome-orbit {
+    animation: skeletonWelcomeOrbit 1s cubic-bezier(0.24, 0.15, 0.8, 0.5) 0.2s 1 both;
+}
+
+.skeleton-welcome-dot {
     position: absolute;
     z-index: 1;
     top: 1.57em;
@@ -130,7 +145,7 @@ html.is-loading body {
     background-color: var(--accent);
 }
 
-.site-loader-orbit.is-landing {
+.skeleton-welcome-orbit.is-landing {
     z-index: 20;
     overflow: visible;
     clip-path: none;
@@ -139,13 +154,131 @@ html.is-loading body {
     contain: none;
 }
 
-.site-loader-orbit.is-landing .site-loader-dot {
-    z-index: 1;
-}
-
-@keyframes loaderDotOrbit {
+@keyframes skeletonWelcomeOrbit {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+.home-skeleton-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(48%, 520px);
+    min-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.24s ease, visibility 0.24s ease;
+}
+
+.home-skeleton-options {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+    width: min(46%, 560px);
+    min-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.24s ease, visibility 0.24s ease;
+}
+
+.home-skeleton.is-skeleton-active .skeleton-welcome-mark {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.home-skeleton.is-skeleton-active .home-skeleton-left,
+.home-skeleton.is-skeleton-active .home-skeleton-options {
+    opacity: 1;
+    visibility: visible;
+}
+
+.skeleton-block {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(211, 43, 49, 0.12);
+}
+
+.skeleton-block::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.68) 48%, transparent 76%);
+    transform: translateX(-110%);
+    animation: skeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.skeleton-name {
+    width: min(92%, 440px);
+    height: 92px;
+    margin-bottom: var(--space-4);
+}
+
+.skeleton-portrait {
+    width: min(360px, 100%);
+    aspect-ratio: 41 / 44;
+    margin-bottom: var(--space-4);
+    border-radius: 44% 44% 24% 24%;
+}
+
+.skeleton-title {
+    width: min(92%, 420px);
+    height: 48px;
+    margin-bottom: var(--space-2);
+}
+
+.skeleton-location {
+    width: min(62%, 250px);
+    height: 34px;
+}
+
+.skeleton-copy {
+    display: grid;
+    gap: 11px;
+}
+
+.skeleton-line {
+    height: 28px;
+}
+
+.skeleton-line-full {
+    width: 100%;
+}
+
+.skeleton-line-medium {
+    width: 74%;
+}
+
+.skeleton-line-short {
+    width: 58%;
+}
+
+.skeleton-nav {
+    display: grid;
+    justify-items: center;
+    align-self: center;
+    gap: var(--space-3);
+    width: min(100%, 300px);
+    margin-top: var(--space-1);
+}
+
+.skeleton-nav-line {
+    width: 210px;
+    max-width: 82%;
+    height: 52px;
+}
+
+.skeleton-button {
+    align-self: center;
+    width: min(255px, 80%);
+    height: 52px;
+}
+
+@keyframes skeletonShimmer {
+    to { transform: translateX(110%); }
 }
 
 .back-to-top {
@@ -311,6 +444,7 @@ html.is-loading body {
 }
 
 .main {
+    position: relative;
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -667,6 +801,29 @@ h2 {
   aspect-ratio: 4 / 5;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+.project-media.is-image-loading,
+.project-carousel-slide.is-image-loading {
+    background-color: rgba(211, 43, 49, 0.09);
+    background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.62) 48%, transparent 76%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    animation: projectImageShimmer 1.35s ease-in-out infinite;
+}
+
+.project-media.is-image-loading .project-img:not(.is-image-ready),
+.project-carousel-slide.is-image-loading .project-img:not(.is-image-ready) {
+    opacity: 0;
+}
+
+.project-img {
+    transition: opacity 0.24s ease;
+}
+
+@keyframes projectImageShimmer {
+    from { background-position: 180% 0; }
+    to { background-position: -120% 0; }
 }
 
 .project-expand-trigger {
@@ -1518,6 +1675,33 @@ footer p {
     gap: var(--space-5);
   }
 
+  .home-skeleton {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-5);
+  }
+
+  .skeleton-welcome-mark {
+    top: 30px;
+    font-size: 42px;
+    transform: translateX(-50%);
+  }
+
+  .home-skeleton-left {
+    width: 100%;
+  }
+
+  .home-skeleton-options {
+    width: min(100%, 560px);
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .skeleton-copy {
+    width: 100%;
+  }
+
   .main-left {
     width: 100%;
   }
@@ -1655,6 +1839,60 @@ footer p {
     justify-content: flex-start;
     gap: var(--space-3);
     padding-top: 70px;
+  }
+
+  .home-skeleton {
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding-top: 70px;
+  }
+
+  .skeleton-name {
+    width: min(76%, 360px);
+    height: 52px;
+    margin-bottom: var(--space-2);
+  }
+
+  .skeleton-portrait {
+    width: 260px;
+    margin-bottom: var(--space-3);
+  }
+
+  .skeleton-title {
+    width: min(78%, 340px);
+    height: 34px;
+    margin-bottom: var(--space-1);
+  }
+
+  .skeleton-location {
+    width: min(52%, 220px);
+    height: 28px;
+  }
+
+  .home-skeleton-options {
+    width: 100%;
+  }
+
+  .skeleton-copy {
+    width: min(100%, 430px);
+  }
+
+  .skeleton-line {
+    height: 22px;
+  }
+
+  .skeleton-nav {
+    gap: var(--space-2);
+    margin-top: 0;
+  }
+
+  .skeleton-nav-line {
+    width: 170px;
+    height: 38px;
+  }
+
+  .skeleton-button {
+    height: 48px;
   }
 
   h1 {
@@ -1852,6 +2090,27 @@ footer p {
    ======================================= */
 @media (max-width: 480px) {
 
+  .skeleton-name {
+    height: 44px;
+  }
+
+  .skeleton-portrait {
+    width: 220px;
+  }
+
+  .skeleton-title {
+    height: 30px;
+  }
+
+  .skeleton-line {
+    height: 18px;
+  }
+
+  .skeleton-nav-line {
+    width: 150px;
+    height: 32px;
+  }
+
   .main-left h1 {
     font-size: clamp(29px, 9.4vw, 38px);
   }
@@ -1931,6 +2190,10 @@ footer p {
   *::after {
     animation: none !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .skeleton-block::after {
+    display: none;
   }
 
   .main-left h1,

@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html lang="en" translate="no" class="is-loading">
+<html lang="en" translate="no" class="is-skeleton-loading">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manuel Ricart</title>
+  <link rel="preload" href="fonts/Myfont-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="img/favicontest_120_red2_outlined2.png">
-  <noscript><style>html.is-loading { overflow-y: auto; } #site-loader { display: none; }</style></noscript>
+  <noscript>
+    <style>
+      .home-skeleton { display: none !important; }
+      html.is-skeleton-loading .main > .main-left,
+      html.is-skeleton-loading .main > .options { visibility: visible !important; }
+      .main-left h1,
+      #pf_img,
+      h2,
+      .notname,
+      #skill_tip,
+      .options p,
+      .options h3,
+      .cv-wrap,
+      .project-card { opacity: 1 !important; transform: none !important; }
+    </style>
+  </noscript>
 </head>
 <body>
-  <div id="site-loader" class="site-loader" role="status" aria-live="polite" aria-label="Loading portfolio">
-    <span class="site-loader-mark" aria-hidden="true"><span class="site-loader-letters">MR</span><span class="site-loader-orbit"><span class="site-loader-dot"></span></span></span>
-  </div>
-
   <button id="back-to-top" class="back-to-top" type="button" aria-label="Back to top">
     <img src="img/topArrowWText.png" alt="">
   </button>
@@ -34,7 +46,35 @@
     </a>
   </div>
 
-  <section id="home" class="main page-section">
+  <section id="home" class="main page-section" aria-busy="true">
+    <div id="home-skeleton" class="home-skeleton" role="status" aria-label="Loading portfolio content">
+      <span class="skeleton-welcome-mark" aria-hidden="true">
+        <span class="skeleton-welcome-letters">MR</span>
+        <span class="skeleton-welcome-orbit"><span class="skeleton-welcome-dot"></span></span>
+      </span>
+      <div class="home-skeleton-left" aria-hidden="true">
+        <span class="skeleton-block skeleton-name"></span>
+        <span class="skeleton-block skeleton-portrait"></span>
+        <span class="skeleton-block skeleton-title"></span>
+        <span class="skeleton-block skeleton-location"></span>
+      </div>
+      <div class="home-skeleton-options" aria-hidden="true">
+        <div class="skeleton-copy">
+          <span class="skeleton-block skeleton-line skeleton-line-full"></span>
+          <span class="skeleton-block skeleton-line skeleton-line-full"></span>
+          <span class="skeleton-block skeleton-line skeleton-line-medium"></span>
+          <span class="skeleton-block skeleton-line skeleton-line-full"></span>
+          <span class="skeleton-block skeleton-line skeleton-line-short"></span>
+        </div>
+        <div class="skeleton-nav">
+          <span class="skeleton-block skeleton-nav-line"></span>
+          <span class="skeleton-block skeleton-nav-line"></span>
+          <span class="skeleton-block skeleton-nav-line"></span>
+        </div>
+        <span class="skeleton-block skeleton-button"></span>
+      </div>
+    </div>
+
     <div class="main-left">
       <h1 id="name">
         Manuel R
@@ -49,7 +89,7 @@
         cart
       </h1>
 
-      <img id="pf_img" src="img/profile-popout-v10-pf1-mountain.png" alt="Profile image with mountain background">
+      <img id="pf_img" src="img/profile-popout-v10-pf1-mountain.png" width="1640" height="1760" fetchpriority="high" decoding="async" alt="Profile image with mountain background">
       <h2 id="title">Technology and Multimedia</h2>
       <h2 id="location"><span id="location_icon">&#128205;</span>Valencia, Spain</h2>
     </div>
@@ -102,8 +142,8 @@
     <div class="projects-grid">
       <article class="project-card project-card-large">
         <div class="project-media project-media-doodle doodle-reveal">
-          <img class="project-img" src="img/projectImages/doodleIt/peacockV2_doodled.png" alt="Doodled peacock image used for doodleIt">
-          <img class="project-img project-original-img" src="img/projectImages/doodleIt/peacockV.jpg" alt="">
+          <img class="project-img" src="img/projectImages/doodleIt/peacockV2_doodled.png" loading="lazy" decoding="async" alt="Doodled peacock image used for doodleIt">
+          <img class="project-img project-original-img" src="img/projectImages/doodleIt/peacockV.jpg" loading="lazy" decoding="async" alt="">
         </div>
         <div class="project-info">
           <h2>doodleIt</h2>
@@ -120,13 +160,13 @@
           <div class="project-carousel-viewport">
             <div class="project-carousel-track">
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/tts_example3.png" width="867" height="351" alt="Parametric speech spectrogram from the TTS Project">
+                <img class="project-img" src="img/tts_example3.png" width="867" height="351" loading="lazy" decoding="async" alt="Parametric speech spectrogram from the TTS Project">
               </figure>
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/tts_example2.png" width="1146" height="577" alt="Interactive concatenative speech synthesis demo">
+                <img class="project-img" src="img/tts_example2.png" width="1146" height="577" loading="lazy" decoding="async" alt="Interactive concatenative speech synthesis demo">
               </figure>
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img project-img-align-top" src="img/tts_example1.png" width="762" height="836" alt="WaveNet and causal convolution explanation page">
+                <img class="project-img project-img-align-top" src="img/tts_example1.png" width="762" height="836" loading="lazy" decoding="async" alt="WaveNet and causal convolution explanation page">
               </figure>
             </div>
           </div>
@@ -168,13 +208,13 @@
           <div class="project-carousel-viewport">
             <div class="project-carousel-track">
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/projectImages/esy/homepage.png" width="1862" height="812" alt="eyesec home page with an interactive 3D eye">
+                <img class="project-img" src="img/projectImages/esy/homepage.png" width="1862" height="812" loading="lazy" decoding="async" alt="eyesec home page with an interactive 3D eye">
               </figure>
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/projectImages/esy/basic.png" width="1738" height="717" alt="eyesec cybersecurity overview page">
+                <img class="project-img" src="img/projectImages/esy/basic.png" width="1738" height="717" loading="lazy" decoding="async" alt="eyesec cybersecurity overview page">
               </figure>
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/projectImages/esy/bottom.png" width="1866" height="816" alt="eyesec cybersecurity services and contact sections">
+                <img class="project-img" src="img/projectImages/esy/bottom.png" width="1866" height="816" loading="lazy" decoding="async" alt="eyesec cybersecurity services and contact sections">
               </figure>
             </div>
           </div>
@@ -203,7 +243,7 @@
 
       <article class="project-card project-card-reverse">
         <div class="project-media">
-          <img class="project-img" src="img/threejsWater.png" alt="Water and Wake System preview">
+          <img class="project-img" src="img/threejsWater.png" loading="lazy" decoding="async" alt="Water and Wake System preview">
         </div>
         <div class="project-info">
           <h2>Water and Wake System</h2>
@@ -220,10 +260,10 @@
           <div class="project-carousel-viewport">
             <div class="project-carousel-track">
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/projectImages/mosaicStudio/homePageMosaic.png" width="1872" height="817" alt="Mosaic Studio 21 home page with illustrated domino pieces">
+                <img class="project-img" src="img/projectImages/mosaicStudio/homePageMosaic.png" width="1872" height="817" loading="lazy" decoding="async" alt="Mosaic Studio 21 home page with illustrated domino pieces">
               </figure>
               <figure class="project-carousel-slide" data-carousel-slide>
-                <img class="project-img" src="img/projectImages/mosaicStudio/mickey.png" width="1677" height="748" alt="Mickey Mouse image recreated as a domino mosaic in Mosaic Studio 21">
+                <img class="project-img" src="img/projectImages/mosaicStudio/mickey.png" width="1677" height="748" loading="lazy" decoding="async" alt="Mickey Mouse image recreated as a domino mosaic in Mosaic Studio 21">
               </figure>
             </div>
           </div>
