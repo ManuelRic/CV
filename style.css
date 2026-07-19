@@ -570,8 +570,7 @@ h2 {
     will-change: width, height;
     transition:
       background-color 180ms ease,
-      box-shadow 220ms ease,
-      transform 180ms ease;
+      box-shadow 220ms ease;
 }
 
 .skill-tip-copy {
@@ -584,7 +583,7 @@ h2 {
     transform-origin: center;
     transition:
       opacity 150ms ease 540ms,
-      transform 320ms cubic-bezier(.22, 1, .36, 1) 460ms;
+      transform 320ms cubic-bezier(.22, 1, .36, 1) 540ms;
 }
 
 .skill-tip-question {
@@ -628,12 +627,11 @@ h2 {
 #skill_tip.is-collapsed .skill-tip-question {
     opacity: 1;
     transform: scale(1);
-    transition-delay: 130ms, 90ms;
+    transition-delay: 540ms, 540ms;
 }
 
 #skill_tip.is-collapsed:hover {
     background-color: rgba(211, 43, 49, 0.07);
-    transform: translateY(-1px) scale(1.04);
     box-shadow: 0 5px 14px rgba(211, 43, 49, 0.18);
 }
 
@@ -1319,6 +1317,60 @@ html.project-lightbox-open body {
   font-size: 28px;
   color: #242424;
   overflow-wrap: break-word;
+}
+
+.project-stack {
+  display: grid;
+  gap: 10px;
+  margin: var(--space-2) 0 0;
+}
+
+.project-stack-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.project-stack dt {
+  padding-top: 7px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-stack dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.project-stack dd span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 29px;
+  padding: 5px 11px;
+  border: 1px solid rgba(211, 43, 49, 0.5);
+  border-radius: 999px;
+  background: rgba(211, 43, 49, 0.13);
+  color: #7d171b;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(211, 43, 49, 0.1);
+}
+
+.project-stack-row:first-child dd span {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(211, 43, 49, 0.22);
 }
 
 .project-link {

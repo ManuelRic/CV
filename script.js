@@ -419,11 +419,25 @@ function setupSkillTipToggle() {
     if (reducedMotionQuery.matches || typeof tip.animate !== "function") return;
 
     morphAnimation = tip.animate([
-      { width: `${startRect.width}px`, height: `${startRect.height}px` },
-      { width: `${endRect.width}px`, height: `${endRect.height}px` }
+      {
+        width: `${startRect.width}px`,
+        height: `${startRect.height}px`,
+        offset: 0
+      },
+      {
+        width: `${startRect.width}px`,
+        height: `${startRect.height}px`,
+        offset: 0.28,
+        easing: "cubic-bezier(.22, 1, .36, 1)"
+      },
+      {
+        width: `${endRect.width}px`,
+        height: `${endRect.height}px`,
+        offset: 1
+      }
     ], {
       duration: 540,
-      easing: "cubic-bezier(.22, 1, .36, 1)"
+      easing: "linear"
     });
     morphAnimation.addEventListener("finish", () => {
       morphAnimation = null;
