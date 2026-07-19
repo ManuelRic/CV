@@ -528,6 +528,9 @@ function setupProjectCarousels() {
     let resumeTimer = null;
     let isHovered = false;
     let isFocusWithin = false;
+    let trackIndex = 1;
+    let isTransitioning = false;
+    let pendingSelection = null;
 
     carousel.setAttribute("role", "region");
     carousel.setAttribute("aria-roledescription", "carousel");
@@ -577,10 +580,44 @@ function setupProjectCarousels() {
       return dot;
     });
 
-    function showSlide(index, announce = true) {
-      currentIndex = (index + slides.length) % slides.length;
-      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+    function createLoopClone(slide) {
+      const clone = slide.cloneNode(true);
 
+      clone.classList.add("project-carousel-clone");
+      clone.classList.remove("is-image-loading");
+      clone.removeAttribute("data-carousel-slide");
+      clone.removeAttribute("id");
+      clone.removeAttribute("aria-label");
+      clone.removeAttribute("aria-roledescription");
+      clone.setAttribute("aria-hidden", "true");
+      clone.setAttribute("role", "presentation");
+      clone.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
+      clone.querySelectorAll("img").forEach(image => {
+        image.alt = "";
+        image.setAttribute("draggable", "false");
+      });
+
+      return clone;
+    }
+
+    const leadingClone = createLoopClone(slides[slides.length - 1]);
+    const trailingClone = createLoopClone(slides[0]);
+    track.prepend(leadingClone);
+    track.append(trailingClone);
+
+    function setTrackPosition(index, instant = false) {
+      trackIndex = index;
+
+      if (instant) track.classList.add("is-resetting");
+      track.style.transform = `translateX(-${trackIndex * 100}%)`;
+
+      if (instant) {
+        void track.offsetWidth;
+        track.classList.remove("is-resetting");
+      }
+    }
+
+    function updateSlideState(announce) {
       slides.forEach((slide, slideIndex) => {
         slide.setAttribute("aria-hidden", String(slideIndex !== currentIndex));
       });
@@ -597,6 +634,47 @@ function setupProjectCarousels() {
         status.textContent = `Showing screenshot ${currentIndex + 1} of ${slides.length}`;
       }
     }
+
+    function showSlide(index, announce = true) {
+      const normalizedIndex = (index + slides.length) % slides.length;
+
+      if (isTransitioning) {
+        pendingSelection = { index: normalizedIndex, announce };
+        return;
+      }
+
+      const previousIndex = currentIndex;
+      let nextTrackIndex = normalizedIndex + 1;
+
+      if (previousIndex === slides.length - 1 && normalizedIndex === 0) {
+        nextTrackIndex = slides.length + 1;
+      } else if (previousIndex === 0 && normalizedIndex === slides.length - 1) {
+        nextTrackIndex = 0;
+      }
+
+      currentIndex = normalizedIndex;
+      isTransitioning = nextTrackIndex !== trackIndex;
+      setTrackPosition(nextTrackIndex);
+      updateSlideState(announce);
+    }
+
+    track.addEventListener("transitionend", event => {
+      if (event.target !== track || event.propertyName !== "transform") return;
+
+      if (trackIndex === 0) {
+        setTrackPosition(slides.length, true);
+      } else if (trackIndex === slides.length + 1) {
+        setTrackPosition(1, true);
+      }
+
+      isTransitioning = false;
+
+      if (pendingSelection) {
+        const selection = pendingSelection;
+        pendingSelection = null;
+        showSlide(selection.index, selection.announce);
+      }
+    });
 
     function stopAutoplay() {
       if (autoplayTimer !== null) {
@@ -701,6 +779,7 @@ function setupProjectCarousels() {
     document.addEventListener("visibilitychange", startAutoplay);
     reducedMotionQuery.addEventListener("change", startAutoplay);
 
+    setTrackPosition(1, true);
     showSlide(0, false);
     carousel.classList.add("is-ready");
     startAutoplay();
