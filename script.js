@@ -230,20 +230,7 @@ function setupCopyTooltips(selector) {
     const textToCopy = el.dataset.copy;               // may be undefined
     const originalText = tooltip ? tooltip.textContent : "";
 
-    // Hover: show original text and track current tooltip
-    el.addEventListener("mouseenter", () => {
-      if (!tooltip) return;
-      if (currentTooltip && currentTooltip !== tooltip) {
-        currentTooltip.classList.remove("show");
-        clearTimeout(hoverTimeout);
-      }
-      tooltip.textContent = originalText; // ensure correct text on hover
-      tooltip.classList.add("show");
-      currentTooltip = tooltip;
-      clearTimeout(hoverTimeout);
-    });
-
-    // Hover out: hide quickly
+    // Hide any click feedback when the pointer leaves.
     el.addEventListener("mouseleave", () => {
       if (!tooltip) return;
       hoverTimeout = setTimeout(() => {
@@ -257,16 +244,9 @@ function setupCopyTooltips(selector) {
       if (!tooltip) return;
       clearTimeout(hoverTimeout);
 
-      // If there's no data-copy, do nothing special: allow default link behavior
-      // but show the original tooltip briefly for feedback.
+      // If there's no data-copy, allow the link to open normally.
       if (!textToCopy) {
-        tooltip.textContent = originalText;
-        tooltip.classList.add("show");
-        setTimeout(() => {
-          tooltip.classList.remove("show");
-          if (currentTooltip === tooltip) currentTooltip = null;
-        }, 1200);
-        return; // do NOT preventDefault — link will open as normal
+        return;
       }
 
       // For copyable items, prevent navigation and perform copy
