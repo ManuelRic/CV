@@ -1059,6 +1059,316 @@ function setupDoodleReveal() {
   });
 }
 
+function setupInkSketchReveals() {
+  function waitForImage(image) {
+    const loadPromise = image.complete
+      ? Promise.resolve()
+      : new Promise(resolve => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", resolve, { once: true });
+        });
+
+    return loadPromise
+      .then(() => typeof image.decode === "function" ? image.decode() : undefined)
+      .catch(() => {});
+  }
+
+  document.querySelectorAll("[data-ink-sketch-reveal]").forEach(surface => {
+    const inkImage = surface.querySelector(".design-ink-art");
+    const sketchImage = surface.querySelector(".design-sketch-source");
+    if (!inkImage || !sketchImage) return;
+
+    const canvas = document.createElement("canvas");
+    const maskCanvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const maskCtx = maskCanvas.getContext("2d");
+    if (!ctx || !maskCtx) return;
+
+    const strokes = [];
+    const trailLife = 1250;
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let rafId = null;
+    let lastPoint = null;
+    let activePointerId = null;
+    let pointerStart = null;
+    let ignoreNextClick = false;
+    let sketchReady = false;
+    let showCompleteSketch = false;
+
+    canvas.className = "ink-sketch-canvas";
+    canvas.setAttribute("aria-hidden", "true");
+    surface.appendChild(canvas);
+    surface.classList.add("is-image-loading");
+
+    waitForImage(inkImage).then(() => {
+      if (inkImage.naturalWidth) inkImage.classList.add("is-image-ready");
+      surface.classList.remove("is-image-loading");
+    });
+
+    waitForImage(sketchImage).then(() => {
+      sketchReady = Boolean(sketchImage.naturalWidth && sketchImage.naturalHeight);
+      renderReveal(performance.now());
+    });
+
+    function resizeCanvas() {
+      const rect = surface.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+
+      [canvas, maskCanvas].forEach(item => {
+        item.width = Math.max(1, Math.round(width * dpr));
+        item.height = Math.max(1, Math.round(height * dpr));
+      });
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      maskCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      maskCtx.imageSmoothingEnabled = true;
+      maskCtx.imageSmoothingQuality = "high";
+    }
+
+    function drawContainedImage(targetCtx, image) {
+      if (!image.naturalWidth || !image.naturalHeight || !width || !height) return;
+
+      const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+      const drawWidth = image.naturalWidth * scale;
+      const drawHeight = image.naturalHeight * scale;
+      const drawX = (width - drawWidth) / 2;
+      const drawY = (height - drawHeight) / 2;
+
+      targetCtx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+    }
+
+    function drawInkBlot(targetCtx, stroke, alpha) {
+      const { x2: x, y2: y, radius, seed } = stroke;
+
+      targetCtx.save();
+      targetCtx.fillStyle = `rgba(255,255,255,${alpha})`;
+      targetCtx.translate(x, y);
+      targetCtx.rotate(seed * 0.37);
+
+      targetCtx.beginPath();
+      targetCtx.ellipse(0, 0, radius * 0.38, radius * 0.3, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      for (let index = 0; index < 5; index++) {
+        const angle = seed + index * 1.71;
+        const distance = radius * (0.32 + (index % 3) * 0.16);
+        const blotRadius = radius * (0.045 + ((index * 7) % 5) * 0.012);
+
+        targetCtx.beginPath();
+        targetCtx.ellipse(
+          Math.cos(angle) * distance,
+          Math.sin(angle) * distance,
+          blotRadius * 1.35,
+          blotRadius,
+          angle,
+          0,
+          Math.PI * 2
+        );
+        targetCtx.fill();
+      }
+
+      targetCtx.restore();
+    }
+
+    function renderReveal(time) {
+      if (!width || !height) resizeCanvas();
+
+      if (!showCompleteSketch) {
+        for (let index = strokes.length - 1; index >= 0; index--) {
+          if (time - strokes[index].created > trailLife) strokes.splice(index, 1);
+        }
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      maskCtx.clearRect(0, 0, width, height);
+      if (!sketchReady) {
+        rafId = null;
+        return;
+      }
+
+      if (showCompleteSketch) {
+        maskCtx.fillStyle = "#fff";
+        maskCtx.fillRect(0, 0, width, height);
+      } else {
+        maskCtx.lineCap = "round";
+        maskCtx.lineJoin = "round";
+
+        strokes.forEach(stroke => {
+          const age = time - stroke.created;
+          const fadeStart = trailLife * 0.55;
+          const fadeProgress = age <= fadeStart
+            ? 1
+            : Math.max(0, 1 - (age - fadeStart) / (trailLife - fadeStart));
+          const alpha = fadeProgress * fadeProgress * (3 - 2 * fadeProgress);
+
+          maskCtx.save();
+          maskCtx.strokeStyle = `rgba(255,255,255,${alpha})`;
+          maskCtx.lineWidth = stroke.radius * 0.62;
+          maskCtx.beginPath();
+          maskCtx.moveTo(stroke.x1, stroke.y1);
+          maskCtx.lineTo(stroke.x2, stroke.y2);
+          maskCtx.stroke();
+          maskCtx.restore();
+
+          drawInkBlot(maskCtx, stroke, alpha);
+        });
+      }
+
+      const surfaceColor = getComputedStyle(surface)
+        .getPropertyValue("--design-surface-color")
+        .trim() || "#fff4f4";
+
+      ctx.fillStyle = surfaceColor;
+      ctx.fillRect(0, 0, width, height);
+      drawContainedImage(ctx, sketchImage);
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(maskCanvas, 0, 0, width, height);
+      ctx.globalCompositeOperation = "source-over";
+
+      if (!showCompleteSketch && strokes.length) {
+        rafId = requestAnimationFrame(renderReveal);
+      } else {
+        rafId = null;
+      }
+    }
+
+    function setCompleteSketch(shouldShow) {
+      showCompleteSketch = shouldShow;
+      strokes.length = 0;
+      surface.setAttribute("aria-pressed", String(shouldShow));
+
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      renderReveal(performance.now());
+    }
+
+    function addTrailPoint(event) {
+      if (!sketchReady) return;
+      if (showCompleteSketch) setCompleteSketch(false);
+
+      const rect = surface.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+
+      if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 4) return;
+
+      const previousPoint = lastPoint || { x, y };
+      const distance = Math.hypot(x - previousPoint.x, y - previousPoint.y);
+      const steps = Math.max(1, Math.ceil(distance / 22));
+      const radius = Math.max(58, Math.min(112, Math.min(rect.width, rect.height) * 0.14));
+      const created = performance.now();
+
+      for (let index = 1; index <= steps; index++) {
+        const startProgress = (index - 1) / steps;
+        const endProgress = index / steps;
+
+        strokes.push({
+          x1: previousPoint.x + (x - previousPoint.x) * startProgress,
+          y1: previousPoint.y + (y - previousPoint.y) * startProgress,
+          x2: previousPoint.x + (x - previousPoint.x) * endProgress,
+          y2: previousPoint.y + (y - previousPoint.y) * endProgress,
+          radius,
+          created,
+          seed: (strokes.length + 1) * 2.37
+        });
+      }
+
+      lastPoint = { x, y };
+      if (strokes.length > 130) strokes.splice(0, strokes.length - 130);
+      if (rafId === null) rafId = requestAnimationFrame(renderReveal);
+    }
+
+    resizeCanvas();
+
+    if ("ResizeObserver" in window) {
+      const observer = new ResizeObserver(() => {
+        resizeCanvas();
+        renderReveal(performance.now());
+      });
+      observer.observe(surface);
+    } else {
+      window.addEventListener("resize", () => {
+        resizeCanvas();
+        renderReveal(performance.now());
+      });
+    }
+
+    surface.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+
+      pointerStart = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        moved: false
+      };
+
+      if (event.pointerType !== "mouse") {
+        event.preventDefault();
+        activePointerId = event.pointerId;
+        surface.setPointerCapture?.(event.pointerId);
+        lastPoint = null;
+        addTrailPoint(event);
+      }
+    }, { passive: false });
+
+    surface.addEventListener("pointermove", event => {
+      if (pointerStart?.id === event.pointerId) {
+        const distance = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
+        if (distance > 10) pointerStart.moved = true;
+      }
+
+      if (event.pointerType !== "mouse" && event.pointerId !== activePointerId) return;
+      if (event.pointerType !== "mouse") event.preventDefault();
+      addTrailPoint(event);
+    }, { passive: false });
+
+    function finishPointer(event) {
+      if (pointerStart?.id === event.pointerId) {
+        ignoreNextClick = pointerStart.moved;
+        pointerStart = null;
+      }
+
+      if (event.pointerId !== activePointerId) return;
+      if (surface.hasPointerCapture?.(event.pointerId)) {
+        surface.releasePointerCapture(event.pointerId);
+      }
+      activePointerId = null;
+      lastPoint = null;
+    }
+
+    surface.addEventListener("pointerup", finishPointer);
+    surface.addEventListener("pointercancel", finishPointer);
+    surface.addEventListener("pointerleave", () => {
+      lastPoint = null;
+    });
+
+    surface.addEventListener("click", () => {
+      if (ignoreNextClick) {
+        ignoreNextClick = false;
+        return;
+      }
+      setCompleteSketch(!showCompleteSketch);
+    });
+
+    surface.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      setCompleteSketch(!showCompleteSketch);
+    });
+  });
+}
+
 function setupProjectLightbox() {
   const lightbox = document.getElementById("project-lightbox");
   const lightboxImage = lightbox?.querySelector(".project-lightbox-image");
@@ -1441,6 +1751,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupProjectCarousels();
   setupDoodleReveal();
+  setupInkSketchReveals();
   setupProjectLightbox();
 
   const locationIcon = document.getElementById("location_icon");

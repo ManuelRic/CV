@@ -1,6 +1,7 @@
 # Image assets
 
 - `branding/`: active favicon and brand assets
+- `drawings/`: active drawing and design work
 - `icons/`: active interface and social icons
 - `profile/`: active profile imagery
 - `projects/`: optimized images grouped by portfolio project

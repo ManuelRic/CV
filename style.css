@@ -357,6 +357,8 @@ html.is-skeleton-loading .main > .options {
 .project-card,
 .project-info,
 .project-link,
+.design-feature,
+.design-copy,
 .about-row,
 .about-row .description,
 #timeline {
@@ -370,6 +372,8 @@ html.is-skeleton-loading .main > .options {
 .project-info h2,
 .project-info p,
 .project-link span,
+.design-copy h2,
+.design-copy p,
 #whoIam p,
 #timeline .note {
     max-width: 100%;
@@ -396,6 +400,7 @@ html.is-skeleton-loading .main > .options {
 }
 
 .projects-section,
+.designs-section,
 .about-section {
     position: relative;
 }
@@ -430,6 +435,8 @@ html.is-skeleton-loading .main > .options {
 .skills-section #skill_tip,
 .projects-section .notname,
 .projects-grid,
+.designs-section .notname,
+.designs-showcase,
 .about-section .notname,
 .about-section h2,
 .about-row {
@@ -448,6 +455,7 @@ html.is-skeleton-loading .main > .options {
     margin-bottom: var(--space-2);
 }
 
+.designs-section .notname,
 .about-section .notname {
     width: min(100%, var(--content-max));
     margin-left: auto;
@@ -809,6 +817,11 @@ h2 {
 }
 
 .page-section.is-visible .project-card {
+    animation: slideInUp var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(0.45s * var(--reveal-delay-scale));
+}
+
+.page-section.is-visible .design-feature {
     animation: slideInUp var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
     animation-delay: calc(0.45s * var(--reveal-delay-scale));
 }
@@ -1487,6 +1500,118 @@ html.project-lightbox-open body {
   width: fit-content;
   max-width: 100%;
   gap: var(--space-1) var(--space-3);
+}
+
+.designs-showcase {
+  width: min(100%, var(--content-max));
+  margin: 0 auto;
+}
+
+.design-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 760px) minmax(240px, 1fr);
+  align-items: center;
+  gap: clamp(var(--space-3), 5vw, var(--space-6));
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+.ink-sketch-reveal {
+  --design-surface-color: #fff4f4;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  isolation: isolate;
+  margin: 0;
+  border: 2px solid rgba(51, 51, 51, 0.78);
+  border-radius: 18px;
+  background-color: var(--design-surface-color);
+  box-shadow: 12px 14px 0 rgba(211, 43, 49, 0.16);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ink-sketch-reveal.is-image-loading {
+  background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.72) 48%, transparent 76%);
+  background-repeat: no-repeat;
+  background-size: 220% 100%;
+  animation: projectImageShimmer 1.35s ease-in-out infinite;
+}
+
+.ink-sketch-reveal:focus-visible {
+  outline: 4px solid rgba(211, 43, 49, 0.62);
+  outline-offset: 5px;
+}
+
+.design-art,
+.ink-sketch-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.design-art {
+  z-index: 1;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+
+.ink-sketch-reveal.is-image-loading .design-ink-art:not(.is-image-ready) {
+  opacity: 0;
+}
+
+.design-sketch-source {
+  visibility: hidden;
+}
+
+.ink-sketch-canvas {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.design-copy {
+  border-left: 5px solid var(--accent);
+  padding-left: var(--space-3);
+}
+
+.design-copy h2 {
+  margin-bottom: var(--space-2);
+}
+
+.design-copy > p:not(.design-kicker) {
+  margin: 0;
+  color: #242424;
+  font-size: clamp(20px, 2.2vw, 27px);
+  line-height: 1.35;
+}
+
+.design-kicker {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .design-feature {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .design-copy {
+    width: min(100%, 620px);
+  }
 }
 
 #location_icon {
@@ -2570,7 +2695,8 @@ footer p {
   .options p,
   .options h3,
   .cv-wrap,
-  .project-card {
+  .project-card,
+  .design-feature {
     opacity: 1 !important;
     transform: none !important;
   }
