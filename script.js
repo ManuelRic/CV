@@ -174,6 +174,12 @@ function setupProgressiveImageSkeletons() {
   }
 
   document.querySelectorAll(".project-media").forEach(media => {
+    if (media.classList.contains("doodle-reveal")) {
+      const visibleImage = media.querySelector(".project-img:not(.project-original-img)");
+      trackImageGroup(media, visibleImage ? [visibleImage] : []);
+      return;
+    }
+
     const carouselSlides = Array.from(media.querySelectorAll(".project-carousel-slide"));
 
     if (carouselSlides.length) {
