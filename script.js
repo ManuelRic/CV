@@ -203,14 +203,14 @@ window.addEventListener("DOMContentLoaded", () => {
     returnBtn.addEventListener("mouseover", () => {
       returnBtn.style.width = "120px";
       returnBtn.style.transition = "width 0.3s ease"
-      returnBtn.src = "img/return_red.png";
+      returnBtn.src = "img/ui/return-arrow.webp";
     });
 
     // Hover out: revert image
     returnBtn.addEventListener("mouseout", () => {
       returnBtn.style.width = "70px";
       returnBtn.style.transition = "width 0.3s ease";
-      returnBtn.src = "img/arrow_nofill.png";
+      returnBtn.src = "img/ui/forward-arrow.webp";
     });
 
     // Click: go back to home page

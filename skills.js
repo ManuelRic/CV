@@ -225,18 +225,18 @@ const skillDescriptions = {
 const skills = Object.keys(skillDescriptions);
 
 const skillImageMap = {
-  "HTML": "img/skills/html_d.png",
-  "CSS": "img/skills/css_d.png",
-  "JavaScript": "img/skills/js_d.png",
-  "Python": "img/skills/python_d.png",
-  "C++": "img/skills/cpp_d.png",
-  "C#": "img/skills/csharp_d.png",
-  "Unity": "img/skills/unity_d.png",
-  "3D Modeling": "img/skills/blender_d.png",
-  "Git": "img/skills/git_d.png",
-  "MySQL": "img/skills/mysql_d.png",
-  "Graphic Design": "img/skills/gd_d.png",
-  "Java": "img/skills/java_d.png"
+  "HTML": "img/skills/html.webp",
+  "CSS": "img/skills/css.webp",
+  "JavaScript": "img/skills/javascript.webp",
+  "Python": "img/skills/python.webp",
+  "C++": "img/skills/cpp.webp",
+  "C#": "img/skills/csharp.webp",
+  "Unity": "img/skills/unity.webp",
+  "3D Modeling": "img/skills/3d-modeling.webp",
+  "Git": "img/skills/git.webp",
+  "MySQL": "img/skills/mysql.webp",
+  "Graphic Design": "img/skills/graphic-design.webp",
+  "Java": "img/skills/java.webp"
 };
 
 const ballColors = [
