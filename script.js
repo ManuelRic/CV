@@ -1080,12 +1080,14 @@ function setupInkSketchReveals() {
 
     const canvas = document.createElement("canvas");
     const maskCanvas = document.createElement("canvas");
+    const sketchCanvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const maskCtx = maskCanvas.getContext("2d");
-    if (!ctx || !maskCtx) return;
+    const sketchCtx = sketchCanvas.getContext("2d");
+    if (!ctx || !maskCtx || !sketchCtx) return;
 
     const strokes = [];
-    const trailLife = 1250;
+    const trailLife = 1500;
     let width = 0;
     let height = 0;
     let dpr = 1;
@@ -1094,8 +1096,13 @@ function setupInkSketchReveals() {
     let activePointerId = null;
     let pointerStart = null;
     let ignoreNextClick = false;
+    let inkReady = false;
     let sketchReady = false;
     let showCompleteSketch = false;
+    let tiltRafId = null;
+    let tiltPointer = null;
+    const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     canvas.className = "ink-sketch-canvas";
     canvas.setAttribute("aria-hidden", "true");
@@ -1103,8 +1110,10 @@ function setupInkSketchReveals() {
     surface.classList.add("is-image-loading");
 
     waitForImage(inkImage).then(() => {
-      if (inkImage.naturalWidth) inkImage.classList.add("is-image-ready");
+      inkReady = Boolean(inkImage.naturalWidth && inkImage.naturalHeight);
+      if (inkReady) inkImage.classList.add("is-image-ready");
       surface.classList.remove("is-image-loading");
+      renderReveal(performance.now());
     });
 
     waitForImage(sketchImage).then(() => {
@@ -1118,17 +1127,20 @@ function setupInkSketchReveals() {
       height = rect.height;
       dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
-      [canvas, maskCanvas].forEach(item => {
+      [canvas, maskCanvas, sketchCanvas].forEach(item => {
         item.width = Math.max(1, Math.round(width * dpr));
         item.height = Math.max(1, Math.round(height * dpr));
       });
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       maskCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sketchCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       maskCtx.imageSmoothingEnabled = true;
       maskCtx.imageSmoothingQuality = "high";
+      sketchCtx.imageSmoothingEnabled = true;
+      sketchCtx.imageSmoothingQuality = "high";
     }
 
     function drawContainedImage(targetCtx, image) {
@@ -1144,34 +1156,43 @@ function setupInkSketchReveals() {
     }
 
     function drawInkBlot(targetCtx, stroke, alpha) {
-      const { x2: x, y2: y, radius, seed } = stroke;
+      const { x1, y1, x2: x, y2: y, radius, seed } = stroke;
+      const direction = Math.atan2(y - y1, x - x1);
+      const noise = offset => {
+        const value = Math.sin(seed * 12.9898 + offset * 78.233) * 43758.5453;
+        return value - Math.floor(value);
+      };
 
       targetCtx.save();
       targetCtx.fillStyle = `rgba(255,255,255,${alpha})`;
       targetCtx.translate(x, y);
-      targetCtx.rotate(seed * 0.37);
+      targetCtx.rotate(direction + (noise(1) - 0.5) * 0.22);
+
+      // One continuous uneven pool keeps the edge organic without detached marks.
+      const edgePoints = Array.from({ length: 12 }, (_, index) => {
+        const angle = index * (Math.PI * 2 / 12);
+        const variation = 0.78 + noise(index + 2) * 0.34;
+
+        return {
+          x: Math.cos(angle) * radius * 0.46 * variation,
+          y: Math.sin(angle) * radius * 0.35 * variation
+        };
+      });
+      const midpoint = (first, second) => ({
+        x: (first.x + second.x) / 2,
+        y: (first.y + second.y) / 2
+      });
+      const startingPoint = midpoint(edgePoints[edgePoints.length - 1], edgePoints[0]);
 
       targetCtx.beginPath();
-      targetCtx.ellipse(0, 0, radius * 0.38, radius * 0.3, 0, 0, Math.PI * 2);
+      targetCtx.moveTo(startingPoint.x, startingPoint.y);
+      edgePoints.forEach((point, index) => {
+        const nextPoint = edgePoints[(index + 1) % edgePoints.length];
+        const nextMidpoint = midpoint(point, nextPoint);
+        targetCtx.quadraticCurveTo(point.x, point.y, nextMidpoint.x, nextMidpoint.y);
+      });
+      targetCtx.closePath();
       targetCtx.fill();
-
-      for (let index = 0; index < 5; index++) {
-        const angle = seed + index * 1.71;
-        const distance = radius * (0.32 + (index % 3) * 0.16);
-        const blotRadius = radius * (0.045 + ((index * 7) % 5) * 0.012);
-
-        targetCtx.beginPath();
-        targetCtx.ellipse(
-          Math.cos(angle) * distance,
-          Math.sin(angle) * distance,
-          blotRadius * 1.35,
-          blotRadius,
-          angle,
-          0,
-          Math.PI * 2
-        );
-        targetCtx.fill();
-      }
 
       targetCtx.restore();
     }
@@ -1187,7 +1208,8 @@ function setupInkSketchReveals() {
 
       ctx.clearRect(0, 0, width, height);
       maskCtx.clearRect(0, 0, width, height);
-      if (!sketchReady) {
+      sketchCtx.clearRect(0, 0, width, height);
+      if (!inkReady || !sketchReady) {
         rafId = null;
         return;
       }
@@ -1220,16 +1242,22 @@ function setupInkSketchReveals() {
         });
       }
 
-      const surfaceColor = getComputedStyle(surface)
-        .getPropertyValue("--design-surface-color")
-        .trim() || "#fff4f4";
+      drawContainedImage(ctx, inkImage);
 
-      ctx.fillStyle = surfaceColor;
-      ctx.fillRect(0, 0, width, height);
-      drawContainedImage(ctx, sketchImage);
-      ctx.globalCompositeOperation = "destination-in";
-      ctx.drawImage(maskCanvas, 0, 0, width, height);
-      ctx.globalCompositeOperation = "source-over";
+      if (showCompleteSketch || strokes.length) {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.drawImage(maskCanvas, 0, 0, width, height);
+        ctx.globalCompositeOperation = "source-over";
+
+        drawContainedImage(sketchCtx, sketchImage);
+        sketchCtx.globalCompositeOperation = "destination-in";
+        sketchCtx.drawImage(maskCanvas, 0, 0, width, height);
+        sketchCtx.globalCompositeOperation = "source-over";
+
+        ctx.drawImage(sketchCanvas, 0, 0, width, height);
+      }
+
+      surface.classList.add("is-canvas-composited");
 
       if (!showCompleteSketch && strokes.length) {
         rafId = requestAnimationFrame(renderReveal);
@@ -1264,8 +1292,8 @@ function setupInkSketchReveals() {
 
       const previousPoint = lastPoint || { x, y };
       const distance = Math.hypot(x - previousPoint.x, y - previousPoint.y);
-      const steps = Math.max(1, Math.ceil(distance / 22));
-      const radius = Math.max(58, Math.min(112, Math.min(rect.width, rect.height) * 0.14));
+      const steps = Math.max(1, Math.ceil(distance / 18));
+      const radius = Math.max(36, Math.min(76, Math.min(rect.width, rect.height) * 0.105));
       const created = performance.now();
 
       for (let index = 1; index <= steps; index++) {
@@ -1286,6 +1314,42 @@ function setupInkSketchReveals() {
       lastPoint = { x, y };
       if (strokes.length > 130) strokes.splice(0, strokes.length - 130);
       if (rafId === null) rafId = requestAnimationFrame(renderReveal);
+    }
+
+    function updateDrawingTilt(event) {
+      if (
+        event.pointerType !== "mouse" ||
+        !hoverTiltQuery.matches ||
+        reducedMotionQuery.matches
+      ) return;
+
+      tiltPointer = { x: event.clientX, y: event.clientY };
+      if (tiltRafId !== null) return;
+
+      tiltRafId = requestAnimationFrame(() => {
+        tiltRafId = null;
+        if (!tiltPointer) return;
+
+        const rect = surface.getBoundingClientRect();
+        const relativeX = Math.max(-1, Math.min(1, (tiltPointer.x - rect.left) / rect.width * 2 - 1));
+        const relativeY = Math.max(-1, Math.min(1, (tiltPointer.y - rect.top) / rect.height * 2 - 1));
+
+        surface.style.setProperty("--drawing-tilt-x", `${(-relativeY * 7).toFixed(2)}deg`);
+        surface.style.setProperty("--drawing-tilt-y", `${(relativeX * 9).toFixed(2)}deg`);
+        surface.classList.add("is-tilting");
+      });
+    }
+
+    function resetDrawingTilt() {
+      tiltPointer = null;
+      if (tiltRafId !== null) {
+        cancelAnimationFrame(tiltRafId);
+        tiltRafId = null;
+      }
+
+      surface.classList.remove("is-tilting");
+      surface.style.setProperty("--drawing-tilt-x", "0deg");
+      surface.style.setProperty("--drawing-tilt-y", "0deg");
     }
 
     resizeCanvas();
@@ -1328,6 +1392,7 @@ function setupInkSketchReveals() {
         if (distance > 10) pointerStart.moved = true;
       }
 
+      updateDrawingTilt(event);
       if (event.pointerType !== "mouse" && event.pointerId !== activePointerId) return;
       if (event.pointerType !== "mouse") event.preventDefault();
       addTrailPoint(event);
@@ -1351,6 +1416,7 @@ function setupInkSketchReveals() {
     surface.addEventListener("pointercancel", finishPointer);
     surface.addEventListener("pointerleave", () => {
       lastPoint = null;
+      resetDrawingTilt();
     });
 
     surface.addEventListener("click", () => {
