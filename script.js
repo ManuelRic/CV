@@ -1087,6 +1087,10 @@ function setupProjectLightbox() {
       return Array.from(media.querySelectorAll("[data-carousel-slide] .project-img"));
     }
 
+    if (media.classList.contains("doodle-reveal")) {
+      return Array.from(media.querySelectorAll(".project-img"));
+    }
+
     const image = media.querySelector(".project-img:not(.project-original-img)");
     return image ? [image] : [];
   }
@@ -1156,14 +1160,15 @@ function setupProjectLightbox() {
     currentImageIndex = (index + lightboxImages.length) % lightboxImages.length;
     const image = lightboxImages[currentImageIndex];
     const hasMultipleImages = lightboxImages.length > 1;
+    const imageLabel = image.dataset.lightboxLabel?.trim();
 
     lightboxImage.src = image.currentSrc || image.src;
-    lightboxImage.alt = image.alt || "Expanded project image";
+    lightboxImage.alt = image.dataset.lightboxAlt || image.alt || "Expanded project image";
     previousButton.hidden = !hasMultipleImages;
     nextButton.hidden = !hasMultipleImages;
     status.hidden = !hasMultipleImages;
     status.textContent = hasMultipleImages
-      ? `${currentImageIndex + 1} / ${lightboxImages.length}`
+      ? `${imageLabel ? `${imageLabel} · ` : ""}${currentImageIndex + 1} / ${lightboxImages.length}`
       : "";
   }
 
