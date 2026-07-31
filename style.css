@@ -357,8 +357,8 @@ html.is-skeleton-loading .main > .options {
 .project-card,
 .project-info,
 .project-link,
-.design-feature,
-.design-copy,
+.sticker-sheet,
+.design-sticker,
 .about-row,
 .about-row .description,
 #timeline {
@@ -372,8 +372,6 @@ html.is-skeleton-loading .main > .options {
 .project-info h2,
 .project-info p,
 .project-link span,
-.design-copy h2,
-.design-copy p,
 #whoIam p,
 #timeline .note {
     max-width: 100%;
@@ -403,6 +401,7 @@ html.is-skeleton-loading .main > .options {
 .designs-section,
 .about-section {
     position: relative;
+    isolation: isolate;
 }
 
 .section-wave {
@@ -435,8 +434,7 @@ html.is-skeleton-loading .main > .options {
 .skills-section #skill_tip,
 .projects-section .notname,
 .projects-grid,
-.designs-section .notname,
-.designs-showcase,
+.sticker-sheet,
 .about-section .notname,
 .about-section h2,
 .about-row {
@@ -455,7 +453,6 @@ html.is-skeleton-loading .main > .options {
     margin-bottom: var(--space-2);
 }
 
-.designs-section .notname,
 .about-section .notname {
     width: min(100%, var(--content-max));
     margin-left: auto;
@@ -821,9 +818,9 @@ h2 {
     animation-delay: calc(0.45s * var(--reveal-delay-scale));
 }
 
-.page-section.is-visible .design-feature {
-    animation: slideInUp var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: calc(0.45s * var(--reveal-delay-scale));
+.page-section.is-visible .design-sticker {
+    opacity: 1;
+    transform: rotate(var(--sticker-rotate)) scale(1);
 }
 
 /* links inside the h3 */
@@ -1502,18 +1499,135 @@ html.project-lightbox-open body {
   gap: var(--space-1) var(--space-3);
 }
 
-.designs-showcase {
+.sticker-sheet {
+  position: relative;
   width: min(100%, var(--content-max));
+  height: clamp(610px, calc(100svh - var(--section-top) - var(--section-bottom)), 820px);
   margin: 0 auto;
+  isolation: isolate;
 }
 
-.design-feature {
-  display: grid;
-  grid-template-columns: minmax(0, 760px) minmax(240px, 1fr);
-  align-items: center;
-  gap: clamp(var(--space-3), 5vw, var(--space-6));
+.design-sticker {
+  --sticker-rotate: 0deg;
+  position: absolute;
+  display: block;
+  min-width: 0;
+  margin: 0;
   opacity: 0;
-  transform: translateY(50px);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transform: rotate(var(--sticker-rotate)) scale(0.86);
+  transform-origin: center;
+  filter:
+    drop-shadow(3px 0 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(-3px 0 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 3px 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 -3px 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 10px 8px rgba(72, 28, 34, 0.18));
+  transition:
+    opacity 460ms ease,
+    transform 560ms cubic-bezier(.22, 1, .36, 1),
+    filter 360ms ease;
+}
+
+.design-sticker > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.design-sticker-camera {
+  --sticker-rotate: -8deg;
+  top: 3%;
+  left: 1%;
+  z-index: 2;
+  width: 28%;
+  transition-delay: calc(0.08s * var(--reveal-delay-scale));
+}
+
+.design-sticker-billy {
+  --sticker-rotate: -1.5deg;
+  top: 12%;
+  left: 21%;
+  z-index: 3;
+  width: 61%;
+  transition-delay: calc(0.16s * var(--reveal-delay-scale));
+}
+
+.design-sticker-camera,
+.design-sticker-billy {
+  filter: none;
+}
+
+.design-sticker-demon {
+  --sticker-rotate: 7deg;
+  bottom: 3%;
+  left: 4%;
+  z-index: 4;
+  width: 25%;
+  transition-delay: calc(0.24s * var(--reveal-delay-scale));
+}
+
+.design-sticker-joy {
+  --sticker-rotate: -7deg;
+  right: 3%;
+  bottom: 3%;
+  z-index: 4;
+  width: 26%;
+  transition-delay: calc(0.32s * var(--reveal-delay-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .page-section.is-visible .design-sticker:hover {
+    z-index: 6;
+    transform: translateY(-8px) rotate(var(--sticker-rotate)) scale(1.045);
+    filter:
+      drop-shadow(3px 0 0 #fff)
+      drop-shadow(-3px 0 0 #fff)
+      drop-shadow(0 3px 0 #fff)
+      drop-shadow(0 -3px 0 #fff)
+      drop-shadow(0 16px 11px rgba(72, 28, 34, 0.24));
+  }
+
+  .page-section.is-visible .design-sticker-camera:hover,
+  .page-section.is-visible .design-sticker-billy:hover {
+    filter: none;
+  }
+}
+
+.design-sticker.is-drag-pending,
+.design-sticker.is-dragging,
+.design-sticker.is-drag-pending .ink-sketch-reveal,
+.design-sticker.is-dragging .ink-sketch-reveal {
+  cursor: grabbing;
+}
+
+.page-section.is-visible .design-sticker.is-dragging {
+  z-index: 10;
+  transform: translateY(-16px) rotate(0deg) scale(1.075);
+  filter: drop-shadow(0 24px 14px rgba(72, 28, 34, 0.3)) brightness(1.03);
+  transition-duration: 120ms;
+  transition-delay: 0s;
+}
+
+.page-section.is-visible .design-sticker.is-resticking {
+  z-index: 9;
+  animation: stickerRestick 440ms cubic-bezier(.2, .85, .3, 1) both;
+  transition-delay: 0s;
+}
+
+@keyframes stickerRestick {
+  0% {
+    transform: translateY(-12px) rotate(0deg) scale(1.06);
+  }
+  58% {
+    transform: translateY(3px) rotate(var(--sticker-rotate)) scale(0.97);
+  }
+  100% {
+    transform: rotate(var(--sticker-rotate)) scale(1);
+  }
 }
 
 .ink-sketch-reveal {
@@ -1550,46 +1664,6 @@ html.project-lightbox-open body {
   outline-offset: 5px;
 }
 
-.design-backdrop-title {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  color: #111111;
-  font-family: "Arial Black", Arial, sans-serif;
-  font-size: clamp(50px, 6.7vw, 96px);
-  font-weight: 1000;
-  line-height: 0.72;
-  letter-spacing: -0.09em;
-  text-align: center;
-  text-transform: uppercase;
-  white-space: nowrap;
-  pointer-events: none;
-  transition: opacity 0.24s ease;
-}
-
-.design-backdrop-title span {
-  position: absolute;
-  top: 53%;
-  left: 75%;
-  font-size: 0.52em;
-  letter-spacing: -0.06em;
-  transform: scaleY(0.78);
-  transform-origin: left center;
-}
-
-.design-backdrop-title strong {
-  position: absolute;
-  top: 60%;
-  left: 75%;
-  font: inherit;
-  transform: scaleY(0.78);
-  transform-origin: left center;
-}
-
-.ink-sketch-reveal.is-image-loading .design-backdrop-title {
-  opacity: 0;
-}
-
 .design-art,
 .ink-sketch-canvas {
   position: absolute;
@@ -1604,7 +1678,7 @@ html.project-lightbox-open body {
   transform-origin: center;
   transform-style: preserve-3d;
   will-change: transform;
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .design-art {
@@ -1614,7 +1688,7 @@ html.project-lightbox-open body {
   pointer-events: none;
   transition:
     opacity 0.24s ease,
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ink-sketch-reveal.is-tilting {
@@ -1651,65 +1725,68 @@ html.project-lightbox-open body {
   }
 }
 
-.design-copy {
-  border-left: 5px solid var(--accent);
-  padding-left: var(--space-3);
-}
-
-.design-copy > .design-backdrop-title {
-  position: static;
-  inset: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: max-content;
-  margin-bottom: var(--space-2);
-  font-size: clamp(50px, 6.7vw, 80px);
-  line-height: 0.68;
-}
-
-.design-copy > .design-backdrop-title > span,
-.design-copy > .design-backdrop-title > strong {
-  position: static;
-  display: block;
-  transform: scaleY(0.78);
-  transform-origin: left center;
-}
-
-.design-copy > .design-backdrop-title > strong {
-  margin-top: -0.08em;
-}
-
-.design-copy h2 {
-  margin-bottom: var(--space-2);
-}
-
-.design-copy > p:not(.design-kicker) {
-  margin: 0;
-  color: #242424;
-  font-size: clamp(20px, 2.2vw, 27px);
-  line-height: 1.35;
-}
-
-.design-kicker {
-  margin: 0 0 10px;
-  color: var(--accent);
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
 @media (max-width: 900px) {
-  .design-feature {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
+  .design-sticker-camera {
+    left: -1%;
+    width: 34%;
   }
 
-  .design-copy {
-    width: min(100%, 620px);
+  .design-sticker-billy {
+    left: 17%;
+    width: 68%;
+  }
+
+  .design-sticker-demon {
+    left: 2%;
+    width: 29%;
+  }
+
+  .design-sticker-joy {
+    right: 1%;
+    width: 30%;
+  }
+}
+
+@media (max-width: 600px) {
+  .sticker-sheet {
+    height: clamp(720px, 190vw, 860px);
+    min-height: 0;
+  }
+
+  .design-sticker-camera {
+    --sticker-rotate: -10deg;
+    top: 1%;
+    left: -7%;
+    width: 50%;
+  }
+
+  .design-sticker-billy {
+    --sticker-rotate: -1deg;
+    top: 18%;
+    left: 1%;
+    width: 98%;
+  }
+
+  .design-sticker-demon {
+    --sticker-rotate: 8deg;
+    bottom: 2%;
+    left: -8%;
+    width: 47%;
+  }
+
+  .design-sticker-joy {
+    --sticker-rotate: -8deg;
+    right: -6%;
+    bottom: 2%;
+    width: 48%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .design-sticker {
+    opacity: 1;
+    transform: rotate(var(--sticker-rotate));
+    transition: none;
   }
 }
 
@@ -2794,8 +2871,7 @@ footer p {
   .options p,
   .options h3,
   .cv-wrap,
-  .project-card,
-  .design-feature {
+  .project-card {
     opacity: 1 !important;
     transform: none !important;
   }

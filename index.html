@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manuel Ricart</title>
   <link rel="preload" href="fonts/Myfont-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260731-sticker-drag" />
   <link rel="icon" type="image/png" href="img/branding/favicon.png">
   <noscript>
     <style>
@@ -404,37 +404,39 @@
     </div>
   </section>
 
-  <section id="designs" class="page-section designs-section">
+  <section id="designs" class="page-section designs-section" aria-label="My designs">
     <div class="section-wave" aria-hidden="true">
       <svg viewBox="0 0 1200 32" preserveAspectRatio="none">
         <path d="M0 17 C48 4 89 27 139 16 C191 5 229 24 282 17 C335 10 378 28 432 15 C487 3 528 24 582 17 C637 10 680 27 735 15 C790 4 833 25 888 17 C943 9 987 27 1042 15 C1097 4 1145 24 1200 16"/>
       </svg>
     </div>
-    <h1 class="notname">My Designs</h1>
 
-    <div class="designs-showcase">
-      <article class="design-feature">
+    <div class="sticker-sheet">
+      <figure class="design-sticker design-sticker-camera">
+        <img src="img/drawings/camera-sketch.webp" width="1497" height="1422" loading="lazy" decoding="async" draggable="false" alt="Colorful concept sketch of an instant camera printing a portrait">
+      </figure>
+
+      <div class="design-sticker design-sticker-billy">
         <figure
           class="ink-sketch-reveal"
           data-ink-sketch-reveal
           role="button"
           tabindex="0"
-          aria-label="Reveal the original sketch beneath the finished Skull Study"
-          aria-describedby="skull-reveal-instruction"
+          aria-label="Interactive drawing: move or drag across the finished artwork to reveal its original sketch. Press Enter or Space to toggle the complete sketch."
           aria-pressed="false"
         >
           <img class="design-art design-ink-art" src="img/drawings/ink-skull.webp" width="2160" height="1620" loading="lazy" decoding="async" draggable="false" alt="Colorful digital ink illustration of a surreal skull wearing a cap">
           <img class="design-art design-sketch-source" src="img/drawings/sketch-skull.webp" width="2160" height="1620" loading="lazy" decoding="async" draggable="false" alt="" aria-hidden="true">
         </figure>
+      </div>
 
-        <div class="design-copy">
-          <span class="design-backdrop-title" aria-hidden="true">
-            <span>Billy the</span>
-            <strong>Butcher</strong>
-          </span>
-          <p id="skull-reveal-instruction">Move or drag across the finished ink artwork to uncover its original sketch. Press Enter or Space to toggle the complete sketch.</p>
-        </div>
-      </article>
+      <figure class="design-sticker design-sticker-demon">
+        <img src="img/drawings/demon-face-ink.webp" width="1238" height="1397" loading="lazy" decoding="async" draggable="false" alt="Red ink illustration of a face wearing a glossy demon hood">
+      </figure>
+
+      <figure class="design-sticker design-sticker-joy">
+        <img src="img/drawings/joy-face-ink.webp" width="1481" height="1257" loading="lazy" decoding="async" draggable="false" alt="Abstract joyful face in burgundy, pink, and white">
+      </figure>
     </div>
   </section>
 
@@ -494,6 +496,7 @@
         </p>
       </div>
     </div>
+
   </section>
 
   <footer>
@@ -521,7 +524,7 @@
   </div>
 
   <script src="matter-js-master/build/matter.min.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=20260731-sticker-drag"></script>
   <script src="skills.js"></script>
 </body>
 </html>

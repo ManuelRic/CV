@@ -1123,8 +1123,8 @@ function setupInkSketchReveals() {
 
     function resizeCanvas() {
       const rect = surface.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
+      width = surface.clientWidth || rect.width;
+      height = surface.clientHeight || rect.height;
       dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
       [canvas, maskCanvas, sketchCanvas].forEach(item => {
@@ -1141,6 +1141,71 @@ function setupInkSketchReveals() {
       maskCtx.imageSmoothingQuality = "high";
       sketchCtx.imageSmoothingEnabled = true;
       sketchCtx.imageSmoothingQuality = "high";
+    }
+
+    function getLocalPointerPosition(clientX, clientY) {
+      const rect = surface.getBoundingClientRect();
+      const localWidth = surface.clientWidth || width || rect.width;
+      const localHeight = surface.clientHeight || height || rect.height;
+
+      if (typeof surface.getBoxQuads === "function") {
+        const quad = surface.getBoxQuads()[0];
+
+        if (quad) {
+          const horizontal = {
+            x: quad.p2.x - quad.p1.x,
+            y: quad.p2.y - quad.p1.y
+          };
+          const vertical = {
+            x: quad.p4.x - quad.p1.x,
+            y: quad.p4.y - quad.p1.y
+          };
+          const pointer = {
+            x: clientX - quad.p1.x,
+            y: clientY - quad.p1.y
+          };
+          const determinant = horizontal.x * vertical.y - horizontal.y * vertical.x;
+
+          if (Math.abs(determinant) > 0.0001) {
+            const horizontalProgress = (pointer.x * vertical.y - pointer.y * vertical.x) / determinant;
+            const verticalProgress = (horizontal.x * pointer.y - horizontal.y * pointer.x) / determinant;
+
+            return {
+              x: horizontalProgress * localWidth,
+              y: verticalProgress * localHeight,
+              width: localWidth,
+              height: localHeight
+            };
+          }
+        }
+      }
+
+      const sticker = surface.closest(".design-sticker");
+      const transform = sticker ? getComputedStyle(sticker).transform : "none";
+
+      if (transform !== "none" && typeof DOMMatrixReadOnly === "function") {
+        const matrix = new DOMMatrixReadOnly(transform);
+        const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
+
+        if (Math.abs(determinant) > 0.0001) {
+          const offsetX = clientX - (rect.left + rect.width / 2);
+          const offsetY = clientY - (rect.top + rect.height / 2);
+
+          return {
+            x: localWidth / 2 + (matrix.d * offsetX - matrix.c * offsetY) / determinant,
+            y: localHeight / 2 + (-matrix.b * offsetX + matrix.a * offsetY) / determinant,
+            width: localWidth,
+            height: localHeight
+          };
+        }
+      }
+
+      return {
+        x: (clientX - rect.left) * (localWidth / rect.width),
+        y: (clientY - rect.top) * (localHeight / rect.height),
+        width: localWidth,
+        height: localHeight
+      };
     }
 
     function drawContainedImage(targetCtx, image) {
@@ -1281,19 +1346,19 @@ function setupInkSketchReveals() {
 
     function addTrailPoint(event) {
       if (!sketchReady) return;
+      if (surface.closest(".design-sticker")?.matches(".is-drag-pending, .is-dragging")) return;
       if (showCompleteSketch) setCompleteSketch(false);
 
-      const rect = surface.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+      const pointer = getLocalPointerPosition(event.clientX, event.clientY);
+      const { x, y } = pointer;
+      if (x < 0 || y < 0 || x > pointer.width || y > pointer.height) return;
 
       if (lastPoint && Math.hypot(x - lastPoint.x, y - lastPoint.y) < 4) return;
 
       const previousPoint = lastPoint || { x, y };
       const distance = Math.hypot(x - previousPoint.x, y - previousPoint.y);
       const steps = Math.max(1, Math.ceil(distance / 18));
-      const radius = Math.max(36, Math.min(76, Math.min(rect.width, rect.height) * 0.105));
+      const radius = Math.max(36, Math.min(76, Math.min(pointer.width, pointer.height) * 0.105));
       const created = performance.now();
 
       for (let index = 1; index <= steps; index++) {
@@ -1330,9 +1395,9 @@ function setupInkSketchReveals() {
         tiltRafId = null;
         if (!tiltPointer) return;
 
-        const rect = surface.getBoundingClientRect();
-        const relativeX = Math.max(-1, Math.min(1, (tiltPointer.x - rect.left) / rect.width * 2 - 1));
-        const relativeY = Math.max(-1, Math.min(1, (tiltPointer.y - rect.top) / rect.height * 2 - 1));
+        const pointer = getLocalPointerPosition(tiltPointer.x, tiltPointer.y);
+        const relativeX = Math.max(-1, Math.min(1, pointer.x / pointer.width * 2 - 1));
+        const relativeY = Math.max(-1, Math.min(1, pointer.y / pointer.height * 2 - 1));
 
         surface.style.setProperty("--drawing-tilt-x", `${(-relativeY * 7).toFixed(2)}deg`);
         surface.style.setProperty("--drawing-tilt-y", `${(relativeX * 9).toFixed(2)}deg`);
@@ -1366,6 +1431,20 @@ function setupInkSketchReveals() {
         renderReveal(performance.now());
       });
     }
+
+    surface.addEventListener("designstickerdragstart", event => {
+      const pointerId = event.detail?.pointerId;
+
+      if (pointerId != null && surface.hasPointerCapture?.(pointerId)) {
+        surface.releasePointerCapture(pointerId);
+      }
+
+      pointerStart = null;
+      activePointerId = null;
+      lastPoint = null;
+      ignoreNextClick = true;
+      resetDrawingTilt();
+    });
 
     surface.addEventListener("pointerdown", event => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -1431,6 +1510,149 @@ function setupInkSketchReveals() {
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       setCompleteSketch(!showCompleteSketch);
+    });
+  });
+}
+
+function setupDraggableDesignStickers() {
+  const sheet = document.querySelector(".sticker-sheet");
+  const stickers = sheet ? Array.from(sheet.querySelectorAll(".design-sticker")) : [];
+  if (!sheet || !stickers.length) return;
+
+  const dragThreshold = 7;
+  const restickDuration = 440;
+  const restickTimers = new WeakMap();
+  let activeDrag = null;
+  let resizeRafId = null;
+
+  function clamp(value, minimum, maximum) {
+    return Math.min(maximum, Math.max(minimum, value));
+  }
+
+  function clearRestick(sticker) {
+    const timer = restickTimers.get(sticker);
+    if (timer) window.clearTimeout(timer);
+    restickTimers.delete(sticker);
+    sticker.classList.remove("is-resticking");
+  }
+
+  function prepareDrag(sticker, event) {
+    if (activeDrag || event.isPrimary === false) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    clearRestick(sticker);
+    sticker.classList.add("is-drag-pending");
+    activeDrag = {
+      sticker,
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startLeft: 0,
+      startTop: 0,
+      dragging: false
+    };
+  }
+
+  function beginDrag(drag) {
+    const { sticker } = drag;
+    drag.startLeft = sticker.offsetLeft;
+    drag.startTop = sticker.offsetTop;
+    drag.dragging = true;
+
+    sticker.style.left = `${drag.startLeft}px`;
+    sticker.style.top = `${drag.startTop}px`;
+    sticker.style.right = "auto";
+    sticker.style.bottom = "auto";
+    sticker.classList.add("is-dragging");
+
+    const revealSurface = sticker.querySelector("[data-ink-sketch-reveal]");
+    revealSurface?.dispatchEvent(new CustomEvent("designstickerdragstart", {
+      detail: { pointerId: drag.pointerId }
+    }));
+  }
+
+  function moveDrag(event) {
+    const drag = activeDrag;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+
+    const deltaX = event.clientX - drag.startClientX;
+    const deltaY = event.clientY - drag.startClientY;
+
+    if (!drag.dragging) {
+      if (Math.hypot(deltaX, deltaY) < dragThreshold) return;
+      beginDrag(drag);
+    }
+
+    const stickerWidth = drag.sticker.offsetWidth;
+    const stickerHeight = drag.sticker.offsetHeight;
+    const horizontalOverhang = Math.min(34, stickerWidth * 0.12);
+    const verticalOverhang = Math.min(26, stickerHeight * 0.1);
+    const maximumLeft = Math.max(
+      -horizontalOverhang,
+      sheet.clientWidth - stickerWidth + horizontalOverhang
+    );
+    const maximumTop = Math.max(
+      -verticalOverhang,
+      sheet.clientHeight - stickerHeight + verticalOverhang
+    );
+
+    drag.sticker.style.left = `${clamp(
+      drag.startLeft + deltaX,
+      -horizontalOverhang,
+      maximumLeft
+    )}px`;
+    drag.sticker.style.top = `${clamp(
+      drag.startTop + deltaY,
+      -verticalOverhang,
+      maximumTop
+    )}px`;
+
+    if (event.cancelable) event.preventDefault();
+  }
+
+  function finishDrag(event) {
+    const drag = activeDrag;
+    if (!drag || (event && event.pointerId !== drag.pointerId)) return;
+    activeDrag = null;
+
+    drag.sticker.classList.remove("is-drag-pending");
+    if (!drag.dragging) return;
+
+    if (event?.cancelable) event.preventDefault();
+    drag.sticker.classList.remove("is-dragging");
+    drag.sticker.classList.add("is-resticking");
+
+    const timer = window.setTimeout(() => {
+      drag.sticker.classList.remove("is-resticking");
+      restickTimers.delete(drag.sticker);
+    }, restickDuration);
+    restickTimers.set(drag.sticker, timer);
+  }
+
+  stickers.forEach(sticker => {
+    sticker.addEventListener("pointerdown", event => prepareDrag(sticker, event), { capture: true });
+    sticker.addEventListener("dragstart", event => event.preventDefault());
+  });
+
+  document.addEventListener("pointermove", moveDrag, { passive: false });
+  document.addEventListener("pointerup", finishDrag);
+  document.addEventListener("pointercancel", finishDrag);
+  window.addEventListener("blur", () => finishDrag(null));
+
+  window.addEventListener("resize", () => {
+    if (activeDrag) finishDrag(null);
+    if (resizeRafId !== null) cancelAnimationFrame(resizeRafId);
+
+    resizeRafId = requestAnimationFrame(() => {
+      resizeRafId = null;
+      stickers.forEach(sticker => {
+        clearRestick(sticker);
+        sticker.classList.remove("is-drag-pending", "is-dragging");
+        sticker.style.removeProperty("left");
+        sticker.style.removeProperty("top");
+        sticker.style.removeProperty("right");
+        sticker.style.removeProperty("bottom");
+      });
     });
   });
 }
@@ -1818,6 +2040,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupProjectCarousels();
   setupDoodleReveal();
   setupInkSketchReveals();
+  setupDraggableDesignStickers();
   setupProjectLightbox();
 
   const locationIcon = document.getElementById("location_icon");
