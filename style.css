@@ -1691,6 +1691,15 @@ html.project-lightbox-open body {
     transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.design-ink-art {
+  filter:
+    drop-shadow(3px 0 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(-3px 0 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 3px 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 -3px 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 10px 8px rgba(72, 28, 34, 0.18));
+}
+
 .ink-sketch-reveal.is-tilting {
   --drawing-lift: 12px;
 }

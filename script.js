@@ -1103,6 +1103,13 @@ function setupInkSketchReveals() {
     let tiltPointer = null;
     const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const inkStickerFilter = [
+      "drop-shadow(3px 0px 0px rgba(255, 255, 255, 0.96))",
+      "drop-shadow(-3px 0px 0px rgba(255, 255, 255, 0.96))",
+      "drop-shadow(0px 3px 0px rgba(255, 255, 255, 0.96))",
+      "drop-shadow(0px -3px 0px rgba(255, 255, 255, 0.96))",
+      "drop-shadow(0px 10px 8px rgba(72, 28, 34, 0.18))"
+    ].join(" ");
 
     canvas.className = "ink-sketch-canvas";
     canvas.setAttribute("aria-hidden", "true");
@@ -1307,7 +1314,10 @@ function setupInkSketchReveals() {
         });
       }
 
+      ctx.save();
+      ctx.filter = inkStickerFilter;
       drawContainedImage(ctx, inkImage);
+      ctx.restore();
 
       if (showCompleteSketch || strokes.length) {
         ctx.globalCompositeOperation = "destination-out";
@@ -1524,6 +1534,10 @@ function setupDraggableDesignStickers() {
   const restickTimers = new WeakMap();
   let activeDrag = null;
   let resizeRafId = null;
+  let topStickerZIndex = stickers.reduce((highest, sticker) => {
+    const zIndex = Number.parseInt(getComputedStyle(sticker).zIndex, 10);
+    return Number.isFinite(zIndex) ? Math.max(highest, zIndex) : highest;
+  }, 10);
 
   function clamp(value, minimum, maximum) {
     return Math.min(maximum, Math.max(minimum, value));
@@ -1558,11 +1572,13 @@ function setupDraggableDesignStickers() {
     drag.startLeft = sticker.offsetLeft;
     drag.startTop = sticker.offsetTop;
     drag.dragging = true;
+    topStickerZIndex += 1;
 
     sticker.style.left = `${drag.startLeft}px`;
     sticker.style.top = `${drag.startTop}px`;
     sticker.style.right = "auto";
     sticker.style.bottom = "auto";
+    sticker.style.zIndex = String(topStickerZIndex);
     sticker.classList.add("is-dragging");
 
     const revealSurface = sticker.querySelector("[data-ink-sketch-reveal]");
