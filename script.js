@@ -1596,6 +1596,9 @@ function setupDraggableDesignStickers() {
   const dragThreshold = 7;
   const restickDuration = 440;
   const restickTimers = new WeakMap();
+  const stickerTiltStates = new WeakMap();
+  const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   let activeDrag = null;
   let resizeRafId = null;
   let topStickerZIndex = stickers.reduce((highest, sticker) => {
@@ -1655,6 +1658,44 @@ function setupDraggableDesignStickers() {
       width: localWidth,
       height: localHeight
     };
+  }
+
+  function resetStickerTilt(sticker) {
+    if (sticker.classList.contains("design-sticker-billy")) return;
+
+    const state = stickerTiltStates.get(sticker);
+    if (state?.rafId != null) cancelAnimationFrame(state.rafId);
+    stickerTiltStates.delete(sticker);
+    sticker.classList.remove("is-art-tilting");
+    sticker.style.setProperty("--sticker-art-tilt-x", "0deg");
+    sticker.style.setProperty("--sticker-art-tilt-y", "0deg");
+  }
+
+  function updateStickerTilt(sticker, event) {
+    if (
+      sticker.classList.contains("design-sticker-billy") ||
+      event.pointerType !== "mouse" ||
+      !hoverTiltQuery.matches ||
+      reducedMotionQuery.matches ||
+      sticker.matches(".is-drag-pending, .is-dragging")
+    ) return;
+
+    const state = stickerTiltStates.get(sticker) || { rafId: null, clientX: 0, clientY: 0 };
+    state.clientX = event.clientX;
+    state.clientY = event.clientY;
+    stickerTiltStates.set(sticker, state);
+    if (state.rafId !== null) return;
+
+    state.rafId = requestAnimationFrame(() => {
+      state.rafId = null;
+      const pointer = getStickerLocalPointer(sticker, state.clientX, state.clientY);
+      const relativeX = Math.max(-1, Math.min(1, pointer.x / pointer.width * 2 - 1));
+      const relativeY = Math.max(-1, Math.min(1, pointer.y / pointer.height * 2 - 1));
+
+      sticker.style.setProperty("--sticker-art-tilt-x", `${(-relativeY * 7).toFixed(2)}deg`);
+      sticker.style.setProperty("--sticker-art-tilt-y", `${(relativeX * 9).toFixed(2)}deg`);
+      sticker.classList.add("is-art-tilting");
+    });
   }
 
   function registerStickerAlphaHitTest(sticker) {
@@ -1766,6 +1807,7 @@ function setupDraggableDesignStickers() {
 
   function beginDrag(drag) {
     const { sticker } = drag;
+    resetStickerTilt(sticker);
     drag.startLeft = sticker.offsetLeft;
     drag.startTop = sticker.offsetTop;
     drag.dragging = true;
@@ -1843,9 +1885,15 @@ function setupDraggableDesignStickers() {
   }
 
   stickers.forEach(sticker => {
+    sticker.addEventListener("pointermove", event => updateStickerTilt(sticker, event), { passive: true });
+    sticker.addEventListener("pointerleave", () => resetStickerTilt(sticker));
     sticker.addEventListener("pointerdown", event => {
+      resetStickerTilt(sticker);
       const visibleSticker = getTopmostVisibleSticker(event.clientX, event.clientY);
-      if (visibleSticker) prepareDrag(visibleSticker, event);
+      if (visibleSticker) {
+        resetStickerTilt(visibleSticker);
+        prepareDrag(visibleSticker, event);
+      }
     }, { capture: true });
     sticker.addEventListener("dragstart", event => event.preventDefault());
   });
@@ -1862,6 +1910,7 @@ function setupDraggableDesignStickers() {
     resizeRafId = requestAnimationFrame(() => {
       resizeRafId = null;
       stickers.forEach(sticker => {
+        resetStickerTilt(sticker);
         clearRestick(sticker);
         sticker.classList.remove("is-drag-pending", "is-dragging");
         sticker.style.removeProperty("left");
