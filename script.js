@@ -1059,6 +1059,8 @@ function setupDoodleReveal() {
   });
 }
 
+const designStickerVisibleHitTests = new WeakMap();
+
 function setupInkSketchReveals() {
   function waitForImage(image) {
     const loadPromise = image.complete
@@ -1101,6 +1103,8 @@ function setupInkSketchReveals() {
     let showCompleteSketch = false;
     let tiltRafId = null;
     let tiltPointer = null;
+    let inkAlphaMap = null;
+    const hostSticker = surface.closest(".design-sticker");
     const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const inkStickerFilter = [
@@ -1118,7 +1122,10 @@ function setupInkSketchReveals() {
 
     waitForImage(inkImage).then(() => {
       inkReady = Boolean(inkImage.naturalWidth && inkImage.naturalHeight);
-      if (inkReady) inkImage.classList.add("is-image-ready");
+      if (inkReady) {
+        inkImage.classList.add("is-image-ready");
+        buildInkAlphaMap();
+      }
       surface.classList.remove("is-image-loading");
       renderReveal(performance.now());
     });
@@ -1227,6 +1234,62 @@ function setupInkSketchReveals() {
       targetCtx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
     }
 
+    function buildInkAlphaMap() {
+      const sampleLimit = 720;
+      const scale = Math.min(1, sampleLimit / Math.max(inkImage.naturalWidth, inkImage.naturalHeight));
+      const mapWidth = Math.max(1, Math.round(inkImage.naturalWidth * scale));
+      const mapHeight = Math.max(1, Math.round(inkImage.naturalHeight * scale));
+      const alphaCanvas = document.createElement("canvas");
+      const alphaContext = alphaCanvas.getContext("2d", { willReadFrequently: true });
+      if (!alphaContext) return;
+
+      alphaCanvas.width = mapWidth;
+      alphaCanvas.height = mapHeight;
+      alphaContext.drawImage(inkImage, 0, 0, mapWidth, mapHeight);
+
+      try {
+        inkAlphaMap = {
+          width: mapWidth,
+          height: mapHeight,
+          pixels: alphaContext.getImageData(0, 0, mapWidth, mapHeight).data
+        };
+      } catch (error) {
+        inkAlphaMap = null;
+      }
+    }
+
+    function isPointOverVisibleInk(pointer) {
+      if (!inkAlphaMap || !inkImage.naturalWidth || !inkImage.naturalHeight) return false;
+
+      const imageScale = Math.min(pointer.width / inkImage.naturalWidth, pointer.height / inkImage.naturalHeight);
+      const displayedWidth = inkImage.naturalWidth * imageScale;
+      const displayedHeight = inkImage.naturalHeight * imageScale;
+      const displayedX = (pointer.width - displayedWidth) / 2;
+      const displayedY = (pointer.height - displayedHeight) / 2;
+      const normalizedX = (pointer.x - displayedX) / displayedWidth;
+      const normalizedY = (pointer.y - displayedY) / displayedHeight;
+
+      if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) return false;
+
+      const mapX = Math.min(inkAlphaMap.width - 1, Math.max(0, Math.floor(normalizedX * inkAlphaMap.width)));
+      const mapY = Math.min(inkAlphaMap.height - 1, Math.max(0, Math.floor(normalizedY * inkAlphaMap.height)));
+      return inkAlphaMap.pixels[(mapY * inkAlphaMap.width + mapX) * 4 + 3] > 64;
+    }
+
+    if (hostSticker) {
+      designStickerVisibleHitTests.set(hostSticker, (clientX, clientY) => {
+        const pointer = getLocalPointerPosition(clientX, clientY);
+        if (
+          pointer.x < 0 ||
+          pointer.y < 0 ||
+          pointer.x > pointer.width ||
+          pointer.y > pointer.height
+        ) return false;
+
+        return isPointOverVisibleInk(pointer);
+      });
+    }
+
     function drawInkBlot(targetCtx, stroke, alpha) {
       const { x1, y1, x2: x, y2: y, radius, seed } = stroke;
       const direction = Math.atan2(y - y1, x - x1);
@@ -1312,6 +1375,7 @@ function setupInkSketchReveals() {
 
           drawInkBlot(maskCtx, stroke, alpha);
         });
+
       }
 
       ctx.save();
@@ -1539,6 +1603,139 @@ function setupDraggableDesignStickers() {
     return Number.isFinite(zIndex) ? Math.max(highest, zIndex) : highest;
   }, 10);
 
+  function getStickerLocalPointer(sticker, clientX, clientY) {
+    const rect = sticker.getBoundingClientRect();
+    const localWidth = sticker.offsetWidth || rect.width;
+    const localHeight = sticker.offsetHeight || rect.height;
+
+    if (typeof sticker.getBoxQuads === "function") {
+      const quad = sticker.getBoxQuads()[0];
+
+      if (quad) {
+        const horizontalX = quad.p2.x - quad.p1.x;
+        const horizontalY = quad.p2.y - quad.p1.y;
+        const verticalX = quad.p4.x - quad.p1.x;
+        const verticalY = quad.p4.y - quad.p1.y;
+        const pointerX = clientX - quad.p1.x;
+        const pointerY = clientY - quad.p1.y;
+        const determinant = horizontalX * verticalY - horizontalY * verticalX;
+
+        if (Math.abs(determinant) > 0.0001) {
+          return {
+            x: (pointerX * verticalY - pointerY * verticalX) / determinant * localWidth,
+            y: (horizontalX * pointerY - horizontalY * pointerX) / determinant * localHeight,
+            width: localWidth,
+            height: localHeight
+          };
+        }
+      }
+    }
+
+    const transform = getComputedStyle(sticker).transform;
+    if (transform !== "none" && typeof DOMMatrixReadOnly === "function") {
+      const matrix = new DOMMatrixReadOnly(transform);
+      const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
+
+      if (Math.abs(determinant) > 0.0001) {
+        const offsetX = clientX - (rect.left + rect.width / 2);
+        const offsetY = clientY - (rect.top + rect.height / 2);
+
+        return {
+          x: localWidth / 2 + (matrix.d * offsetX - matrix.c * offsetY) / determinant,
+          y: localHeight / 2 + (-matrix.b * offsetX + matrix.a * offsetY) / determinant,
+          width: localWidth,
+          height: localHeight
+        };
+      }
+    }
+
+    return {
+      x: (clientX - rect.left) * (localWidth / rect.width),
+      y: (clientY - rect.top) * (localHeight / rect.height),
+      width: localWidth,
+      height: localHeight
+    };
+  }
+
+  function registerStickerAlphaHitTest(sticker) {
+    if (designStickerVisibleHitTests.has(sticker)) return;
+
+    const image = sticker.querySelector(":scope > img");
+    if (!image) return;
+    let alphaMap = null;
+
+    const buildAlphaMap = () => {
+      if (!image.naturalWidth || !image.naturalHeight) return;
+
+      const sampleLimit = 720;
+      const scale = Math.min(1, sampleLimit / Math.max(image.naturalWidth, image.naturalHeight));
+      const mapWidth = Math.max(1, Math.round(image.naturalWidth * scale));
+      const mapHeight = Math.max(1, Math.round(image.naturalHeight * scale));
+      const alphaCanvas = document.createElement("canvas");
+      const alphaContext = alphaCanvas.getContext("2d", { willReadFrequently: true });
+      if (!alphaContext) return;
+
+      alphaCanvas.width = mapWidth;
+      alphaCanvas.height = mapHeight;
+      alphaContext.drawImage(image, 0, 0, mapWidth, mapHeight);
+
+      try {
+        alphaMap = {
+          width: mapWidth,
+          height: mapHeight,
+          pixels: alphaContext.getImageData(0, 0, mapWidth, mapHeight).data
+        };
+      } catch (error) {
+        alphaMap = null;
+      }
+    };
+
+    designStickerVisibleHitTests.set(sticker, (clientX, clientY) => {
+      if (!alphaMap || !image.naturalWidth || !image.naturalHeight) return false;
+
+      const pointer = getStickerLocalPointer(sticker, clientX, clientY);
+      if (
+        pointer.x < 0 ||
+        pointer.y < 0 ||
+        pointer.x > pointer.width ||
+        pointer.y > pointer.height
+      ) return false;
+
+      const imageScale = Math.min(pointer.width / image.naturalWidth, pointer.height / image.naturalHeight);
+      const displayedWidth = image.naturalWidth * imageScale;
+      const displayedHeight = image.naturalHeight * imageScale;
+      const displayedX = (pointer.width - displayedWidth) / 2;
+      const displayedY = (pointer.height - displayedHeight) / 2;
+      const normalizedX = (pointer.x - displayedX) / displayedWidth;
+      const normalizedY = (pointer.y - displayedY) / displayedHeight;
+      if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) return false;
+
+      const mapX = Math.min(alphaMap.width - 1, Math.max(0, Math.floor(normalizedX * alphaMap.width)));
+      const mapY = Math.min(alphaMap.height - 1, Math.max(0, Math.floor(normalizedY * alphaMap.height)));
+      return alphaMap.pixels[(mapY * alphaMap.width + mapX) * 4 + 3] > 64;
+    });
+
+    if (image.complete && image.naturalWidth) buildAlphaMap();
+    else image.addEventListener("load", buildAlphaMap, { once: true });
+  }
+
+  function getTopmostVisibleSticker(clientX, clientY) {
+    const seen = new Set();
+
+    for (const element of document.elementsFromPoint(clientX, clientY)) {
+      const sticker = element.closest?.(".design-sticker");
+      if (!sticker || !sheet.contains(sticker) || seen.has(sticker)) continue;
+      seen.add(sticker);
+
+      const hitTest = designStickerVisibleHitTests.get(sticker);
+      if (!hitTest || hitTest(clientX, clientY)) return sticker;
+    }
+
+    return null;
+  }
+
+  stickers.forEach(registerStickerAlphaHitTest);
+
   function clamp(value, minimum, maximum) {
     return Math.min(maximum, Math.max(minimum, value));
   }
@@ -1646,7 +1843,10 @@ function setupDraggableDesignStickers() {
   }
 
   stickers.forEach(sticker => {
-    sticker.addEventListener("pointerdown", event => prepareDrag(sticker, event), { capture: true });
+    sticker.addEventListener("pointerdown", event => {
+      const visibleSticker = getTopmostVisibleSticker(event.clientX, event.clientY);
+      if (visibleSticker) prepareDrag(visibleSticker, event);
+    }, { capture: true });
     sticker.addEventListener("dragstart", event => event.preventDefault());
   });
 

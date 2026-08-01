@@ -404,6 +404,26 @@ html.is-skeleton-loading .main > .options {
     isolation: isolate;
 }
 
+.designs-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(
+            to right,
+            transparent 0 7.5%,
+            rgba(169, 30, 39, 0.28) 7.5% calc(7.5% + 2px),
+            transparent calc(7.5% + 2px) 100%
+        ),
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0 30px,
+            rgba(45, 73, 104, 0.29) 30px 32px
+        );
+}
+
 .section-wave {
     position: absolute;
     top: 0;
@@ -1538,12 +1558,12 @@ html.project-lightbox-open body {
   height: auto;
 }
 
-.design-sticker-camera {
+.design-sticker-painter {
   --sticker-rotate: -8deg;
-  top: 3%;
-  left: 1%;
+  top: 2%;
+  left: -1%;
   z-index: 2;
-  width: 28%;
+  width: 36%;
   transition-delay: calc(0.08s * var(--reveal-delay-scale));
 }
 
@@ -1556,7 +1576,6 @@ html.project-lightbox-open body {
   transition-delay: calc(0.16s * var(--reveal-delay-scale));
 }
 
-.design-sticker-camera,
 .design-sticker-billy {
   filter: none;
 }
@@ -1591,7 +1610,6 @@ html.project-lightbox-open body {
       drop-shadow(0 16px 11px rgba(72, 28, 34, 0.24));
   }
 
-  .page-section.is-visible .design-sticker-camera:hover,
   .page-section.is-visible .design-sticker-billy:hover {
     filter: none;
   }
@@ -1645,7 +1663,7 @@ html.project-lightbox-open body {
   border-radius: 0;
   background-color: var(--design-surface-color);
   box-shadow: none;
-  cursor: crosshair;
+  cursor: grab;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -1735,9 +1753,9 @@ html.project-lightbox-open body {
 }
 
 @media (max-width: 900px) {
-  .design-sticker-camera {
-    left: -1%;
-    width: 34%;
+  .design-sticker-painter {
+    left: -3%;
+    width: 42%;
   }
 
   .design-sticker-billy {
@@ -1762,11 +1780,11 @@ html.project-lightbox-open body {
     min-height: 0;
   }
 
-  .design-sticker-camera {
+  .design-sticker-painter {
     --sticker-rotate: -10deg;
     top: 1%;
-    left: -7%;
-    width: 50%;
+    left: -10%;
+    width: 62%;
   }
 
   .design-sticker-billy {
