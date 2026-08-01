@@ -25,94 +25,78 @@ function setupSkeletonLoader() {
       return;
     }
 
-    const orbitAnimations = typeof orbit.getAnimations === "function" ? orbit.getAnimations() : [];
-    const orbitAnimation = orbitAnimations.find(animation => {
-      return animation.animationName === "skeletonWelcomeOrbit";
-    }) || orbitAnimations[0];
     const landingAngle = 360;
-    const orbitDuration = 1000;
-    const bounceDuration = 520;
+    const introDelay = 120;
+    const orbitDuration = 1050;
+    const settleDuration = 600;
+    const totalDuration = orbitDuration + settleDuration;
+    const orbitEnd = orbitDuration / totalDuration;
     orbit.classList.add("is-landing");
-
-    if (orbitAnimation) {
-      await Promise.race([
-        orbitAnimation.finished.catch(() => {}),
-        wait(orbitDuration + 300)
-      ]);
-    } else {
-      const fallbackOrbit = orbit.animate([
-        { transform: "rotate(0deg)" },
-        { transform: `rotate(${landingAngle}deg)` }
-      ], {
-        duration: orbitDuration,
-        easing: "cubic-bezier(0.24, 0.15, 0.8, 0.5)",
-        fill: "forwards"
-      });
-
-      await fallbackOrbit.finished.catch(() => {});
-      fallbackOrbit.cancel();
-    }
-
-    orbit.style.transform = `rotate(${landingAngle}deg)`;
     orbit.style.animation = "none";
-    orbitAnimation?.cancel();
 
-    const bounce = orbit.animate([
+    const landing = orbit.animate([
+      {
+        transform: "rotate(0deg)",
+        offset: 0,
+        easing: "cubic-bezier(0.42, 0, 0.2, 1)"
+      },
       {
         transform: `rotate(${landingAngle}deg)`,
-        offset: 0,
-        easing: "cubic-bezier(0.12, 0.8, 0.24, 1)"
+        offset: orbitEnd,
+        easing: "cubic-bezier(0.18, 0.75, 0.25, 1)"
       },
       {
-        transform: `rotate(${landingAngle - 20}deg)`,
-        offset: 0.2,
-        easing: "cubic-bezier(0.3, 0, 0.2, 1)"
+        transform: `rotate(${landingAngle - 12}deg)`,
+        offset: (orbitDuration + 140) / totalDuration,
+        easing: "cubic-bezier(0.35, 0, 0.25, 1)"
       },
       {
-        transform: `rotate(${landingAngle + 9}deg)`,
-        offset: 0.43,
-        easing: "cubic-bezier(0.3, 0, 0.2, 1)"
+        transform: `rotate(${landingAngle + 5}deg)`,
+        offset: (orbitDuration + 300) / totalDuration,
+        easing: "cubic-bezier(0.35, 0, 0.25, 1)"
       },
       {
-        transform: `rotate(${landingAngle - 5}deg)`,
-        offset: 0.64,
-        easing: "cubic-bezier(0.3, 0, 0.2, 1)"
+        transform: `rotate(${landingAngle - 2}deg)`,
+        offset: (orbitDuration + 455) / totalDuration,
+        easing: "cubic-bezier(0.35, 0, 0.25, 1)"
       },
-      { transform: `rotate(${landingAngle + 2}deg)`, offset: 0.82 },
       { transform: `rotate(${landingAngle}deg)`, offset: 1 }
     ], {
-      duration: bounceDuration,
-      fill: "forwards"
+      delay: introDelay,
+      duration: totalDuration,
+      easing: "linear",
+      fill: "both"
     });
 
     const impact = dot && typeof dot.animate === "function"
       ? dot.animate([
           { transform: "scale(1)", offset: 0 },
-          { transform: "scale(1.7, 0.58)", offset: 0.1 },
-          { transform: "scale(0.78, 1.35)", offset: 0.27 },
-          { transform: "scale(1.18, 0.86)", offset: 0.48 },
-          { transform: "scale(0.94, 1.08)", offset: 0.7 },
+          { transform: "scale(1.38, 0.72)", offset: 0.14 },
+          { transform: "scale(0.88, 1.18)", offset: 0.34 },
+          { transform: "scale(1.08, 0.94)", offset: 0.58 },
+          { transform: "scale(0.98, 1.03)", offset: 0.8 },
           { transform: "scale(1)", offset: 1 }
         ], {
-          duration: bounceDuration,
+          delay: introDelay + orbitDuration,
+          duration: 430,
           easing: "cubic-bezier(0.22, 0.7, 0.3, 1)",
-          fill: "forwards"
+          fill: "both"
         })
       : null;
 
-    const impactAnimationsFinished = [bounce.finished.catch(() => {})];
+    const impactAnimationsFinished = [landing.finished.catch(() => {})];
     if (impact) impactAnimationsFinished.push(impact.finished.catch(() => {}));
 
     await Promise.race([
       Promise.all(impactAnimationsFinished),
-      wait(bounceDuration + 100)
+      wait(introDelay + totalDuration + 120)
     ]);
 
-    orbit.style.transform = "rotate(0deg)";
+    orbit.style.transform = `rotate(${landingAngle}deg)`;
     orbit.style.animation = "none";
-    bounce.cancel();
+    if (dot) dot.style.transform = "scale(1)";
+    landing.cancel();
     impact?.cancel();
-    orbitAnimation?.cancel();
     orbit.classList.remove("is-landing");
   }
 

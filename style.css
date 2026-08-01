@@ -109,7 +109,8 @@ html.is-skeleton-loading .main > .options {
     letter-spacing: -0.06em;
     opacity: 0;
     visibility: hidden;
-    transform: translate(-50%, -50%);
+    transform: translate3d(-50%, -50%, 0);
+    backface-visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
@@ -137,10 +138,6 @@ html.is-skeleton-loading .main > .options {
     will-change: transform;
 }
 
-.home-skeleton.is-intro-active .skeleton-welcome-orbit {
-    animation: skeletonWelcomeOrbit 1s cubic-bezier(0.24, 0.15, 0.8, 0.5) 0.2s 1 both;
-}
-
 .skeleton-welcome-dot {
     position: absolute;
     z-index: 1;
@@ -150,6 +147,8 @@ html.is-skeleton-loading .main > .options {
     height: 0.13em;
     border-radius: 50%;
     background-color: var(--accent);
+    transform-origin: center;
+    will-change: transform;
 }
 
 .skeleton-welcome-orbit.is-landing {
@@ -159,11 +158,6 @@ html.is-skeleton-loading .main > .options {
     -webkit-mask-image: none;
     mask-image: none;
     contain: none;
-}
-
-@keyframes skeletonWelcomeOrbit {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
 }
 
 .home-skeleton-left {
@@ -1601,6 +1595,24 @@ html.project-lightbox-open body {
   transition-delay: calc(0.16s * var(--reveal-delay-scale));
 }
 
+.design-sticker-hand {
+  --sticker-rotate: 9deg;
+  top: 1%;
+  right: 1%;
+  z-index: 5;
+  width: 20%;
+  transition-delay: calc(0.2s * var(--reveal-delay-scale));
+}
+
+.design-sticker-flower {
+  --sticker-rotate: -5deg;
+  bottom: 7%;
+  left: 38%;
+  z-index: 5;
+  width: 23%;
+  transition-delay: calc(0.28s * var(--reveal-delay-scale));
+}
+
 .design-sticker-billy {
   filter: none;
 }
@@ -1650,9 +1662,19 @@ html.project-lightbox-open body {
 .page-section.is-visible .design-sticker.is-dragging {
   z-index: 10;
   transform: translateY(-16px) rotate(0deg) scale(1.075);
-  filter: drop-shadow(0 24px 14px rgba(72, 28, 34, 0.3)) brightness(1.03);
+  filter:
+    drop-shadow(3px 0 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(-3px 0 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 3px 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 -3px 0 rgba(255, 255, 255, 0.96))
+    drop-shadow(0 24px 14px rgba(72, 28, 34, 0.3))
+    brightness(1.03);
   transition-duration: 120ms;
   transition-delay: 0s;
+}
+
+.page-section.is-visible .design-sticker-billy.is-dragging {
+  filter: drop-shadow(0 24px 14px rgba(72, 28, 34, 0.3)) brightness(1.03);
 }
 
 .page-section.is-visible .design-sticker.is-resticking {
@@ -1788,6 +1810,17 @@ html.project-lightbox-open body {
     width: 68%;
   }
 
+  .design-sticker-hand {
+    right: -2%;
+    width: 23%;
+  }
+
+  .design-sticker-flower {
+    bottom: 8%;
+    left: 38%;
+    width: 27%;
+  }
+
   .design-sticker-demon {
     left: 2%;
     width: 29%;
@@ -1817,6 +1850,20 @@ html.project-lightbox-open body {
     top: 18%;
     left: 1%;
     width: 98%;
+  }
+
+  .design-sticker-hand {
+    --sticker-rotate: 11deg;
+    top: 1%;
+    right: -9%;
+    width: 36%;
+  }
+
+  .design-sticker-flower {
+    --sticker-rotate: -6deg;
+    bottom: 21%;
+    left: 32%;
+    width: 43%;
   }
 
   .design-sticker-demon {
