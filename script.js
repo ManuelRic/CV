@@ -1604,10 +1604,12 @@ function setupDraggableDesignStickers() {
   const restickDuration = 440;
   const restickTimers = new WeakMap();
   const stickerTiltStates = new WeakMap();
+  const stickerPlacements = new WeakMap();
   const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   let activeDrag = null;
   let resizeRafId = null;
+  let lastSheetWidth = sheet.clientWidth;
   let topStickerZIndex = stickers.reduce((highest, sticker) => {
     const zIndex = Number.parseInt(getComputedStyle(sticker).zIndex, 10);
     return Number.isFinite(zIndex) ? Math.max(highest, zIndex) : highest;
@@ -1872,6 +1874,44 @@ function setupDraggableDesignStickers() {
     if (event.cancelable) event.preventDefault();
   }
 
+  function rememberStickerPlacement(sticker) {
+    if (!sheet.clientWidth || !sheet.clientHeight) return;
+
+    stickerPlacements.set(sticker, {
+      centerX: (sticker.offsetLeft + sticker.offsetWidth / 2) / sheet.clientWidth,
+      centerY: (sticker.offsetTop + sticker.offsetHeight / 2) / sheet.clientHeight
+    });
+  }
+
+  function restoreStickerPlacement(sticker, placement) {
+    const stickerWidth = sticker.offsetWidth;
+    const stickerHeight = sticker.offsetHeight;
+    const horizontalOverhang = Math.min(34, stickerWidth * 0.12);
+    const verticalOverhang = Math.min(26, stickerHeight * 0.1);
+    const maximumLeft = Math.max(
+      -horizontalOverhang,
+      sheet.clientWidth - stickerWidth + horizontalOverhang
+    );
+    const maximumTop = Math.max(
+      -verticalOverhang,
+      sheet.clientHeight - stickerHeight + verticalOverhang
+    );
+
+    sticker.style.left = `${clamp(
+      placement.centerX * sheet.clientWidth - stickerWidth / 2,
+      -horizontalOverhang,
+      maximumLeft
+    )}px`;
+    sticker.style.top = `${clamp(
+      placement.centerY * sheet.clientHeight - stickerHeight / 2,
+      -verticalOverhang,
+      maximumTop
+    )}px`;
+    sticker.style.right = "auto";
+    sticker.style.bottom = "auto";
+    rememberStickerPlacement(sticker);
+  }
+
   function finishDrag(event) {
     const drag = activeDrag;
     if (!drag || (event && event.pointerId !== drag.pointerId)) return;
@@ -1883,6 +1923,7 @@ function setupDraggableDesignStickers() {
     if (event?.cancelable) event.preventDefault();
     drag.sticker.classList.remove("is-dragging");
     drag.sticker.classList.add("is-resticking");
+    rememberStickerPlacement(drag.sticker);
 
     const timer = window.setTimeout(() => {
       drag.sticker.classList.remove("is-resticking");
@@ -1916,14 +1957,20 @@ function setupDraggableDesignStickers() {
 
     resizeRafId = requestAnimationFrame(() => {
       resizeRafId = null;
+      const nextSheetWidth = sheet.clientWidth;
+
+      // Mobile browser bars resize only the viewport height while scrolling.
+      // Ignore those events so a user's sticker arrangement stays untouched.
+      if (Math.abs(nextSheetWidth - lastSheetWidth) < 2) return;
+      lastSheetWidth = nextSheetWidth;
+
       stickers.forEach(sticker => {
         resetStickerTilt(sticker);
         clearRestick(sticker);
         sticker.classList.remove("is-drag-pending", "is-dragging");
-        sticker.style.removeProperty("left");
-        sticker.style.removeProperty("top");
-        sticker.style.removeProperty("right");
-        sticker.style.removeProperty("bottom");
+
+        const placement = stickerPlacements.get(sticker);
+        if (placement) restoreStickerPlacement(sticker, placement);
       });
     });
   });
