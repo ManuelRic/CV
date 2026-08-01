@@ -798,11 +798,25 @@ function setupDoodleReveal() {
     let width = 0;
     let height = 0;
     let dpr = 1;
+    let imagesReady = false;
     const strokeLife = 940;
 
     canvas.className = "doodle-canvas";
-    overlay.style.display = "none";
+    overlay.loading = "eager";
     surface.appendChild(canvas);
+
+    function waitForDoodleImage(image) {
+      const loadPromise = image.complete
+        ? Promise.resolve()
+        : new Promise(resolve => {
+            image.addEventListener("load", resolve, { once: true });
+            image.addEventListener("error", resolve, { once: true });
+          });
+
+      return loadPromise
+        .then(() => typeof image.decode === "function" ? image.decode() : undefined)
+        .catch(() => {});
+    }
 
     function resizeCanvas() {
       const rect = surface.getBoundingClientRect();
@@ -891,6 +905,10 @@ function setupDoodleReveal() {
 
     function renderReveal(time) {
       if (!width || !height) resizeCanvas();
+      if (!imagesReady) {
+        rafId = null;
+        return;
+      }
 
       for (let i = strokes.length - 1; i >= 0; i--) {
         if (time - strokes[i].created > strokeLife) strokes.splice(i, 1);
@@ -944,6 +962,8 @@ function setupDoodleReveal() {
     }
 
     function addTrailPoint(event) {
+      if (!imagesReady) return;
+
       const canvasRect = canvas.getBoundingClientRect();
       const surfaceRect = surface.getBoundingClientRect();
       const x = event.clientX - canvasRect.left;
@@ -987,15 +1007,18 @@ function setupDoodleReveal() {
     }
 
     resizeCanvas();
-    if (overlay.complete) {
-      renderReveal(performance.now());
-    }
+    Promise.all([baseImage, overlay].filter(Boolean).map(waitForDoodleImage)).then(() => {
+      imagesReady = Boolean(
+        overlay.naturalWidth &&
+        overlay.naturalHeight &&
+        (!baseImage || (baseImage.naturalWidth && baseImage.naturalHeight))
+      );
+      if (!imagesReady) return;
 
-    if (!overlay.complete) {
-      overlay.addEventListener("load", () => {
-        renderReveal(performance.now());
-      }, { once: true });
-    }
+      resizeCanvas();
+      surface.classList.add("is-doodle-reveal-ready");
+      renderReveal(performance.now());
+    });
 
     if ("ResizeObserver" in window) {
       const observer = new ResizeObserver(() => {
