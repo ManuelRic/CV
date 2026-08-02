@@ -2445,7 +2445,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const footer = document.querySelector("footer");
-  const backToTop = document.getElementById("back-to-top");
 
   function updateFooterVisibility() {
     if (!footer) return;
@@ -2460,53 +2459,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("scroll", updateFooterVisibility, { passive: true });
   window.addEventListener("resize", updateFooterVisibility);
 
-  if (backToTop) {
-    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mobileBackToTopQuery = window.matchMedia("(max-width: 768px)");
-
-    function updateBackToTopPosition() {
-      if (mobileBackToTopQuery.matches) {
-        backToTop.style.setProperty("--scroll-offset", "0px");
-      } else {
-        const maximumScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-        const scrollProgress = Math.min(1, Math.max(0, window.scrollY / maximumScroll));
-        const startingTop = Number.parseFloat(getComputedStyle(backToTop).top) || 16;
-        const footerHeight = footer ? footer.offsetHeight : 0;
-        const footerGap = 12;
-        const maximumTravel = Math.max(
-          0,
-          window.innerHeight - (startingTop * 2) - backToTop.offsetHeight - footerHeight - footerGap
-        );
-
-        backToTop.style.setProperty("--scroll-offset", `${scrollProgress * maximumTravel}px`);
-      }
-
-      const visibilityThreshold = mobileBackToTopQuery.matches ? window.innerHeight : 8;
-      backToTop.classList.toggle("is-visible", window.scrollY > visibilityThreshold);
-    }
-
-    backToTop.addEventListener("click", () => {
-      window.scrollTo({
-        top: 0,
-        behavior: reducedMotionQuery.matches ? "auto" : "smooth"
-      });
-    });
-
-    updateBackToTopPosition();
-    window.addEventListener("scroll", updateBackToTopPosition, { passive: true });
-    window.addEventListener("resize", updateBackToTopPosition);
-  }
-});
-
-// Add a class when the slideInRight animation completes so hover transforms work reliably
-document.querySelectorAll('.options h3').forEach(el => {
-  el.addEventListener('animationend', (e) => {
-    // Ensure we're responding to the expected keyframe animation
-    if (e.animationName && e.animationName !== 'slideInRight') return;
-
-    // Add the class (listener fires once per element by specifying { once: true } below)
-    el.classList.add('animation-finished');
-  }, { once: true });
 });
 
 
