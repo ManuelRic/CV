@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manuel Ricart</title>
   <link rel="preload" href="fonts/Myfont-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20260801-doodle-reveal-fix" />
-  <link rel="icon" type="image/png" href="img/branding/favicon.png">
+  <link rel="stylesheet" href="style.css?v=20260802-header-scroll-state" />
+  <link rel="icon" type="image/png" href="img/branding/favicon.png?v=20260802-handwritten-transparent">
   <noscript>
     <style>
       .home-skeleton { display: none !important; }
@@ -29,34 +29,53 @@
     <img src="img/ui/top-arrow-with-text.webp" alt="">
   </button>
 
-  <div class="floating-contacts" aria-label="Contact links">
-    <a class="tooltip" href="mailto:manuel.ricart.soler@gmail.com" data-copy="manuel.ricart.soler@gmail.com" aria-label="Copy Gmail address">
-      <img class="logos" src="img/icons/social/gmail.webp" alt="Gmail">
-      <svg class="contact-action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-      </svg>
-      <span class="tooltip-text">manuel.ricart.soler@gmail.com</span>
-    </a>
+  <header class="site-header">
+    <nav class="header-nav" aria-label="Primary navigation">
+      <a href="#home">Home</a>
+      <a href="#skills">Skills</a>
+      <a href="#projects">Projects</a>
+      <a href="#designs">Designs</a>
+      <a href="#about">About</a>
+    </nav>
 
-    <a class="tooltip" href="https://www.linkedin.com/in/manuel-ricart-soler-747b86273/" target="_blank" rel="noopener noreferrer" aria-label="Open LinkedIn profile">
-      <img class="logos" src="img/icons/social/linkedin.webp" alt="LinkedIn">
-      <svg class="contact-action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 3h6v6"/>
-        <path d="M10 14 21 3"/>
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-      </svg>
-    </a>
+    <div class="floating-contacts" aria-label="Contact links">
+      <a class="tooltip" href="pdf/CV_Manuel_Ricart.pdf" download aria-label="Download CV as PDF">
+        <img class="logos" src="img/icons/social/cv.png" alt="CV">
+        <svg class="contact-action-icon lucide lucide-download-icon lucide-download" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 15V3"/>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <path d="m7 10 5 5 5-5"/>
+        </svg>
+      </a>
 
-    <a class="tooltip" href="https://github.com/ManuelRic" target="_blank" rel="noopener noreferrer" aria-label="Open GitHub profile">
-      <img class="logos" src="img/icons/social/github.webp" alt="GitHub">
-      <svg class="contact-action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 3h6v6"/>
-        <path d="M10 14 21 3"/>
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-      </svg>
-    </a>
-  </div>
+      <a class="tooltip" href="mailto:manuel.ricart.soler@gmail.com" data-copy="manuel.ricart.soler@gmail.com" aria-label="Copy Gmail address">
+        <img class="logos" src="img/icons/social/gmail.webp" alt="Gmail">
+        <svg class="contact-action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+        </svg>
+        <span class="tooltip-text" role="status" aria-live="polite" aria-atomic="true"></span>
+      </a>
+
+      <a class="tooltip" href="https://www.linkedin.com/in/manuel-ricart-soler-747b86273/" target="_blank" rel="noopener noreferrer" aria-label="Open LinkedIn profile">
+        <img class="logos" src="img/icons/social/linkedin.webp" alt="LinkedIn">
+        <svg class="contact-action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 3h6v6"/>
+          <path d="M10 14 21 3"/>
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        </svg>
+      </a>
+
+      <a class="tooltip" href="https://github.com/ManuelRic" target="_blank" rel="noopener noreferrer" aria-label="Open GitHub profile">
+        <img class="logos" src="img/icons/social/github.webp" alt="GitHub">
+        <svg class="contact-action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 3h6v6"/>
+          <path d="M10 14 21 3"/>
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        </svg>
+      </a>
+    </div>
+  </header>
 
   <section id="home" class="main page-section" aria-busy="true">
     <div id="home-skeleton" class="home-skeleton" role="status" aria-label="Loading portfolio content">
@@ -109,7 +128,6 @@
     <div class="options">
       <div class="home-copy">
         <p>I enjoy designing and building <span class="red_txt">interactive</span> projects that connect technology, <span class="red_txt">creativity</span> and <span class="red_txt">design</span>.</p>
-        <p id="lang_p"><span id="lang_t">Languages:</span> Spanish (<span class="red_txt">Native</span>)&nbsp;+&nbsp;English (<span class="red_txt">C1</span>)</p>
       </div>
 
       <nav class="home-nav" aria-label="Page sections">
@@ -118,13 +136,8 @@
         <h3><a href="#about"><span class="link-inner">About me</span></a></h3>
       </nav>
 
-      <div class="home-actions">
-        <a class="cv-download" href="pdf/CV_Manuel_Ricart.pdf" download>
-          <span class="cv-wrap">
-            <span id="cv_button"><span class="btn-inner">Download CV as PDF</span></span>
-          </span>
-        </a>
-      </div>
+      <p id="lang_p"><span id="lang_t">Languages:</span> Spanish (<span class="red_txt">Native</span>)&nbsp;+&nbsp;English (<span class="red_txt">C1</span>)</p>
+
     </div>
   </section>
 
@@ -531,7 +544,7 @@
   </div>
 
   <script src="matter-js-master/build/matter.min.js"></script>
-  <script src="script.js?v=20260801-sticker-position-fix"></script>
+  <script src="script.js?v=20260802-header-scroll-state"></script>
   <script src="skills.js"></script>
 </body>
 </html>

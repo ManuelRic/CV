@@ -124,6 +124,20 @@ function setupSkeletonLoader() {
 
 setupSkeletonLoader();
 
+function setupHeaderScrollState() {
+  const header = document.querySelector(".site-header");
+  if (!header) return;
+
+  const updateHeader = () => {
+    header.classList.toggle("is-scrolled", window.scrollY > 0);
+  };
+
+  updateHeader();
+  window.addEventListener("scroll", updateHeader, { passive: true });
+}
+
+setupHeaderScrollState();
+
 function setupProgressiveImageSkeletons() {
   function trackImageGroup(container, images) {
     if (!images.length) return;
@@ -212,57 +226,53 @@ window.addEventListener("DOMContentLoaded", () => {
 
 function setupCopyTooltips(selector) {
   const elements = document.querySelectorAll(selector);
-  let currentTooltip = null;
-  let hoverTimeout = null;
 
   elements.forEach(el => {
     const tooltip = el.querySelector(".tooltip-text");
-    const textToCopy = el.dataset.copy;               // may be undefined
-    const originalText = tooltip ? tooltip.textContent : "";
+    const textToCopy = el.dataset.copy;
+    if (!tooltip || !textToCopy) return;
 
-    // Hide any click feedback when the pointer leaves.
-    el.addEventListener("mouseleave", () => {
-      if (!tooltip) return;
-      hoverTimeout = setTimeout(() => {
+    let hideTimer = null;
+    let clearTextTimer = null;
+    let copyInProgress = false;
+
+    const showFeedback = message => {
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(clearTextTimer);
+      tooltip.textContent = message;
+      tooltip.classList.add("show");
+
+      hideTimer = window.setTimeout(() => {
         tooltip.classList.remove("show");
-        if (currentTooltip === tooltip) currentTooltip = null;
-      }, 250);
-    });
+        hideTimer = null;
 
-    // Click: only attempt copy if data-copy exists.
+        clearTextTimer = window.setTimeout(() => {
+          if (!tooltip.classList.contains("show")) {
+            tooltip.textContent = "";
+          }
+          clearTextTimer = null;
+        }, 200);
+      }, 1500);
+    };
+
     el.addEventListener("click", async (event) => {
-      if (!tooltip) return;
-      clearTimeout(hoverTimeout);
-
-      // If there's no data-copy, allow the link to open normally.
-      if (!textToCopy) {
-        return;
-      }
-
-      // For copyable items, prevent navigation and perform copy
       event.preventDefault();
+      if (copyInProgress) return;
+
+      copyInProgress = true;
       try {
         await navigator.clipboard.writeText(String(textToCopy));
-        tooltip.textContent = "Copied!";
-        tooltip.classList.add("show");
+        showFeedback("Copied!");
       } catch (err) {
-        tooltip.textContent = "Error!";
-        tooltip.classList.add("show");
+        showFeedback("Copy failed");
+      } finally {
+        copyInProgress = false;
       }
-
-      // Restore original text
-      setTimeout(() => {
-        tooltip.textContent = originalText;
-        tooltip.classList.remove("show");
-        if (currentTooltip === tooltip) currentTooltip = null;
-      }, 1500);
     });
   });
 }
 
-
-// Apply to all tooltip elements
-setupCopyTooltips(".tooltip");
+setupCopyTooltips("[data-copy]");
 
 const revealTiming = {
   duration: 1000,
