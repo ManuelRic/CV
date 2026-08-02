@@ -1097,6 +1097,41 @@ function setupInkSketchReveals() {
     const sketchImage = surface.querySelector(".design-sketch-source");
     if (!inkImage || !sketchImage) return;
 
+    if (surface.dataset.inkSketchMode === "toggle") {
+      let showSketch = false;
+      let suppressClickUntil = 0;
+
+      const setSketchVisible = shouldShow => {
+        showSketch = shouldShow;
+        surface.classList.toggle("is-sketch-visible", shouldShow);
+        surface.setAttribute("aria-pressed", String(shouldShow));
+        surface.setAttribute(
+          "aria-label",
+          shouldShow
+            ? "Skull sketch shown. Activate to show the ink artwork."
+            : "Skull ink artwork shown. Activate to show the sketch."
+        );
+      };
+
+      surface.addEventListener("designstickerdragstart", () => {
+        suppressClickUntil = performance.now() + 400;
+      });
+
+      surface.addEventListener("click", () => {
+        if (performance.now() < suppressClickUntil) return;
+        setSketchVisible(!showSketch);
+      });
+
+      surface.addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        setSketchVisible(!showSketch);
+      });
+
+      setSketchVisible(false);
+      return;
+    }
+
     const canvas = document.createElement("canvas");
     const maskCanvas = document.createElement("canvas");
     const sketchCanvas = document.createElement("canvas");
@@ -1720,7 +1755,7 @@ function setupDraggableDesignStickers() {
   function registerStickerAlphaHitTest(sticker) {
     if (designStickerVisibleHitTests.has(sticker)) return;
 
-    const image = sticker.querySelector(":scope > img");
+    const image = sticker.querySelector(":scope > img, .design-ink-art");
     if (!image) return;
     let alphaMap = null;
 

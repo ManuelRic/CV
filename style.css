@@ -1733,7 +1733,7 @@ html.project-lightbox-open body {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .page-section.is-visible .design-sticker:hover {
+  .page-section.is-visible .design-sticker:not(.design-sticker-billy):hover {
     z-index: 6;
     transform: translateY(-8px) rotate(var(--sticker-rotate)) scale(1.045);
     filter:
@@ -1744,9 +1744,6 @@ html.project-lightbox-open body {
       drop-shadow(0 16px 11px rgba(72, 28, 34, 0.24));
   }
 
-  .page-section.is-visible .design-sticker-billy:hover {
-    filter: none;
-  }
 }
 
 .design-sticker.is-drag-pending,
@@ -1881,6 +1878,19 @@ html.project-lightbox-open body {
 
 .design-sketch-source {
   visibility: hidden;
+}
+
+.ink-sketch-reveal[data-ink-sketch-mode="toggle"] .design-sketch-source {
+  visibility: visible;
+  opacity: 0;
+}
+
+.ink-sketch-reveal[data-ink-sketch-mode="toggle"].is-sketch-visible .design-ink-art {
+  opacity: 0;
+}
+
+.ink-sketch-reveal[data-ink-sketch-mode="toggle"].is-sketch-visible .design-sketch-source {
+  opacity: 1;
 }
 
 .ink-sketch-canvas {
