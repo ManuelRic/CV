@@ -138,6 +138,67 @@ function setupHeaderScrollState() {
 
 setupHeaderScrollState();
 
+function setupMobileNavigation() {
+  const header = document.querySelector(".site-header");
+  const toggle = header?.querySelector(".nav-toggle");
+  const nav = header?.querySelector(".header-nav");
+  const toggleLabel = toggle?.querySelector(".sr-only");
+  if (!header || !toggle || !nav) return;
+
+  const mobileQuery = window.matchMedia("(max-width: 768px)");
+  header.classList.add("has-mobile-nav");
+
+  function setMenuOpen(shouldOpen, returnFocus = false) {
+    const open = Boolean(shouldOpen && mobileQuery.matches);
+    header.classList.toggle("is-menu-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    if (toggleLabel) {
+      toggleLabel.textContent = open ? "Close navigation menu" : "Open navigation menu";
+    }
+    if (!open && returnFocus) toggle.focus({ preventScroll: true });
+  }
+
+  toggle.addEventListener("click", () => {
+    setMenuOpen(toggle.getAttribute("aria-expanded") !== "true");
+  });
+
+  nav.addEventListener("click", event => {
+    if (event.target.closest("a")) setMenuOpen(false, true);
+  });
+
+  header.querySelector(".floating-contacts")?.addEventListener("click", () => {
+    setMenuOpen(false);
+  });
+
+  document.addEventListener("pointerdown", event => {
+    if (header.classList.contains("is-menu-open") && !header.contains(event.target)) {
+      setMenuOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && header.classList.contains("is-menu-open")) {
+      setMenuOpen(false, true);
+    }
+  });
+
+  window.addEventListener("scroll", () => {
+    if (header.classList.contains("is-menu-open")) setMenuOpen(false);
+  }, { passive: true });
+
+  const handleViewportChange = event => {
+    if (!event.matches) setMenuOpen(false);
+  };
+
+  if (typeof mobileQuery.addEventListener === "function") {
+    mobileQuery.addEventListener("change", handleViewportChange);
+  } else {
+    mobileQuery.addListener(handleViewportChange);
+  }
+}
+
+setupMobileNavigation();
+
 function setupProgressiveImageSkeletons() {
   function trackImageGroup(container, images) {
     if (!images.length) return;

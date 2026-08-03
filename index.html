@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manuel Ricart</title>
   <link rel="preload" href="fonts/Myfont-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20260803-inline-animated-i" />
+  <link rel="stylesheet" href="style.css?v=20260803-mobile-menu" />
   <link rel="icon" type="image/png" href="img/branding/faviconPxl.png">
   <noscript>
     <style>
@@ -25,7 +25,16 @@
 </head>
 <body>
   <header class="site-header">
-    <nav class="header-nav" aria-label="Primary navigation">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">
+      <span class="nav-toggle-icon" aria-hidden="true">
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+      </span>
+      <span class="sr-only">Open navigation menu</span>
+    </button>
+
+    <nav id="primary-navigation" class="header-nav" aria-label="Primary navigation">
       <a href="#home">Home</a>
       <a href="#skills">Skills</a>
       <a href="#projects">Projects</a>
@@ -521,7 +530,7 @@
   </div>
 
   <script src="matter-js-master/build/matter.min.js"></script>
-  <script src="script.js?v=20260803-inline-animated-i"></script>
+  <script src="script.js?v=20260803-mobile-menu"></script>
   <script src="skills.js"></script>
 </body>
 </html>
