@@ -238,7 +238,7 @@ html.is-skeleton-loading .main > .options {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: min(48%, 520px);
+    width: min(40%, 440px);
     min-width: 0;
     opacity: 0;
     visibility: hidden;
@@ -249,8 +249,8 @@ html.is-skeleton-loading .main > .options {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-4);
-    width: min(46%, 560px);
+    gap: var(--space-2);
+    width: min(54%, 600px);
     min-width: 0;
     opacity: 0;
     visibility: hidden;
@@ -289,13 +289,12 @@ html.is-skeleton-loading .main > .options {
 .skeleton-name {
     width: min(92%, 440px);
     height: 92px;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-1);
 }
 
 .skeleton-portrait {
-    width: min(360px, 100%);
+    width: min(420px, 100%);
     aspect-ratio: 41 / 44;
-    margin-bottom: var(--space-4);
     border-radius: 44% 44% 24% 24%;
 }
 
@@ -308,11 +307,20 @@ html.is-skeleton-loading .main > .options {
 .skeleton-location {
     width: min(62%, 250px);
     height: 34px;
+    margin-bottom: var(--space-3);
 }
 
 .skeleton-copy {
     display: grid;
     gap: 11px;
+    width: 100%;
+    padding-left: var(--space-3);
+    border-left: 4px solid rgba(211, 43, 49, 0.18);
+}
+
+.skeleton-language {
+    width: 78%;
+    margin-top: var(--space-2);
 }
 
 .skeleton-line {
@@ -325,31 +333,6 @@ html.is-skeleton-loading .main > .options {
 
 .skeleton-line-medium {
     width: 74%;
-}
-
-.skeleton-line-short {
-    width: 58%;
-}
-
-.skeleton-nav {
-    display: grid;
-    justify-items: center;
-    align-self: center;
-    gap: var(--space-3);
-    width: min(100%, 300px);
-    margin-top: var(--space-1);
-}
-
-.skeleton-nav-line {
-    width: 210px;
-    max-width: 82%;
-    height: 52px;
-}
-
-.skeleton-button {
-    align-self: center;
-    width: min(255px, 80%);
-    height: 52px;
 }
 
 @keyframes skeletonShimmer {
@@ -371,7 +354,6 @@ html.is-skeleton-loading .main > .options {
 .main-left,
 .options,
 .home-copy,
-.home-actions,
 .project-card,
 .project-info,
 .project-link,
@@ -383,8 +365,8 @@ html.is-skeleton-loading .main > .options {
     min-width: 0;
 }
 
-.main-left h1,
-.main-left h2,
+.hero-identity h1,
+.hero-identity h2,
 .options p,
 #lang_p,
 .project-info h2,
@@ -501,9 +483,11 @@ html.is-skeleton-loading .main > .options {
 .main {
     position: relative;
     min-height: calc(100vh - var(--site-header-height));
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(280px, 440px) minmax(0, 600px);
     justify-content: center;
     align-items: center;
+    width: 100%;
     gap: clamp(var(--space-3), 4vw, var(--space-6));
     padding-top: clamp(24px, 5vh, var(--section-top));
     padding-bottom: clamp(24px, 5vh, var(--section-top));
@@ -516,38 +500,46 @@ html.is-skeleton-loading .main > .options {
 }
 
 .main-left {
-    width: min(48%, 520px);
+    width: 100%;
     min-width: 0;
     margin: 0;
     display: flex;
-    flex-direction: column;
-    text-align: center;
+    justify-content: center;
     align-items: center;
     position: relative;
 }
 
-.main-left h1 {
+.hero-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+}
+
+#name {
     position: relative;
     max-width: 100%;
     font-size: 80px;
-    margin: 0 0 var(--space-4);
+    line-height: 0.98;
+    white-space: nowrap;
+    margin: 0 0 var(--space-2);
     opacity: 0;
-    transform: translateX(-50px);
+    transform: translateX(50px);
 }
 
 #pf_img {
     position: relative;
     display: block;
-    width: 360px;
+    width: min(100%, 420px);
     max-width: 100%;
     height: auto;
     object-fit: contain;
-    margin: 0 0 var(--space-4);
+    margin: 0;
     opacity: 0;
     transform: translateY(50px);
 }
 
-.main-left h2 {
+.hero-identity h2 {
     position: relative;
     width: fit-content;
     max-width: 100%;
@@ -697,24 +689,32 @@ h2 {
   position: relative;
   z-index: 2;
   margin: 0;
-  width: min(46%, 560px);
+  width: 100%;
+  max-width: 600px;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .home-copy {
+  position: relative;
   display: grid;
   gap: var(--space-2);
   width: 100%;
+  padding-left: var(--space-3);
 }
 
-.home-actions {
-  display: flex;
-  justify-content: center;
-  width: 100%;
+.home-copy::before {
+  content: "";
+  position: absolute;
+  top: 0.18em;
+  bottom: 0.18em;
+  left: 0;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--accent);
 }
 
 .options p {
@@ -726,7 +726,7 @@ h2 {
   font-size: 30px;
   overflow-wrap: break-word;
   opacity: 0;
-  transform: translateX(-50px);
+  transform: translateX(50px);
 }
 
 /*
@@ -735,18 +735,17 @@ h2 {
  * than the visible page, so the final controls fell below the initial fold.
  */
 @media (min-width: 993px) {
-  .main-left h1 {
-    font-size: clamp(56px, 9.8vh, 80px);
-    margin-bottom: clamp(12px, 3vh, var(--space-4));
+  #name {
+    font-size: clamp(56px, 8.6vh, 80px);
+    margin-bottom: clamp(8px, 1.8vh, var(--space-2));
   }
 
   #pf_img {
-    width: clamp(240px, 46vh, 360px);
-    margin-bottom: clamp(12px, 3vh, var(--space-4));
+    width: clamp(280px, 52vh, 420px);
   }
 
-  .main-left h2 {
-    font-size: clamp(28px, 5vh, 40px);
+  .hero-identity h2 {
+    font-size: clamp(28px, 4.5vh, 40px);
   }
 
   #title {
@@ -758,31 +757,31 @@ h2 {
   }
 
   .options {
-    gap: clamp(var(--space-2), 3vh, var(--space-4));
+    gap: clamp(var(--space-2), 2.6vh, var(--space-3));
   }
 
   .home-copy {
     gap: clamp(var(--space-1), 1.5vh, var(--space-2));
   }
 
-  .options p {
-    font-size: clamp(21px, 3.7vh, 30px);
+  .home-copy p {
+    font-size: clamp(22px, 3.4vh, 29px);
   }
 
   #lang_p {
-    font-size: clamp(19px, 3.2vh, 26px);
+    font-size: clamp(19px, 2.8vh, 24px);
   }
 
 }
 
-.page-section.is-visible .main-left h1 {
-    animation: slideInLeft var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
+.page-section.is-visible #name {
+    animation: slideInRight var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
     animation-delay: calc(0.2s * var(--reveal-delay-scale));
 }
 
 .page-section.is-visible #pf_img {
     animation: slideInUp var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: calc(0.4s * var(--reveal-delay-scale));
+    animation-delay: calc(0.25s * var(--reveal-delay-scale));
 }
 
 .page-section.is-visible h2 {
@@ -800,9 +799,14 @@ h2 {
     animation-delay: calc(0.7s * var(--reveal-delay-scale));
 }
 
-.page-section.is-visible .options p {
-    animation: slideInLeft var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
-    animation-delay: calc(0.8s * var(--reveal-delay-scale));
+.page-section.is-visible .home-copy p {
+    animation: slideInRight var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(0.55s * var(--reveal-delay-scale));
+}
+
+.page-section.is-visible #lang_p {
+    animation: slideInRight var(--reveal-duration) cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(0.7s * var(--reveal-delay-scale));
 }
 
 .page-section.is-visible .cv-wrap {
@@ -2187,8 +2191,8 @@ footer p {
 .letter-container {
   position: relative;
   display: inline-block;
-  font-size: 1.1em; /* relative to h1 */
-  vertical-align: 0.14em;
+  font-size: 1em;
+  vertical-align: baseline;
   z-index: 0;
 }
 
@@ -2196,69 +2200,41 @@ footer p {
   content: "";
   position: absolute;
   left: -0.2em;
-  top: -1.12em;
-  width: 0.7em;
+  top: -0.35em;
+  width: 0.65em;
   height: 1.35em;
   pointer-events: auto;
   z-index: 4;
 }
 
-.dot_trunk,
-.trunk_dot {
-  position: absolute;
-  pointer-events: none; /* so hover works on dot */
-}
-
-/* size & position relative to container */
-.dot_trunk {
-  width: 0.3em;
-  height: 0.43em;
-  transform: translate(-0.07em, -0.66em);
-  z-index: 3;
-  background-color: var(--paper);
-}
-
-.trunk_dot {
-  width: 0.3em;
-  height: 0.25em;
-  transform: translate(-0.1em, -0.36em);
-  z-index: 1;
-  background-color: var(--paper);
-}
-
 /* moving dot */
 .dot {
   position: absolute;
-  transform: translate(-0.07em, -0.9em) rotate(180deg);
+  top: 0;
+  left: 0;
+  transform: translateY(-0.1em) rotate(180deg);
   z-index: 2;
+  clip-path: inset(38% 0 48% 0);
+  -webkit-clip-path: inset(38% 0 48% 0);
 }
 
-/* optional trunk if you want visual trunk */
+/* The stem remains in normal text flow, so its baseline and spacing are native. */
 .trunk {
-  position: absolute;
-  transform: translate(-0.07em, -0.8em);
-  z-index: 0;
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+  clip-path: inset(52% 0 0 0);
+  -webkit-clip-path: inset(52% 0 0 0);
 }
 
 @keyframes moveUp {
-  0%   { transform: translate(-0.07em, -0.90em) rotate(180deg); }
-  20%  { transform: translate(-0.12em, -0.95em) rotate(180deg); }
-  40%  { transform: translate( -0.02em, -1.00em) rotate(180deg); }
-  60%  { transform: translate(-0.1em, -1.05em) rotate(180deg); }
-  80%  { transform: translate( 0.00em, -1.08em) rotate(180deg); }
-  100% { transform: translate(-0.07em, -1.10em) rotate(180deg); }
+  0%   { transform: translate(0, -0.10em) rotate(180deg); }
+  20%  { transform: translate(-0.05em, -0.15em) rotate(180deg); }
+  40%  { transform: translate(0.05em, -0.20em) rotate(180deg); }
+  60%  { transform: translate(-0.03em, -0.25em) rotate(180deg); }
+  80%  { transform: translate(0.04em, -0.28em) rotate(180deg); }
+  100% { transform: translate(0, -0.30em) rotate(180deg); }
 }
-
-@keyframes moveTrunk {
-  0%   { transform: translate(-0.07em, -0.65em); }
-  20%  { transform: translate(-0.12em, -0.71em); }
-  40%  { transform: translate( -0.02em, -0.76em); }
-  60%  { transform: translate(-0.1em, -0.81em); }
-  80%  { transform: translate( 0.0em, -0.84em); }
-  100% { transform: translate(-0.07em, -0.86em); }
-}
-
-
 
 /*Keyframes for animations*/
 
@@ -2287,10 +2263,10 @@ footer p {
   }
 
   .main {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
     text-align: center;
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   .home-skeleton {
@@ -2319,11 +2295,11 @@ footer p {
     width: 100%;
   }
 
-  .main-left h1 {
+  #name {
     font-size: 60px;
   }
 
-  .main-left h2 {
+  .hero-identity h2 {
     font-size: 32px;
   }
 
@@ -2332,7 +2308,7 @@ footer p {
   }
 
   .options p {
-    text-align: left;
+    text-align: center;
   }
 
   .options {
@@ -2341,8 +2317,24 @@ footer p {
     gap: var(--space-3);
   }
 
+  .hero-identity {
+    align-items: center;
+  }
+
   .home-copy {
     width: min(100%, 560px);
+    padding-top: 18px;
+    padding-left: 0;
+  }
+
+  .home-copy::before {
+    top: 0;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: 64px;
+    height: 4px;
+    transform: translateX(-50%);
   }
 
   #lang_p {
@@ -2460,8 +2452,7 @@ footer p {
   }
 
   .main {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
     text-align: center;
     justify-content: center;
     gap: var(--space-2);
@@ -2482,7 +2473,6 @@ footer p {
 
   .skeleton-portrait {
     width: 260px;
-    margin-bottom: var(--space-3);
   }
 
   .skeleton-title {
@@ -2508,20 +2498,6 @@ footer p {
     height: 22px;
   }
 
-  .skeleton-nav {
-    gap: var(--space-2);
-    margin-top: 0;
-  }
-
-  .skeleton-nav-line {
-    width: 170px;
-    height: 38px;
-  }
-
-  .skeleton-button {
-    height: 48px;
-  }
-
   h1 {
     font-size: clamp(52px, 16vw, 72px);
     margin-bottom: var(--space-3);
@@ -2531,19 +2507,18 @@ footer p {
     margin-bottom: var(--space-3);
   }
 
-  .main-left h1 {
+  #name {
     font-size: clamp(32px, 9.8vw, 48px);
     white-space: nowrap;
     margin-bottom: var(--space-1);
   }
 
-  .main-left h2 {
+  .hero-identity h2 {
     font-size: 28px;
   }
 
   #pf_img {
     width: 260px;
-    margin-bottom: var(--space-2);
   }
 
   #title {
@@ -2554,7 +2529,6 @@ footer p {
     font-size: 22px;
   }
 
-  /* Stack main-left above options */
   .options {
     width: 100%;
     margin-top: 0;
@@ -2568,7 +2542,7 @@ footer p {
 
   .options p {
     font-size: 24px;
-    text-align: left;
+    text-align: center;
     width: min(100%, 430px);
   }
 
@@ -2713,16 +2687,11 @@ footer p {
     height: 18px;
   }
 
-  .skeleton-nav-line {
-    width: 150px;
-    height: 32px;
-  }
-
-  .main-left h1 {
+  #name {
     font-size: clamp(29px, 9.4vw, 38px);
   }
 
-  .main-left h2 {
+  .hero-identity h2 {
     font-size: 24px;
   }
 
@@ -2783,18 +2752,17 @@ footer p {
     padding-bottom: 40px;
   }
 
-  .main-left h1 {
+  #name {
     margin-bottom: 6px;
   }
 
-  .main-left h2 {
+  .hero-identity h2 {
     font-size: clamp(20px, 3vh, 24px);
     line-height: 1.2;
   }
 
   #pf_img {
     width: clamp(180px, 25vh, 220px);
-    margin-bottom: 8px;
   }
 
   #title {
@@ -2832,16 +2800,15 @@ footer p {
     padding-bottom: var(--space-4);
   }
 
-  .main-left h1 {
+  #name {
     font-size: clamp(29px, 8.8vw, 36px);
   }
 
   #pf_img {
     width: clamp(156px, 24vh, 180px);
-    margin-bottom: 6px;
   }
 
-  .main-left h2 {
+  .hero-identity h2 {
     font-size: clamp(18px, 2.8vh, 21px);
   }
 
@@ -2884,7 +2851,7 @@ footer p {
     display: none;
   }
 
-  .main-left h1,
+  #name,
   #pf_img,
   h2,
   .notname,

@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Manuel Ricart</title>
   <link rel="preload" href="fonts/Myfont-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20260802-header-only-navigation" />
-  <link rel="icon" type="image/png" href="img/branding/favicon.png?v=20260802-handwritten-transparent">
+  <link rel="stylesheet" href="style.css?v=20260803-inline-animated-i" />
+  <link rel="icon" type="image/png" href="img/branding/faviconPxl.png">
   <noscript>
     <style>
       .home-skeleton { display: none !important; }
       html.is-skeleton-loading .main > .main-left,
       html.is-skeleton-loading .main > .options { visibility: visible !important; }
-      .main-left h1,
+      #name,
       #pf_img,
       h2,
       .notname,
@@ -29,7 +29,6 @@
       <a href="#home">Home</a>
       <a href="#skills">Skills</a>
       <a href="#projects">Projects</a>
-      <a href="#designs">Designs</a>
       <a href="#about">About</a>
     </nav>
 
@@ -79,48 +78,36 @@
         <span class="skeleton-welcome-orbit"><span class="skeleton-welcome-dot"></span></span>
       </span>
       <div class="home-skeleton-left" aria-hidden="true">
-        <span class="skeleton-block skeleton-name"></span>
         <span class="skeleton-block skeleton-portrait"></span>
-        <span class="skeleton-block skeleton-title"></span>
-        <span class="skeleton-block skeleton-location"></span>
       </div>
       <div class="home-skeleton-options" aria-hidden="true">
+        <span class="skeleton-block skeleton-name"></span>
+        <span class="skeleton-block skeleton-title"></span>
+        <span class="skeleton-block skeleton-location"></span>
         <div class="skeleton-copy">
           <span class="skeleton-block skeleton-line skeleton-line-full"></span>
           <span class="skeleton-block skeleton-line skeleton-line-full"></span>
           <span class="skeleton-block skeleton-line skeleton-line-medium"></span>
-          <span class="skeleton-block skeleton-line skeleton-line-full"></span>
-          <span class="skeleton-block skeleton-line skeleton-line-short"></span>
         </div>
-        <div class="skeleton-nav">
-          <span class="skeleton-block skeleton-nav-line"></span>
-          <span class="skeleton-block skeleton-nav-line"></span>
-          <span class="skeleton-block skeleton-nav-line"></span>
+        <div class="skeleton-language">
+          <span class="skeleton-block skeleton-line skeleton-line-medium"></span>
         </div>
-        <span class="skeleton-block skeleton-button"></span>
       </div>
     </div>
 
     <div class="main-left">
-      <h1 id="name">
-        Manuel R
-        <div class="letter-container">
-          <div class="dot_trunk"></div>
-          <div class="trunk_dot"></div>
-          <span class="red_txt">
-            <span class="trunk">i</span>
-            <span class="dot">i</span>
-          </span>
-        </div>
-        cart
-      </h1>
-
       <img id="pf_img" src="img/profile/manuel-ricart.webp" width="1640" height="1760" fetchpriority="high" decoding="async" alt="Profile image with mountain background">
-      <h2 id="title">Technology and Multimedia</h2>
-      <h2 id="location"><span id="location_icon">&#128205;</span>Valencia, Spain</h2>
     </div>
 
     <div class="options">
+      <div class="hero-identity">
+        <h1 id="name">
+          Manuel R<span class="letter-container"><span class="red_txt trunk">i</span><span class="red_txt dot" aria-hidden="true">i</span></span>cart
+        </h1>
+        <h2 id="title">Technology and Multimedia</h2>
+        <h2 id="location"><span id="location_icon">&#128205;</span>Valencia, Spain</h2>
+      </div>
+
       <div class="home-copy">
         <p>I enjoy designing and building <span class="red_txt">interactive</span> projects that connect technology, <span class="red_txt">creativity</span> and <span class="red_txt">design</span>.</p>
       </div>
@@ -534,7 +521,7 @@
   </div>
 
   <script src="matter-js-master/build/matter.min.js"></script>
-  <script src="script.js?v=20260802-header-only-navigation"></script>
+  <script src="script.js?v=20260803-inline-animated-i"></script>
   <script src="skills.js"></script>
 </body>
 </html>

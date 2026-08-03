@@ -2470,8 +2470,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.letter-container').forEach(container => {
     const dot = container.querySelector('.dot');
-    const trunk = container.querySelector('.dot_trunk');
-    if (!dot || !trunk) return;
+    if (!dot) return;
 
     let forwardPlaying = false;
     let reversePlaying = false;
@@ -2479,7 +2478,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clearAndReflow() {
       dot.style.animation = 'none';
-      trunk.style.animation = 'none';
       void dot.offsetWidth; // force reflow
     }
 
@@ -2492,7 +2490,6 @@ document.addEventListener('DOMContentLoaded', () => {
       forwardPlaying = true;
 
       dot.style.animation = `moveUp ${DURATION}ms ease-in-out forwards`;
-      trunk.style.animation = `moveTrunk ${DURATION}ms ease-in-out forwards`;
 
       dot.addEventListener('animationend', function onFwdEnd() {
         forwardPlaying = false;
@@ -2515,13 +2512,11 @@ document.addEventListener('DOMContentLoaded', () => {
       clearAndReflow();
 
       dot.style.animation = `moveUp ${DURATION}ms ease-in-out reverse forwards`;
-      trunk.style.animation = `moveTrunk ${DURATION}ms ease-in-out reverse forwards`;
 
       dot.addEventListener('animationend', function onRevEnd() {
         reversePlaying = false;
         dot.removeEventListener('animationend', onRevEnd);
         dot.style.animation = '';
-        trunk.style.animation = '';
       }, { once: true });
     }
 
