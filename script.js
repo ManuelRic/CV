@@ -1221,10 +1221,7 @@ function setupInkSketchReveals() {
     const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const inkStickerFilter = [
-      "drop-shadow(3px 0px 0px rgba(255, 255, 255, 0.96))",
-      "drop-shadow(-3px 0px 0px rgba(255, 255, 255, 0.96))",
-      "drop-shadow(0px 3px 0px rgba(255, 255, 255, 0.96))",
-      "drop-shadow(0px -3px 0px rgba(255, 255, 255, 0.96))",
+      "drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.96))",
       "drop-shadow(0px 10px 8px rgba(72, 28, 34, 0.18))"
     ].join(" ");
 
@@ -1714,6 +1711,7 @@ function setupDraggableDesignStickers() {
   const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   let activeDrag = null;
+  let dragRafId = null;
   let resizeRafId = null;
   let lastSheetWidth = sheet.clientWidth;
   let topStickerZIndex = stickers.reduce((highest, sticker) => {
@@ -1795,7 +1793,12 @@ function setupDraggableDesignStickers() {
       sticker.matches(".is-drag-pending, .is-dragging")
     ) return;
 
-    const state = stickerTiltStates.get(sticker) || { rafId: null, clientX: 0, clientY: 0 };
+    const state = stickerTiltStates.get(sticker) || {
+      rafId: null,
+      clientX: 0,
+      clientY: 0,
+      rect: null
+    };
     state.clientX = event.clientX;
     state.clientY = event.clientY;
     stickerTiltStates.set(sticker, state);
@@ -1803,9 +1806,9 @@ function setupDraggableDesignStickers() {
 
     state.rafId = requestAnimationFrame(() => {
       state.rafId = null;
-      const pointer = getStickerLocalPointer(sticker, state.clientX, state.clientY);
-      const relativeX = Math.max(-1, Math.min(1, pointer.x / pointer.width * 2 - 1));
-      const relativeY = Math.max(-1, Math.min(1, pointer.y / pointer.height * 2 - 1));
+      state.rect ||= sticker.getBoundingClientRect();
+      const relativeX = Math.max(-1, Math.min(1, (state.clientX - state.rect.left) / state.rect.width * 2 - 1));
+      const relativeY = Math.max(-1, Math.min(1, (state.clientY - state.rect.top) / state.rect.height * 2 - 1));
 
       sticker.style.setProperty("--sticker-art-tilt-x", `${(-relativeY * 7).toFixed(2)}deg`);
       sticker.style.setProperty("--sticker-art-tilt-y", `${(relativeX * 9).toFixed(2)}deg`);
@@ -1912,12 +1915,22 @@ function setupDraggableDesignStickers() {
     activeDrag = {
       sticker,
       pointerId: event.pointerId,
+      pointerType: event.pointerType,
       startClientX: event.clientX,
       startClientY: event.clientY,
       startLeft: 0,
       startTop: 0,
+      currentLeft: 0,
+      currentTop: 0,
+      latestClientX: event.clientX,
+      latestClientY: event.clientY,
       dragging: false
     };
+
+    document.addEventListener("pointermove", moveDrag, { passive: false });
+    document.addEventListener("pointerup", finishDrag);
+    document.addEventListener("pointercancel", finishDrag);
+    window.addEventListener("blur", handleWindowBlur);
   }
 
   function beginDrag(drag) {
@@ -1925,6 +1938,22 @@ function setupDraggableDesignStickers() {
     resetStickerTilt(sticker);
     drag.startLeft = sticker.offsetLeft;
     drag.startTop = sticker.offsetTop;
+    drag.currentLeft = drag.startLeft;
+    drag.currentTop = drag.startTop;
+    const stickerWidth = sticker.offsetWidth;
+    const stickerHeight = sticker.offsetHeight;
+    const horizontalOverhang = Math.min(34, stickerWidth * 0.12);
+    const verticalOverhang = Math.min(26, stickerHeight * 0.1);
+    drag.minimumLeft = -horizontalOverhang;
+    drag.minimumTop = -verticalOverhang;
+    drag.maximumLeft = Math.max(
+      drag.minimumLeft,
+      sheet.clientWidth - stickerWidth + horizontalOverhang
+    );
+    drag.maximumTop = Math.max(
+      drag.minimumTop,
+      sheet.clientHeight - stickerHeight + verticalOverhang
+    );
     drag.dragging = true;
     topStickerZIndex += 1;
 
@@ -1933,6 +1962,8 @@ function setupDraggableDesignStickers() {
     sticker.style.right = "auto";
     sticker.style.bottom = "auto";
     sticker.style.zIndex = String(topStickerZIndex);
+    sticker.style.setProperty("--sticker-drag-x", "0px");
+    sticker.style.setProperty("--sticker-drag-y", "0px");
     sticker.classList.add("is-dragging");
 
     const revealSurface = sticker.querySelector("[data-ink-sketch-reveal]");
@@ -1941,42 +1972,53 @@ function setupDraggableDesignStickers() {
     }));
   }
 
+  function applyDragPosition(drag) {
+    const nextLeft = clamp(
+      drag.startLeft + drag.latestClientX - drag.startClientX,
+      drag.minimumLeft,
+      drag.maximumLeft
+    );
+    const nextTop = clamp(
+      drag.startTop + drag.latestClientY - drag.startClientY,
+      drag.minimumTop,
+      drag.maximumTop
+    );
+
+    drag.currentLeft = nextLeft;
+    drag.currentTop = nextTop;
+    drag.sticker.style.setProperty("--sticker-drag-x", `${nextLeft - drag.startLeft}px`);
+    drag.sticker.style.setProperty("--sticker-drag-y", `${nextTop - drag.startTop}px`);
+  }
+
+  function scheduleDragPosition(drag) {
+    if (dragRafId !== null) return;
+
+    dragRafId = requestAnimationFrame(() => {
+      dragRafId = null;
+      if (activeDrag !== drag || !drag.dragging) return;
+      applyDragPosition(drag);
+    });
+  }
+
   function moveDrag(event) {
     const drag = activeDrag;
     if (!drag || event.pointerId !== drag.pointerId) return;
 
-    const deltaX = event.clientX - drag.startClientX;
-    const deltaY = event.clientY - drag.startClientY;
+    drag.latestClientX = event.clientX;
+    drag.latestClientY = event.clientY;
+    const deltaX = drag.latestClientX - drag.startClientX;
+    const deltaY = drag.latestClientY - drag.startClientY;
 
     if (!drag.dragging) {
+      if (drag.pointerType === "touch" && Math.abs(deltaY) > Math.abs(deltaX)) {
+        finishDrag(event);
+        return;
+      }
       if (Math.hypot(deltaX, deltaY) < dragThreshold) return;
       beginDrag(drag);
     }
 
-    const stickerWidth = drag.sticker.offsetWidth;
-    const stickerHeight = drag.sticker.offsetHeight;
-    const horizontalOverhang = Math.min(34, stickerWidth * 0.12);
-    const verticalOverhang = Math.min(26, stickerHeight * 0.1);
-    const maximumLeft = Math.max(
-      -horizontalOverhang,
-      sheet.clientWidth - stickerWidth + horizontalOverhang
-    );
-    const maximumTop = Math.max(
-      -verticalOverhang,
-      sheet.clientHeight - stickerHeight + verticalOverhang
-    );
-
-    drag.sticker.style.left = `${clamp(
-      drag.startLeft + deltaX,
-      -horizontalOverhang,
-      maximumLeft
-    )}px`;
-    drag.sticker.style.top = `${clamp(
-      drag.startTop + deltaY,
-      -verticalOverhang,
-      maximumTop
-    )}px`;
-
+    scheduleDragPosition(drag);
     if (event.cancelable) event.preventDefault();
   }
 
@@ -2022,11 +2064,30 @@ function setupDraggableDesignStickers() {
     const drag = activeDrag;
     if (!drag || (event && event.pointerId !== drag.pointerId)) return;
     activeDrag = null;
+    document.removeEventListener("pointermove", moveDrag);
+    document.removeEventListener("pointerup", finishDrag);
+    document.removeEventListener("pointercancel", finishDrag);
+    window.removeEventListener("blur", handleWindowBlur);
+
+    if (dragRafId !== null) {
+      cancelAnimationFrame(dragRafId);
+      dragRafId = null;
+    }
 
     drag.sticker.classList.remove("is-drag-pending");
     if (!drag.dragging) return;
 
+    if (event) {
+      drag.latestClientX = event.clientX;
+      drag.latestClientY = event.clientY;
+    }
+    applyDragPosition(drag);
+
     if (event?.cancelable) event.preventDefault();
+    drag.sticker.style.left = `${drag.currentLeft}px`;
+    drag.sticker.style.top = `${drag.currentTop}px`;
+    drag.sticker.style.removeProperty("--sticker-drag-x");
+    drag.sticker.style.removeProperty("--sticker-drag-y");
     drag.sticker.classList.remove("is-dragging");
     drag.sticker.classList.add("is-resticking");
     rememberStickerPlacement(drag.sticker);
@@ -2036,6 +2097,10 @@ function setupDraggableDesignStickers() {
       restickTimers.delete(drag.sticker);
     }, restickDuration);
     restickTimers.set(drag.sticker, timer);
+  }
+
+  function handleWindowBlur() {
+    finishDrag(null);
   }
 
   stickers.forEach(sticker => {
@@ -2051,11 +2116,6 @@ function setupDraggableDesignStickers() {
     }, { capture: true });
     sticker.addEventListener("dragstart", event => event.preventDefault());
   });
-
-  document.addEventListener("pointermove", moveDrag, { passive: false });
-  document.addEventListener("pointerup", finishDrag);
-  document.addEventListener("pointercancel", finishDrag);
-  window.addEventListener("blur", () => finishDrag(null));
 
   window.addEventListener("resize", () => {
     if (activeDrag) finishDrag(null);
