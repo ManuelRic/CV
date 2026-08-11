@@ -2280,12 +2280,18 @@ footer p {
 /* moving dot */
 .dot {
   position: absolute;
+  display: inline-block;
   top: 0;
   left: 0;
   transform: translateY(-0.1em) rotate(180deg);
   z-index: 2;
   clip-path: inset(38% 0 48% 0);
   -webkit-clip-path: inset(38% 0 48% 0);
+}
+
+/* Keep the decorative copy of the letter out of searchable page text. */
+.dot::before {
+  content: "i";
 }
 
 /* The stem remains in normal text flow, so its baseline and spacing are native. */
