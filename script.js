@@ -1220,10 +1220,8 @@ function setupInkSketchReveals() {
     const hostSticker = surface.closest(".design-sticker");
     const hoverTiltQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const inkStickerFilter = [
-      "drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.96))",
-      "drop-shadow(0px 10px 8px rgba(72, 28, 34, 0.18))"
-    ].join(" ");
+    const inkStickerFilter =
+      "drop-shadow(0px 10px 8px rgba(72, 28, 34, 0.18))";
 
     canvas.className = "ink-sketch-canvas";
     canvas.setAttribute("aria-hidden", "true");

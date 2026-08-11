@@ -1571,9 +1571,7 @@ html.project-lightbox-open body {
     scale(0.86);
   transform-origin: center;
   perspective: 900px;
-  filter:
-    drop-shadow(0 0 2px rgba(255, 255, 255, 0.96))
-    drop-shadow(0 10px 8px rgba(72, 28, 34, 0.18));
+  filter: drop-shadow(0 10px 8px rgba(72, 28, 34, 0.18));
   transition:
     opacity 460ms ease,
     transform 220ms cubic-bezier(.22, 1, .36, 1);
@@ -1773,9 +1771,7 @@ html.project-lightbox-open body {
 }
 
 .design-ink-art {
-  filter:
-    drop-shadow(0 0 2px rgba(255, 255, 255, 0.96))
-    drop-shadow(0 10px 8px rgba(72, 28, 34, 0.18));
+  filter: drop-shadow(0 10px 8px rgba(72, 28, 34, 0.18));
 }
 
 .ink-sketch-reveal.is-tilting {
