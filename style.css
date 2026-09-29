@@ -1003,6 +1003,22 @@ h2 {
   justify-self: end;
 }
 
+.project-card-sketchboard {
+  grid-template-columns: minmax(320px, 600px) minmax(240px, 1fr);
+  align-items: center;
+}
+
+.project-card-sketchboard .project-media {
+  order: 1;
+  max-width: 600px;
+  justify-self: start;
+}
+
+.project-card-sketchboard .project-info {
+  order: 2;
+  width: auto;
+}
+
 .project-card-large .project-media {
   max-width: 600px;
 }
@@ -1206,6 +1222,12 @@ html.project-lightbox-open body {
 
 .project-media-wide {
   aspect-ratio: 16 / 9;
+}
+
+.project-media-sketchboard-static {
+  aspect-ratio: 1118 / 679;
+  border: 1px solid rgba(51, 51, 51, 0.14);
+  background: #f2f3f6;
 }
 
 .project-media-doodle {
@@ -1663,7 +1685,7 @@ html.project-lightbox-open body {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .page-section.is-visible .design-sticker:not(.design-sticker-billy):hover {
+  .page-section.is-visible .design-sticker:hover {
     z-index: 6;
     transform:
       translate3d(var(--sticker-drag-x), calc(var(--sticker-drag-y) - 8px), 0)
@@ -1690,6 +1712,11 @@ html.project-lightbox-open body {
   will-change: transform;
   transition: none;
   transition-delay: 0s;
+}
+
+.design-sticker.is-dragging,
+.design-sticker.is-dragging > img {
+  filter: none;
 }
 
 .page-section.is-visible .design-sticker.is-resticking {

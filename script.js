@@ -1772,8 +1772,6 @@ function setupDraggableDesignStickers() {
   }
 
   function resetStickerTilt(sticker) {
-    if (sticker.classList.contains("design-sticker-billy")) return;
-
     const state = stickerTiltStates.get(sticker);
     if (state?.rafId != null) cancelAnimationFrame(state.rafId);
     stickerTiltStates.delete(sticker);
@@ -1784,7 +1782,6 @@ function setupDraggableDesignStickers() {
 
   function updateStickerTilt(sticker, event) {
     if (
-      sticker.classList.contains("design-sticker-billy") ||
       event.pointerType !== "mouse" ||
       !hoverTiltQuery.matches ||
       reducedMotionQuery.matches ||
@@ -1960,8 +1957,6 @@ function setupDraggableDesignStickers() {
     sticker.style.right = "auto";
     sticker.style.bottom = "auto";
     sticker.style.zIndex = String(topStickerZIndex);
-    sticker.style.setProperty("--sticker-drag-x", "0px");
-    sticker.style.setProperty("--sticker-drag-y", "0px");
     sticker.classList.add("is-dragging");
 
     const revealSurface = sticker.querySelector("[data-ink-sketch-reveal]");
@@ -1984,8 +1979,9 @@ function setupDraggableDesignStickers() {
 
     drag.currentLeft = nextLeft;
     drag.currentTop = nextTop;
-    drag.sticker.style.setProperty("--sticker-drag-x", `${nextLeft - drag.startLeft}px`);
-    drag.sticker.style.setProperty("--sticker-drag-y", `${nextTop - drag.startTop}px`);
+    const dragX = nextLeft - drag.startLeft;
+    const dragY = nextTop - drag.startTop - 16;
+    drag.sticker.style.transform = `translate3d(${dragX}px, ${dragY}px, 0) rotate(0deg) scale(1.075)`;
   }
 
   function scheduleDragPosition(drag) {
@@ -2084,8 +2080,7 @@ function setupDraggableDesignStickers() {
     if (event?.cancelable) event.preventDefault();
     drag.sticker.style.left = `${drag.currentLeft}px`;
     drag.sticker.style.top = `${drag.currentTop}px`;
-    drag.sticker.style.removeProperty("--sticker-drag-x");
-    drag.sticker.style.removeProperty("--sticker-drag-y");
+    drag.sticker.style.removeProperty("transform");
     drag.sticker.classList.remove("is-dragging");
     drag.sticker.classList.add("is-resticking");
     rememberStickerPlacement(drag.sticker);
@@ -2298,7 +2293,7 @@ function setupProjectLightbox() {
     closeTimer = window.setTimeout(finishClosing, 240);
   }
 
-  document.querySelectorAll(".project-media").forEach(media => {
+  document.querySelectorAll(".project-media:not([data-project-interactive])").forEach(media => {
     const trigger = media.matches("[data-project-carousel]")
       ? media.querySelector(".project-carousel-viewport")
       : media;
