@@ -475,6 +475,10 @@ html.is-skeleton-loading .main > .options {
     isolation: isolate;
 }
 
+.about-section {
+    min-height: auto;
+}
+
 .designs-section::before {
     content: "";
     position: absolute;
